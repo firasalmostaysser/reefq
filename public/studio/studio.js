@@ -255,15 +255,57 @@ function renderDeliver(){
 }
 $('#btn-copymsg').onclick=function(){copy($('#msgbox').textContent,this)};
 $('#btn-copylink').onclick=function(){var g=guestLink();if(g)copy(g,this);else toast('No link yet')};
-/* ---------- orders (from the landing page) ---------- */
-function loadLeads(){api('/api/leads').then(function(r){leads=r.items;renderLeads()}).catch(function(){})}
-function renderLeads(){var rows=$('#o-rows');
-  rows.innerHTML=leads.length?leads.map(function(l){var wa=String(l.phone||'').replace(/[^0-9]/g,'');if(wa.length===8)wa='216'+wa;return '<tr><td>'+new Date(l.at).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})+'</td><td><b>'+esc(l.names)+'</b>'+(l.note?'<br><span class="status">'+esc(l.note)+'</span>':'')+'</td><td>'+esc(l.date||'')+'<br><span class="status">'+esc(l.city||'')+'</span></td><td class="num">'+esc(l.guests||'')+'</td><td>'+esc(l.plan||'')+'<br><span class="status">'+esc([l.theme,l.model].filter(Boolean).join(' · '))+'</span></td><td>'+(wa?'<a class="btn sm primary" target="_blank" rel="noopener" href="https://wa.me/'+wa+'">'+esc(l.phone)+'</a>':esc(l.phone||''))+'</td></tr>'}).join(''):'<tr><td colspan="6" class="empty">No orders yet. They appear here when couples use the form on the website.</td></tr>';
-  $('#o-count').textContent=leads.length?leads.length+' orders':''}
+/* ---------- orders & RIB payments ---------- */
+var orders=[],oFilter='verify',oSel=null,proofUrl=null;
+var OST={awaiting_payment:['Awaiting transfer','info'],proof_sent:['Proof to verify','warn'],paid:['Paid · client','good'],rejected:['Proof rejected','bad'],cancelled:['Cancelled','bad']};
+var OFILTERS=[['verify','To verify'],['awaiting','Awaiting'],['paid','Paid'],['all','All']];
+function loadLeads(){api('/api/orders').then(function(r){orders=r.items;renderOrders();if(oSel){var o=orders.find(function(x){return x.code===oSel});if(o)openOrder(o.code,true)}}).catch(function(){})}
+function oMatch(o){return oFilter==='all'||(oFilter==='verify'&&o.status==='proof_sent')||(oFilter==='awaiting'&&(o.status==='awaiting_payment'||o.status==='rejected'))||(oFilter==='paid'&&o.status==='paid')}
+function renderOrders(){
+  var n=orders.filter(function(o){return o.status==='proof_sent'}).length,bd=$('#o-badge');bd.hidden=!n;bd.textContent=n;
+  $('#o-filters').innerHTML=OFILTERS.map(function(f){var c=orders.filter(function(o){var k=oFilter;oFilter=f[0];var r=oMatch(o);oFilter=k;return r}).length;return '<button class="chip" type="button" data-of="'+f[0]+'" aria-pressed="'+(oFilter===f[0])+'">'+f[1]+' · '+c+'</button>'}).join('');
+  $$('[data-of]').forEach(function(b){b.onclick=function(){oFilter=b.dataset.of;renderOrders()}});
+  var list=orders.filter(oMatch);
+  $('#o-rows').innerHTML=list.length?list.map(function(o){var st=OST[o.status]||[o.status,''];return '<tr class="'+(oSel===o.code?'sel':'')+'"><td>'+new Date(o.createdAt).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})+'</td><td><b>'+esc(o.code)+'</b></td><td>'+esc(o.names)+'<br><span class="status">'+esc([o.date,o.city].filter(Boolean).join(' · '))+'</span></td><td>'+esc(o.plan)+'</td><td class="num">'+o.deposit+' DT</td><td><span class="pill '+st[1]+'">'+st[0]+'</span></td><td><button class="btn sm" type="button" data-od="'+esc(o.code)+'">Review</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">Nothing here. Orders from the website appear in this list.</td></tr>';
+  $$('[data-od]').forEach(function(b){b.onclick=function(){openOrder(b.dataset.od)}});
+}
+function clientLink(o){return ORIGIN+'/commande/'+o.code+'?t='+o.token}
+function openOrder(code,keep){
+  var o=orders.find(function(x){return x.code===code});if(!o)return;oSel=code;renderOrders();
+  var d=$('#o-detail');d.hidden=false;if(!keep)d.scrollIntoView({behavior:'smooth',block:'start'});
+  var st=OST[o.status]||[o.status,''];$('#od-title').textContent=o.code+' · '+o.names;$('#od-status').textContent=st[0];$('#od-status').className='pill '+st[1];
+  var wa=String(o.phone||'').replace(/[^0-9]/g,'');if(wa.length===8)wa='216'+wa;
+  var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],['Deposit',o.deposit+' DT'],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],['Canva model',o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
+  $('#od-info').innerHTML=info.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'<dt>History</dt><dd>'+o.history.map(function(h){return esc(new Date(h.at).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+(OST[h.status]||[h.status])[0]+(h.note?' · '+h.note:''))}).join('<br>')+'</dd>';
+  $('#od-note').value=o.adminNote||'';$('#od-amount').value=o.paid||o.deposit;$('#od-reason').value='';
+  var closed=o.status==='paid'||o.status==='cancelled';$('#od-confirm').hidden=o.status==='paid'||o.status==='cancelled';$('#od-reject').hidden=closed;$('#od-cancel').hidden=o.status==='cancelled';$('#od-reopen').hidden=!closed;
+  $('#od-invite').textContent=o.inviteId?'Open the invitation in Design':'Create invitation from this order';
+  var msg='Bonjour '+(o.names||'')+',\n'+(o.status==='paid'?'Votre paiement est confirmé, merci ! Votre espace client Reefq :\n':'Voici votre espace client Reefq pour la commande '+o.code+' (acompte '+o.deposit+' DT par virement) :\n')+clientLink(o);
+  var w=$('#od-wa');w.hidden=!wa;w.href='https://wa.me/'+wa+'?text='+encodeURIComponent(msg);
+  $('#od-proofs').innerHTML=o.proofs.length>1?o.proofs.map(function(p,i){return '<button class="chip" type="button" data-pi="'+i+'" aria-pressed="'+(i===o.proofs.length-1)+'">Proof '+(i+1)+'</button>'}).join(''):'';
+  $$('[data-pi]').forEach(function(b){b.onclick=function(){$$('[data-pi]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});showProof(o,+b.dataset.pi)}});
+  if(!keep)showProof(o,o.proofs.length-1);
+}
+function showProof(o,i){var box=$('#od-proof');if(i<0){box.innerHTML='<p class="hint">No proof uploaded yet.</p>';return}
+  box.innerHTML='<p class="hint">Loading…</p>';
+  fetch('/api/orders/'+o.code+'/proof?i='+i,{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){if(proofUrl)URL.revokeObjectURL(proofUrl);proofUrl=URL.createObjectURL(b);
+    box.innerHTML=/pdf/.test(b.type)?'<a class="btn" target="_blank" rel="noopener" href="'+proofUrl+'">Open PDF receipt</a>':'<a href="'+proofUrl+'" target="_blank" rel="noopener"><img alt="Transfer receipt" src="'+proofUrl+'"></a>'}).catch(function(){box.innerHTML='<p class="hint">Could not load the proof.</p>'})}
+function oAction(action,extra){if(!oSel)return;var b=Object.assign({action:action},extra||{});return api('/api/orders/'+oSel+'/status',{method:'POST',body:b}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;openOrder(o.code,true);renderOrders();toast(action==='confirm'?'Payment confirmed. Client space is open.':'Order updated')}).catch(function(e){toast(e.message)})}
+$('#od-confirm').onclick=function(){var v=+$('#od-amount').value;if(!(v>0)){$('#od-amount').focus();return}oAction('confirm',{amountReceived:v})};
+$('#od-reject').onclick=function(){oAction('reject',{note:$('#od-reason').value.trim()})};
+$('#od-cancel').onclick=function(){oAction('cancel',{note:$('#od-reason').value.trim()})};
+$('#od-reopen').onclick=function(){oAction('reopen')};
+$('#od-close').onclick=function(){oSel=null;$('#o-detail').hidden=true;renderOrders()};
+$('#od-note-save').onclick=function(){api('/api/orders/'+oSel,{method:'PATCH',body:{adminNote:$('#od-note').value}}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;toast('Note saved')})};
+$('#od-copy').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(o)copy(clientLink(o),this)};
+$('#od-invite').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(!o)return;
+  var go=function(inv){var i=invites.findIndex(function(x){return x.id===inv.id});if(i<0)invites.unshift(inv);load(inv);$('#tab-design').click();toast('Invitation opened in Design')};
+  if(o.inviteId){api('/api/invitations/'+o.inviteId).then(go).catch(function(e){toast(e.message)});return}
+  api('/api/orders/'+o.code+'/invitation',{method:'POST'}).then(function(r){var i=orders.findIndex(function(x){return x.code===r.order.code});orders[i]=r.order;go(r.invitation)}).catch(function(e){toast(e.message)})};
 $('#o-refresh').onclick=loadLeads;
 /* ---------- settings ---------- */
-function renderSettings(){$('#s-canva').textContent=ME&&ME.canva?'Canva integration configured. Connect once, then designs sync every 15 minutes.':'Add the CANVA_CLIENT_ID and CANVA_CLIENT_SECRET secrets to enable Canva.';$('#s-connect').hidden=!(ME&&ME.canva);$('#s-sync').hidden=!(ME&&ME.canva)}
-$('#s-sync').onclick=function(){var b=this;b.disabled=true;$('#s-sync-status').textContent='Syncing…';api('/api/canva/sync',{method:'POST'}).then(function(r){$('#s-sync-status').textContent=r.error||(r.count+' templates · '+(r.exported||[]).length+' updated');loadCanva()}).catch(function(e){$('#s-sync-status').textContent=e.message}).then(function(){b.disabled=false})};
+function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME&&ME.canva?(cs&&cs.connected?'Connected to Canva'+(cs.lastRun?' · last sync '+new Date(cs.lastRun).toLocaleString('fr-TN')+(cs.count!=null?' · '+cs.count+' templates':''):'')+(cs.lastError?' · last error: '+cs.lastError:''):'Canva is configured. Press Connect Canva once.'):'Add CANVA_CLIENT_ID, CANVA_CLIENT_SECRET and CANVA_FOLDER_ID in Netlify environment variables to enable Canva.';$('#s-bank').textContent=ME&&ME.bankReady?'Bank details are set. Clients see them on their payment page.':'Add BANK_NAME, BANK_HOLDER, BANK_RIB and BANK_IBAN in Netlify environment variables so clients see your RIB.';$('#s-connect').hidden=!(ME&&ME.canva);$('#s-sync').hidden=!(ME&&ME.canva)}
+$('#s-sync').onclick=function(){var b=this;b.disabled=true;$('#s-sync-status').textContent='Syncing…';api('/api/canva/sync',{method:'POST'}).then(function(r){$('#s-sync-status').textContent=r.note;setTimeout(loadCanva,60000)}).catch(function(e){$('#s-sync-status').textContent=e.message}).then(function(){b.disabled=false})};
 $('#s-logout').onclick=function(){api('/api/logout',{method:'POST'}).then(function(){location.reload()})};
 
 /* ---------- login ---------- */
@@ -275,10 +317,11 @@ $$('#brand-logo,#l-logo').forEach(function(i){i.src=ReefqInvite.LOGO});$('#brand
 fillForm();renderChips();preview(true);status('Example couple. Press "+ New couple" or edit and save.','');
 function start(){
   api('/api/me').then(function(me){ME=me;$('#btn-write').hidden=!me.wording;renderSettings();
-    return api('/api/invitations')}).then(function(r){invites=r.items;renderChips()}).catch(function(){});
+    loadLeads();return api('/api/invitations')}).then(function(r){invites=r.items;renderChips()}).catch(function(){});
   loadCanva();
 }
 start();
 setInterval(function(){if(document.visibilityState==='visible'&&tab==='guests')loadRsvps()},20000);
 setInterval(loadCanva,5*60*1000);
+setInterval(function(){if(document.visibilityState==='visible'&&ME)loadLeads()},60000);
 })();

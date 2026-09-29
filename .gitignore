@@ -5,3 +5,7 @@ node_modules/
 .DS_Store
 tools/promo/out/
 public/_promo/
+.netlify/
+.env
+test/out-*.png
+.wrangler/

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Votre commande · Reefq</title>
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/commande/commande.css">
+<style>[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="nav">
+  <a class="logo" href="/" aria-label="Reefq"><img class="lg-l" src="/assets/logo-light.webp" alt="Reefq رِفق"><img class="lg-d" src="/assets/logo-dark.webp" alt="Reefq رِفق"></a>
+  <div class="navr"><a class="btn ghost sm" id="wa-help" target="_blank" rel="noopener" hidden>Besoin d'aide ?</a></div>
+</header>
+<main class="cs">
+  <p class="msg" id="loading">Chargement de votre commande…</p>
+  <div id="view" hidden>
+    <section class="head">
+      <p class="eyebrow">Espace client</p>
+      <h1 id="h-names"></h1>
+      <p class="meta"><span id="h-code"></span> · <span id="h-plan"></span> · <span class="pill" id="h-status"></span></p>
+    </section>
+
+    <ol class="track" id="track" aria-label="Étapes de la commande"></ol>
+
+    <section class="card" id="pay" hidden>
+      <h2>Réglez l'acompte par virement</h2>
+      <p class="lead-s">Montant à virer : <b id="p-amount"></b> <span class="muted" id="p-of"></span></p>
+      <div class="alert" id="p-rejected" hidden></div>
+      <dl class="bank" id="bank"></dl>
+      <p class="muted small">Indiquez le motif <b id="p-ref"></b> pour que nous retrouvions votre virement.</p>
+      <h3>Envoyez la preuve du virement</h3>
+      <p class="muted small">Une photo ou une capture du reçu (ou du SMS/app de votre banque). JPG, PNG ou PDF, 6 Mo maximum.</p>
+      <form id="proof-form" class="upload">
+        <label class="drop" for="proof-file"><span id="drop-txt">Choisir une photo ou un PDF</span><input type="file" id="proof-file" accept="image/*,application/pdf"></label>
+        <img id="proof-prev" alt="" hidden>
+        <p class="err" id="proof-err" hidden></p>
+        <button class="btn primary" type="submit" id="proof-send" disabled>Envoyer le justificatif</button>
+      </form>
+    </section>
+
+    <section class="card" id="checking" hidden>
+      <h2>Nous vérifions votre virement</h2>
+      <p>Merci ! Votre justificatif est bien reçu. Nous le vérifions sur notre compte bancaire, en général sous 24 h ouvrées. Cette page se met à jour toute seule.</p>
+      <p class="muted small" id="c-proofs"></p>
+      <button class="btn ghost sm" type="button" id="c-again">Envoyer un autre justificatif</button>
+    </section>
+
+    <section class="card ok" id="paid" hidden>
+      <h2>Paiement confirmé</h2>
+      <p id="paid-txt"></p>
+    </section>
+
+    <section class="card" id="space" hidden>
+      <h2>Votre invitation</h2>
+      <div id="inv-none"><p>Notre équipe prépare votre invitation. Vous recevrez le lien ici et sur WhatsApp.</p></div>
+      <div id="inv-box" hidden>
+        <div class="linkrow"><code id="inv-link"></code><button class="btn sm" type="button" id="inv-copy">Copier</button><a class="btn sm primary" id="inv-open" target="_blank" rel="noopener">Ouvrir</a></div>
+        <div class="tiles"><div class="tile"><b id="t-total">0</b><span>Réponses</span></div><div class="tile"><b id="t-coming">0</b><span>Personnes présentes</span></div><div class="tile"><b id="t-declined">0</b><span>Absents</span></div></div>
+        <div class="bar"><h3>Réponses de vos invités</h3><a class="btn sm" id="csv" download>Télécharger (Excel)</a></div>
+        <div class="tablewrap"><table><thead><tr><th>Invité</th><th>Réponse</th><th class="num">Pers.</th><th>Régime</th><th>Message</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div id="glist" hidden>
+          <h3>Liens personnels</h3>
+          <p class="muted small">Chaque famille a son lien, avec son nom et ses places réservées.</p>
+          <ul class="glinks" id="glinks"></ul>
+        </div>
+      </div>
+    </section>
+
+    <p class="keep muted small">Gardez ce lien : il ouvre votre espace à tout moment. <button class="linkbtn" type="button" id="copy-page">Copier le lien de cette page</button></p>
+  </div>
+</main>
+<script src="/commande/commande.js"></script>
+</body>
+</html>

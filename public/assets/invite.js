@@ -21,7 +21,7 @@ function show(inv,guest,demo){
 }
 if(m[1]==='demo'){show(DEMO,q.get('to')?{id:'demo',name:q.get('to'),seats:+q.get('n')||2}:null,true);return}
 fetch('/api/public/invitations/'+m[1]+(q.get('g')?'?g='+encodeURIComponent(q.get('g')):''))
-  .then(function(r){if(r.status===404)throw 404;if(!r.ok)throw 1;return r.json()})
+  .then(function(r){if(r.status===404||r.status===410)throw 404;if(!r.ok)throw 1;return r.json()})
   .then(function(d){show(d.invitation,d.guest,false)})
   .catch(function(e){msg(e===404?'Cette invitation est introuvable. Demandez un nouveau lien aux mariés.':'L\'invitation n\'a pas pu se charger. Actualisez la page.')});
 })();

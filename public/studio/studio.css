@@ -148,3 +148,18 @@ td .btn{white-space:nowrap}
 
 .manual{grid-template-columns:2fr 1.2fr .8fr 2fr auto;align-items:end}@media (max-width:760px){.manual{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chip{white-space:nowrap}@media (max-width:600px){.chips{flex-basis:100%}}
+
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--gold);color:#fff;font-size:11px;font-weight:700;margin-inline-start:4px}
+.pill.warn{background:#fbeede;color:#9a5b12}.pill.good{background:var(--okbg);color:var(--ok)}.pill.bad{background:var(--badbg);color:var(--bad)}.pill.info{background:var(--accent-soft);color:var(--accent)}
+.od{display:flex;flex-direction:column;gap:14px}
+.od-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.od-head h2{margin:0}
+.od-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+@media (max-width:860px){.od-grid{grid-template-columns:minmax(0,1fr)}}
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin:0}
+.kv dt{color:var(--muted);font-size:12.5px;font-weight:600}.kv dd{margin:0;overflow-wrap:anywhere}
+.od-h{font-family:var(--display);font-size:19px;margin:0 0 8px}
+.proofbox{border:1px dashed var(--line);border-radius:12px;min-height:160px;display:grid;place-items:center;padding:8px;background:var(--bg)}
+.proofbox img{max-width:100%;max-height:420px;border-radius:8px}
+.od-actions{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.od-foot{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+tr.sel td{background:var(--accent-soft)}

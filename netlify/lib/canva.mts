@@ -1,29 +1,32 @@
 /**
  * Canva → Reefq sync.
  * The designer saves templates in one Canva folder (CANVA_FOLDER_ID). Every 15 minutes new or edited
- * designs are exported (PNG, plus MP4 when the title contains [anim]) into R2 and listed at /templates.json.
- * Title convention: "<Theme> · <Name> | tag1, tag2 [anim]"  ·  [draft] hides a design.
+ * designs are exported (PNG, plus MP4 when the title contains [anim]) into the "files" blob store and
+ * listed at /templates.json.  Title convention: "<Theme> · <Name> | tag1, tag2 [anim]"  ·  [draft] hides a design.
  */
-import { isStudio } from './auth.js';
-import { b64url } from './lib.js';
+import { state, files } from './stores.mts';
+import { b64url, env as E } from './util.mts';
 const API = 'https://api.canva.com/rest/v1';
 const AUTH = 'https://www.canva.com/api/oauth/authorize';
 const SCOPES = 'design:meta:read design:content:read folder:read';
 
-export async function canvaRoutes(req, env, url) {
-  const p = url.pathname;
-  if (p === '/templates.json') return catalogResponse(env);
-  if (p.startsWith('/media/')) return mediaResponse(env, p.slice(7));
-  if (p === '/auth/canva/start') { if (!(await isStudio(req, env))) return new Response('Sign in to the studio first.', { status: 401 }); return authStart(env, url); }
-  if (p === '/auth/canva/callback') return authCallback(env, url);
-  return null;
+/* Adapter so the sync code reads like before: env.X → Netlify env, env.STATE → state store, env.MEDIA → files store */
+function mkEnv(): any {
+  const st = state(), fl = files();
+  return new Proxy({}, { get(_t, k: string) {
+    if (k === 'STATE') return {
+      get: async (key: string) => { const r: any = await st.get('canva/' + key, { type: 'json' }); if (!r) return null; if (r.exp && r.exp < Date.now()) return null; return r.v; },
+      put: (key: string, v: string, o?: any) => st.setJSON('canva/' + key, { v, exp: o && o.expirationTtl ? Date.now() + o.expirationTtl * 1000 : 0 }),
+      delete: (key: string) => st.delete('canva/' + key) };
+    if (k === 'MEDIA') return { put: (key: string, body: any) => fl.set(key, body), delete: (key: string) => fl.delete(key) };
+    return E(k);
+  } });
 }
-export async function syncNow(env, opts) { if (!env.CANVA_FOLDER_ID) return { error: 'Set CANVA_FOLDER_ID first.' }; return sync(env, opts || {}); }
-export async function scheduledSync(env) {
-  if (!env.CANVA_FOLDER_ID || !(await env.STATE.get('refresh_token'))) return;
-  try { await sync(env, {}); } catch (e) { await putJSON(env, 'status', { lastError: String(e.message || e), lastRun: Date.now() }); }
-}
-export async function canvaStatus(env) { return { connected: !!(await env.STATE.get('refresh_token')), ...(await getJSON(env, 'status', {})) }; }
+export async function authStartResponse(url: URL) { return authStart(mkEnv(), url); }
+export async function authCallbackResponse(url: URL) { return authCallback(mkEnv(), url); }
+export async function syncNow(opts?: any) { const env = mkEnv(); if (!env.CANVA_FOLDER_ID) return { error: 'Set CANVA_FOLDER_ID first.' }; return sync(env, opts || {}); }
+export async function canvaStatus() { const env = mkEnv(); return { connected: !!(await env.STATE.get('refresh_token')), ...(await getJSON(env, 'status', {})) }; }
+export async function catalog() { const c = await getJSON(mkEnv(), 'catalog', { items: [] }); return { updatedAt: c.updatedAt || null, items: c.items.map(({ imageKey, videoKey, editUrl, ...rest }: any) => rest) }; }
 
 /* ---------------- OAuth (Authorization Code + PKCE) ---------------- */
 async function authStart(env, url) {
@@ -47,7 +50,7 @@ async function authCallback(env, url) {
   await env.STATE.delete('pkce:' + state);
   return new Response('<meta charset="utf-8"><body style="font:16px system-ui;padding:40px">Reefq est connecté à Canva. <a href="/studio/">Retour au studio</a></body>', { headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
-function redirectUri(env) { return env.SITE_URL.replace(/\/$/, '') + '/auth/canva/callback'; }
+function redirectUri(env) { return (env.SITE_URL || env.URL).replace(/\/$/, '') + '/auth/canva/callback'; }
 async function tokenRequest(env, body) {
   const r = await fetch(API + '/oauth/token', {
     method: 'POST',
@@ -132,7 +135,7 @@ async function exportTo(env, designId, format, key, contentType) {
   if (j.status !== 'success' || !j.urls || !j.urls[0]) throw new Error('Export failed for ' + designId + ': ' + JSON.stringify(j.error || j.status));
   const file = await fetch(j.urls[0]);
   if (!file.ok) throw new Error('Download failed ' + file.status);
-  await env.MEDIA.put(key, file.body, { httpMetadata: { contentType, cacheControl: 'public, max-age=31536000, immutable' } });
+  await env.MEDIA.put(key, new Blob([await file.arrayBuffer()], { type: contentType }));
 }
 export function parseTitle(t) {
   const anim = /\[anim\]/i.test(t), draft = /\[draft\]/i.test(t);
@@ -146,17 +149,6 @@ export function parseTitle(t) {
 }
 
 /* ---------------- Serving ---------------- */
-async function catalogResponse(env) {
-  const c = await getJSON(env, 'catalog', { items: [] });
-  const items = c.items.map(({ imageKey, videoKey, editUrl, ...rest }) => rest);
-  return new Response(JSON.stringify({ updatedAt: c.updatedAt || null, items }), { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=60' } });
-}
-async function mediaResponse(env, key) {
-  const obj = await env.MEDIA.get(decodeURIComponent(key));
-  if (!obj) return new Response('Not found', { status: 404 });
-  const h = new Headers(); obj.writeHttpMetadata && obj.writeHttpMetadata(h); h.set('etag', obj.httpEtag || ''); h.set('access-control-allow-origin', '*');
-  return new Response(obj.body, { headers: h });
-}
 function publicMedia(env, key) { return '/media/' + key; }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function getJSON(env, k, d) { const v = await env.STATE.get(k); return v ? JSON.parse(v) : d; }

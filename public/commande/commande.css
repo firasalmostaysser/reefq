@@ -1,0 +1,49 @@
+/* Client space: the landing page's ivory paper and teal, laid out as a single column of steps. */
+.cs{max-width:760px;margin:0 auto;padding:28px 16px 64px;display:flex;flex-direction:column;gap:18px}
+.msg{text-align:center;color:var(--muted);padding:20vh 0}
+.head h1{font:500 clamp(34px,6vw,48px)/1.1 var(--display);margin:0 0 6px}
+.meta{margin:0;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font:700 12px var(--ui);letter-spacing:.04em;background:var(--soft);color:var(--accent)}
+.pill.warn{background:#fbeede;color:#9a5b12}.pill.bad{background:#f8e3e1;color:#a23b3b}.pill.good{background:#e0f1e7;color:#2d7a4c}
+.track{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.track{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.track li{border-top:3px solid var(--line);padding-top:8px;font-size:13px;color:var(--muted);font-weight:600}
+.track li.done{border-color:var(--accent);color:var(--fg)}
+.track li.now{border-color:var(--gold);color:var(--fg)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card.ok{border-color:#9fd1b3}
+.card h2{font:600 26px/1.2 var(--display);margin:0 0 10px}
+.card h3{font:600 20px var(--display);margin:22px 0 6px}
+.lead-s{font-size:18px;margin:0 0 14px}.lead-s b{font-size:24px;font-family:var(--display)}
+.muted{color:var(--muted)}.small{font-size:14px}
+.bank{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:0 0 12px;padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+.bank dt{color:var(--muted);font-size:13px;font-weight:600}
+.bank dd{margin:0;font:600 16px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere;user-select:all}
+.bank button{font-size:12px;padding:6px 10px}
+.alert{background:#f8e3e1;color:#7e2c2c;border-radius:10px;padding:12px 14px;margin:0 0 12px}
+.upload{display:flex;flex-direction:column;gap:10px;align-items:flex-start;max-width:none}
+.drop{display:flex;align-items:center;justify-content:center;width:100%;min-height:90px;border:1.5px dashed var(--line);border-radius:12px;cursor:pointer;color:var(--accent);font-weight:600;text-align:center;padding:12px;box-sizing:border-box}
+.drop:focus-within{outline:2px solid var(--accent)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+#proof-prev{max-width:220px;max-height:260px;border-radius:10px;border:1px solid var(--line)}
+.err{color:#b3443a;margin:0}
+.linkrow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.linkrow code{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-wrap:anywhere;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.tile b{display:block;font:600 30px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tile span{font-size:12px;color:var(--muted);font-weight:600}
+.bar{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:16px}
+.bar h3{margin:0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.empty{text-align:center;color:var(--muted);padding:18px}
+.glinks{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
+.glinks li{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.keep{text-align:center}
+.linkbtn{all:unset;cursor:pointer;color:var(--accent);font-weight:600;text-decoration:underline}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-weight:600;font-size:14px;z-index:50}

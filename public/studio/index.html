@@ -29,7 +29,7 @@
       <button role="tab" id="tab-design" aria-selected="true" data-tab="design">Design</button>
       <button role="tab" id="tab-guests" aria-selected="false" data-tab="guests">Guests &amp; RSVPs</button>
       <button role="tab" id="tab-deliver" aria-selected="false" data-tab="deliver">Deliver</button>
-      <button role="tab" id="tab-orders" aria-selected="false" data-tab="orders">Orders</button>
+      <button role="tab" id="tab-orders" aria-selected="false" data-tab="orders">Orders <span class="badge" id="o-badge" hidden></span></button>
       <button role="tab" id="tab-settings" aria-selected="false" data-tab="settings">Settings</button>
     </nav>
   </header>
@@ -206,8 +206,34 @@
     </div>
   </section>
   <section id="p-orders" class="panel" hidden>
-    <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:24px;margin:0;flex:1">Orders from the website</h2><span class="status" id="o-count"></span><button class="btn sm" type="button" id="o-refresh">Refresh</button></div>
-    <div class="tablewrap"><table><thead><tr><th>Received</th><th>Couple</th><th>Date &amp; city</th><th style="text-align:right">Guests</th><th>Offer</th><th>WhatsApp</th></tr></thead><tbody id="o-rows"></tbody></table></div>
+    <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:24px;margin:0;flex:1">Orders &amp; payments</h2><div class="chips" id="o-filters" style="flex:0 1 auto"></div><button class="btn sm" type="button" id="o-refresh">Refresh</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Received</th><th>Code</th><th>Couple</th><th>Offer</th><th style="text-align:right">Deposit</th><th>Status</th><th></th></tr></thead><tbody id="o-rows"></tbody></table></div>
+    <div class="card od" id="o-detail" hidden>
+      <div class="od-head"><h2 id="od-title"></h2><span class="pill" id="od-status"></span><button class="btn sm ghost" type="button" id="od-close" style="margin-inline-start:auto">Close</button></div>
+      <div class="od-grid">
+        <div>
+          <dl class="kv" id="od-info"></dl>
+          <label class="f" style="margin-top:12px"><span>Internal note</span><textarea id="od-note" placeholder="Visible only in the studio"></textarea></label>
+          <button class="btn sm" type="button" id="od-note-save" style="margin-top:6px">Save note</button>
+        </div>
+        <div>
+          <h3 class="od-h">Payment proof</h3>
+          <div class="proofbox" id="od-proof"><p class="hint">No proof uploaded yet.</p></div>
+          <div class="chips" id="od-proofs" style="margin-top:6px"></div>
+          <div class="od-actions" id="od-pay-actions">
+            <label class="f"><span>Amount received (DT)</span><input type="number" id="od-amount" min="0"></label>
+            <button class="btn primary" type="button" id="od-confirm">Confirm payment &amp; open client space</button>
+            <label class="f"><span>Reason if not found</span><input id="od-reason" placeholder="Ex. virement introuvable, montant incorrect"></label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" id="od-reject">Proof not valid</button><button class="btn ghost" type="button" id="od-cancel">Cancel order</button><button class="btn ghost" type="button" id="od-reopen" hidden>Reopen</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="od-foot">
+        <button class="btn" type="button" id="od-invite">Create invitation from this order</button>
+        <a class="btn primary" id="od-wa" target="_blank" rel="noopener">Send client space on WhatsApp</a>
+        <button class="btn ghost" type="button" id="od-copy">Copy client space link</button>
+      </div>
+    </div>
   </section>
 
   <section id="p-settings" class="panel" hidden>
@@ -215,6 +241,10 @@
       <h2>Canva templates</h2>
       <p class="hint" id="s-canva"></p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
+    </div>
+    <div class="card">
+      <h2>Bank transfer (RIB)</h2>
+      <p class="hint" id="s-bank"></p>
     </div>
     <div class="card">
       <h2>Account</h2>

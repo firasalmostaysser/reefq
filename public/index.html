@@ -78,18 +78,18 @@
     <details><summary data-i="q2">Peut-on modifier après l'envoi ?</summary><p data-i="a2">Oui. Un changement d'heure ou de lieu est mis à jour sur le même lien, sans renvoyer l'invitation.</p></details>
     <details><summary data-i="q3">Comment je vois qui vient ?</summary><p data-i="a3">Vous recevez un tableau avec chaque réponse, le nombre de personnes et les remarques, et un fichier pour le traiteur.</p></details>
     <details><summary data-i="q4">Et pour les invités qui préfèrent le papier ?</summary><p data-i="a4">L'offre Prestige ajoute des cartes imprimées avec un QR code qui ouvre l'invitation digitale.</p></details>
-    <details><summary data-i="q5">Comment payer ?</summary><p data-i="a5">Un acompte de 50 % à la commande, le reste à la validation de votre invitation.</p></details>
+    <details><summary data-i="q5">Comment payer ?</summary><p data-i="a5">Par virement bancaire : un acompte de 50 % à la commande. Vous envoyez la photo du reçu depuis votre espace client, nous vérifions et confirmons. Le reste à la livraison de votre invitation.</p></details>
   </section>
 
   <section class="order" id="order">
     <h2 data-i="ord_t">Réservez votre invitation</h2>
-    <p class="sub" data-i="ord_s">Remplissez ces quelques lignes. Le message s'ouvre dans WhatsApp, prêt à nous être envoyé.</p>
+    <p class="sub" data-i="ord_s">Remplissez ces quelques lignes. Vous arrivez ensuite sur votre espace client pour régler l'acompte par virement.</p>
     <form id="of" novalidate>
       <div class="g2">
         <label class="f"><span data-i="o_names">Vos prénoms</span><input id="o-names" placeholder="Yasmine & Karim" required></label>
         <label class="f"><span data-i="o_date">Date du mariage</span><input id="o-date" type="date"></label>
         <label class="f"><span data-i="o_city">Ville</span><input id="o-city" placeholder="Tunis"></label>
-        <label class="f"><span data-i="o_phone">Votre WhatsApp</span><input id="o-phone" type="tel" placeholder="+216 …" autocomplete="tel"></label>
+        <label class="f"><span data-i="o_phone">Votre WhatsApp</span><input id="o-phone" type="tel" placeholder="+216 …" autocomplete="tel" required></label>
         <label class="f"><span data-i="o_guests">Nombre d'invités (environ)</span><input id="o-guests" type="number" min="1" placeholder="250"></label>
         <label class="f"><span data-i="o_plan">Offre</span><select id="o-plan"><option>Essentiel</option><option selected>Signature</option><option>Prestige</option></select></label>
         <label class="f" id="o-model-wrap" hidden><span data-i="o_model">Modèle</span><select id="o-model"></select></label>
@@ -98,7 +98,7 @@
       <input id="o-web" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
       <label class="f"><span data-i="o_note">Un mot sur votre projet (facultatif)</span><textarea id="o-note"></textarea></label>
       <p class="err" id="o-err" hidden></p>
-      <button class="btn primary" type="submit" data-i="o_send">Envoyer sur WhatsApp</button>
+      <button class="btn primary" type="submit" data-i="o_send">Réserver ma date</button>
       <p class="small" id="o-alt"></p>
     </form>
   </section>
