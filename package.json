@@ -1,0 +1,17 @@
+{
+  "name": "reefq",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler d1 migrations apply reefq --local && wrangler dev --port 8788",
+    "deploy": "wrangler d1 migrations apply reefq --remote && wrangler deploy",
+    "test": "node test/canva.test.mjs",
+    "test:e2e": "node test/smoke.mjs",
+    "promo": "python3 tools/promo/build_promo.py && node tools/promo/render_posters.cjs && node tools/promo/render_videos.cjs",
+    "assets": "python3 tools/render_assets.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.50.0",
+    "wrangler": "^4.0.0"
+  }
+}

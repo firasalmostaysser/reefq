@@ -1,0 +1,5 @@
+STUDIO_PASSWORD=change-me
+SESSION_SECRET=a-long-random-string-at-least-32-characters
+# CANVA_CLIENT_ID=
+# CANVA_CLIENT_SECRET=
+# ANTHROPIC_API_KEY=

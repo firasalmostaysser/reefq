@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reefq Studio</title>
+<link rel="icon" href="/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="/assets/invitation.css">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/studio/studio.css">
+<style>[hidden]{display:none!important}</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <form id="l-form" class="login-card">
+    <img id="l-logo" alt="Reefq رِفق">
+    <h1>Studio</h1>
+    <label class="f"><span>Password</span><input type="password" id="l-pass" autocomplete="current-password" required></label>
+    <p class="err" id="l-err" hidden></p>
+    <button class="btn primary" type="submit">Sign in</button>
+  </form>
+</div>
+<div id="studio">
+  <header class="top">
+    <div class="brand"><h1><span class="logo"><img class="lg-l" id="brand-logo" alt="Reefq رِفق"><img class="lg-d" id="brand-logo-d" alt="Reefq رِفق"></span><span class="vh">Reefq Studio</span></h1><small>Studio · Digital invitations</small></div>
+    <nav class="tabs" role="tablist" aria-label="Studio sections">
+      <button role="tab" id="tab-design" aria-selected="true" data-tab="design">Design</button>
+      <button role="tab" id="tab-guests" aria-selected="false" data-tab="guests">Guests &amp; RSVPs</button>
+      <button role="tab" id="tab-deliver" aria-selected="false" data-tab="deliver">Deliver</button>
+      <button role="tab" id="tab-orders" aria-selected="false" data-tab="orders">Orders</button>
+      <button role="tab" id="tab-settings" aria-selected="false" data-tab="settings">Settings</button>
+    </nav>
+  </header>
+
+  <div class="bar">
+    <div class="chips" id="chips" aria-label="Invitations"></div>
+    <button class="btn ghost" id="btn-new" type="button">+ New couple</button>
+    <button class="btn ghost" id="btn-dup" type="button" hidden>Duplicate</button>
+    <button class="btn" id="btn-del" type="button" hidden>Delete</button>
+    <button class="btn primary" id="btn-save" type="button">Save invitation</button>
+    <span class="status" id="status" role="status"></span>
+  </div>
+
+  <section id="p-design" class="desk">
+    <form class="form" id="form" autocomplete="off" onsubmit="return false">
+      <fieldset>
+        <legend>The couple</legend>
+        <p class="hint">Arabic names are used when a guest reads the invitation in Arabic.</p>
+        <div class="grid">
+          <label class="f"><span>Bride</span><input id="k-a-name" data-k="a.name"></label>
+          <label class="f"><span>Bride (Arabic)</span><input id="k-a-ar" data-k="a.ar" dir="rtl"></label>
+          <label class="f"><span>Groom</span><input id="k-b-name" data-k="b.name"></label>
+          <label class="f"><span>Groom (Arabic)</span><input id="k-b-ar" data-k="b.ar" dir="rtl"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>The big day</legend>
+        <div class="grid">
+          <label class="f full"><span>Occasion</span><select id="k-type" data-k="eventType"><option value="wedding">Wedding · Mariage · زفاف</option><option value="engagement">Engagement · Fiançailles · خطوبة</option><option value="contract">Marriage contract · Contrat · عقد القران</option><option value="henna">Henna night · Henné · ليلة الحنّة</option></select></label>
+          <label class="f"><span>Date</span><input type="date" id="k-date" data-k="date"></label>
+          <label class="f"><span>Time</span><input type="time" id="k-time" data-k="time"></label>
+          <label class="f"><span>Venue</span><input id="k-venue" data-k="venue"></label>
+          <label class="f"><span>City</span><input id="k-city" data-k="city"></label>
+          <label class="f full"><span>Google Maps link (optional)</span><input id="k-maps" data-k="maps" placeholder="https://maps.app.goo.gl/…"></label>
+          <label class="f"><span>Dress code</span><input id="k-dress" data-k="dress"></label>
+          <label class="f"><span>Extra note</span><input id="k-note" data-k="note"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Celebrations</legend>
+        <p class="hint">Henna, contract, ceremony, dinner… Labels translate automatically for each guest.</p>
+        <div class="events" id="events"></div>
+        <div style="margin-top:10px"><button class="btn sm" type="button" id="ev-add">+ Add celebration</button></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Wording</legend>
+        <div class="write-row">
+          <label class="f" style="flex:0 1 200px"><span>Tone</span>
+            <select id="tone"><option value="classic and elegant">Classic &amp; elegant</option><option value="poetic and romantic">Poetic &amp; romantic</option><option value="warm, modern and simple">Warm &amp; modern</option><option value="traditional and formal, in the voice of both families">Traditional, from the families</option></select></label>
+          <button class="btn" type="button" id="btn-write" style="align-self:flex-end">Write it with Claude</button>
+          <span class="status" id="write-status" style="align-self:flex-end"></span>
+        </div>
+        <div class="grid three">
+          <label class="f"><span>Français</span><textarea id="k-msg-fr" data-k="message.fr"></textarea></label>
+          <label class="f"><span>العربية</span><textarea id="k-msg-ar" data-k="message.ar" dir="rtl"></textarea></label>
+          <label class="f"><span>English</span><textarea id="k-msg-en" data-k="message.en"></textarea></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Look &amp; feel</legend>
+        <div class="themes" id="themes"></div>
+        <div class="grid" style="margin-top:14px">
+          <label class="f"><span>Opens in</span><select id="k-lang" data-k="lang"><option value="fr">Français</option><option value="ar">العربية</option><option value="en">English</option></select></label>
+          <label class="f"><span>Song link (MP3 plays inside; YouTube or Spotify opens in a new tab)</span><input id="k-music" data-k="musicUrl" placeholder="https://…"></label>
+          <div class="f full"><span>Canva template from your designer</span><select id="k-canva"><option value="">None: use the Reefq card</option></select><small class="hint" id="canva-note" style="margin:4px 0 0"></small></div>
+          <div class="f full"><span>Polaroid photos (up to 3)</span><div class="photos" id="photos"></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Envelope</legend>
+        <p class="hint">Real paper, lining and wax seal. Changes show on the envelope in the preview.</p>
+        <div class="envopts">
+          <div class="f"><span>Paper</span><div class="sw-row" id="sw-paper"></div></div>
+          <div class="f"><span>Wax seal</span><div class="sw-row" id="sw-seal"></div></div>
+          <div class="f"><span>Lining pattern</span><div class="sw-row" id="sw-liner"></div></div>
+          <div class="grid">
+            <label class="f"><span>Lining colour</span><input type="color" id="env-linerbg"></label>
+            <label class="f"><span>Table colour</span><input type="color" id="env-table"></label>
+            <label class="f full"><span>Seal monogram (leave empty for initials)</span><input id="env-mono" maxlength="7" placeholder="Y &amp; K"></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Sections</legend>
+        <div class="toggles">
+          <label><input type="checkbox" id="show-countdown" data-show="countdown"> Countdown</label>
+          <label><input type="checkbox" id="show-program" data-show="program"> Celebrations &amp; dress code</label>
+          <label><input type="checkbox" id="show-photos" data-show="photos"> Photos</label>
+          <label><input type="checkbox" id="show-rsvp" data-show="rsvp"> RSVP form</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Replies</legend>
+        <div class="grid">
+          <label class="f"><span>Reply by</span><input type="date" id="k-rsvpby" data-k="rsvpBy"></label>
+          <label class="f"><span>Seats per invitation</span><input type="number" min="1" max="12" id="k-max" data-k="maxGuests"></label>
+          <label class="f"><span>Couple's WhatsApp (replies fallback)</span><input id="k-wa" data-k="whatsapp" placeholder="+216 …"></label>
+
+        </div>
+      </fieldset>
+    </form>
+
+    <aside class="previewcol" aria-label="Live preview">
+      <div class="phone"><div class="screen" id="screen"></div></div>
+      <div class="pv-tools">
+        <button class="btn sm" type="button" id="pv-cover">Show envelope</button>
+        <button class="btn sm" type="button" id="pv-open">Show inside</button>
+        <button class="btn sm primary pv-close" type="button" id="pv-close">Hide preview</button>
+      </div>
+    </aside>
+  </section>
+
+  <button class="pv-fab" type="button" id="pv-fab" aria-label="Show preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>Preview</button>
+  <section id="p-guests" class="panel" hidden>
+    <div class="tiles" id="tiles"></div>
+    <div class="card">
+      <h2>Guest list</h2>
+      <p class="hint">One guest or family per line: <b>name, WhatsApp number, seats</b>. Each gets a personal invitation that greets them by name and reserves their seats.</p>
+      <div class="grid" style="grid-template-columns:minmax(0,1fr) auto;align-items:end">
+        <label class="f"><span>Paste guests</span><textarea id="g-paste" placeholder="Famille Ben Salah, +216 98 123 456, 4&#10;Ahmed Trabelsi, 22 555 111, 2"></textarea></label>
+        <button class="btn primary" type="button" id="g-add">Add guests</button>
+      </div>
+      <div class="bar" style="padding:12px 0 6px"><span class="status" id="g-sum" style="flex:1"></span><select id="g-lang" class="btn sm" aria-label="Message language"><option value="fr">Message FR</option><option value="ar">رسالة AR</option><option value="en">Message EN</option></select><button class="btn sm" type="button" id="g-csv">Download guest list</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Guest</th><th>WhatsApp</th><th style="text-align:right">Seats</th><th>Status</th><th>Send</th><th></th></tr></thead><tbody id="g-rows"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2>Add a reply by hand</h2>
+      <p class="hint">For answers that came by phone or WhatsApp.</p>
+      <form class="grid manual" id="manual" onsubmit="return false">
+        <label class="f"><span>Guest name</span><input id="m-name"></label>
+        <label class="f"><span>Answer</span><select id="m-att"><option value="yes">Coming</option><option value="no">Not coming</option></select></label>
+        <label class="f"><span>People</span><input type="number" id="m-guests" min="0" max="20" value="1"></label>
+        <label class="f"><span>Note</span><input id="m-note"></label>
+        <button class="btn primary" type="button" id="m-add">Add</button>
+      </form>
+    </div>
+    <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:22px;margin:0;flex:1">Replies</h2><button class="btn sm" type="button" id="btn-csv">Download CSV</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Guest</th><th>Answer</th><th style="text-align:right">People</th><th>Dietary</th><th>Message</th><th>Received</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+
+  <section id="p-deliver" class="panel" hidden>
+    <div class="card">
+      <h2>From brief to RSVPs</h2>
+      <div class="flow">
+        <div><span class="who">Couple</span><b>1. Brief</b>Names, dates, venues, photos, song, theme.</div>
+        <div><span class="who">Reefq Studio</span><b>2. Generate</b>Fill this form. The envelope, seal, botanicals and pages build themselves.</div>
+        <div><span class="who">Claude</span><b>3. Wording</b>Invitation text in French, Arabic and English, in the tone they choose.</div>
+        <div><span class="who">You</span><b>4. Deliver</b>A personal link per family on WhatsApp, and a QR code for printed cards.</div>
+        <div><span class="who">Guests</span><b>5. Reply</b>RSVPs land in Guests &amp; RSVPs. Download as CSV for the caterer.</div>
+      </div>
+    </div>
+    <div class="deliver">
+      <div class="card">
+        <h2>Message for guests</h2>
+        <div class="langtabs" id="msg-langs"></div>
+        <div class="msgbox" id="msgbox"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" type="button" id="btn-copymsg">Copy message</button></div>
+        <h2 style="margin-top:20px">Guest link</h2>
+        <div class="copybox"><code id="glink"></code><button class="btn sm" type="button" id="btn-copylink">Copy</button><a class="btn sm" id="glink-open" target="_blank" rel="noopener" hidden>Open</a></div>
+        <p class="hint" style="margin-top:8px" id="glink-hint"></p>
+      </div>
+      <div class="card">
+        <h2>QR for printed cards</h2>
+        <div class="qr" id="qr"></div>
+        <p class="hint" style="margin-top:8px">Points to the guest link. Paste it on the printed card design in Canva.</p>
+      </div>
+    </div>
+  </section>
+  <section id="p-orders" class="panel" hidden>
+    <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:24px;margin:0;flex:1">Orders from the website</h2><span class="status" id="o-count"></span><button class="btn sm" type="button" id="o-refresh">Refresh</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Received</th><th>Couple</th><th>Date &amp; city</th><th style="text-align:right">Guests</th><th>Offer</th><th>WhatsApp</th></tr></thead><tbody id="o-rows"></tbody></table></div>
+  </section>
+
+  <section id="p-settings" class="panel" hidden>
+    <div class="card">
+      <h2>Canva templates</h2>
+      <p class="hint" id="s-canva"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
+    </div>
+    <div class="card">
+      <h2>Account</h2>
+      <button class="btn" type="button" id="s-logout">Sign out</button>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="/assets/engine.js"></script>
+<script src="/studio/studio.js"></script>
+</body>
+</html>
