@@ -5,6 +5,7 @@ import { isStudio, login, logout } from '../lib/auth.mts';
 import { wording } from '../lib/wording.mts';
 import { canvaStatus } from '../lib/canva.mts';
 import { THEME_IDS } from '../lib/themes.mts';
+import { notify, later, siteUrl, alertsConfigured } from '../lib/notify.mts';
 
 const MAX_INVITE_BYTES = 900_000;
 const PRICES: Record<string, number> = { Essentiel: 149, Signature: 249, Prestige: 349 };
@@ -28,7 +29,8 @@ async function route(req: Request, context: Context): Promise<Response> {
   /* ---------------- public ---------------- */
   if (p === '/api/login' && m === 'POST') return login(req, context);
   if (p === '/api/logout' && m === 'POST') return logout();
-  if (p === '/api/config' && m === 'GET') return json({ whatsapp: env('REEFQ_WHATSAPP'), prices: PRICES, depositPercent: depositPct() });
+  if (p === '/api/config' && m === 'GET') return json({ whatsapp: env('REEFQ_WHATSAPP'), prices: PRICES, depositPercent: depositPct(),
+    posthog: env('POSTHOG_KEY') ? { key: env('POSTHOG_KEY'), host: env('POSTHOG_HOST') || 'https://us.i.posthog.com' } : null });
 
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})$/)) && m === 'GET') return publicInvitation(mm[1], url.searchParams.get('g'));
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})\/rsvp$/)) && m === 'POST') return publicRsvp(req, context, mm[1]);
@@ -50,7 +52,7 @@ async function route(req: Request, context: Context): Promise<Response> {
 
   /* ---------------- studio (signed in) ---------------- */
   if (!(await isStudio(req))) return err(401, 'Sign in to the studio.');
-  if (p === '/api/me') return json({ ok: true, wording: !!env('ANTHROPIC_API_KEY'), canva: !!env('CANVA_CLIENT_ID'), canvaStatus: await canvaStatus().catch(() => null), bankReady: !!env('BANK_RIB') });
+  if (p === '/api/me') return json({ ok: true, wording: !!env('ANTHROPIC_API_KEY'), canva: !!env('CANVA_CLIENT_ID'), canvaStatus: await canvaStatus().catch(() => null), bankReady: !!env('BANK_RIB'), alerts: alertsConfigured(), posthog: !!env('POSTHOG_KEY') });
 
   if (p === '/api/invitations' && m === 'GET') {
     const items = (await listJSON(invitations())).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -209,6 +211,7 @@ async function createOrder(req: Request, context: Context) {
     history: [{ at: now, status: 'awaiting_payment', note: 'Commande reçue', by: 'client' }] };
   for (const k of ['names', 'date', 'city', 'guests', 'theme', 'model', 'note', 'phone', 'lang']) o[k] = clampStr(b[k], 600);
   await orders().setJSON(code, o);
+  later(context, notify(`Nouvelle commande ${code}`, [`${o.names} · ${o.plan} ${price} DT (acompte ${o.deposit} DT)`, `Date : ${o.date || '—'} · ${o.city || '—'} · ${o.guests || '?'} invités`, `Thème : ${o.theme || '—'}${o.model ? ' · modèle ' + o.model : ''}`, `WhatsApp : ${o.phone}`, o.note ? `Note : ${o.note}` : '', `${siteUrl()}/studio/`].filter(Boolean).join('\n')));
   return json({ code, token, url: `/commande/${code}?t=${token}` });
 }
 
@@ -265,6 +268,7 @@ async function uploadProof(req: Request, context: Context, o: any) {
   o.status = 'proof_sent';
   o.history.push({ at: Date.now(), status: 'proof_sent', note: 'Justificatif de virement envoyé', by: 'client' });
   await saveOrder(o);
+  later(context, notify(`Justificatif reçu ${o.code}`, `${o.names} · acompte attendu ${o.deposit} DT (${o.plan}).\nVérifiez le compte puis confirmez dans le Studio : ${siteUrl()}/studio/`, { name: `${o.code}.${ext}`, type, data: buf }));
   return json(await clientView(o));
 }
 

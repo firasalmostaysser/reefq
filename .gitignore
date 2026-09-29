@@ -9,3 +9,4 @@ public/_promo/
 .env
 test/out-*.png
 .wrangler/
+test/out-themes/

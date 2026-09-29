@@ -1,6 +1,8 @@
 import { chromium } from 'playwright';
-const out=process.env.OUT, B='http://localhost:8888/_promo/themes.html';
-const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+const out=process.env.OUT||'test/out-themes', B=''+(process.env.BASE||'http://localhost:8888')+'/theme-preview.html';
+import { mkdirSync } from 'node:fs';
+mkdirSync(out,{recursive:true});
+const b=await chromium.launch(process.env.CHROMIUM?{executablePath:process.env.CHROMIUM}:{});
 const errs=[];
 const p=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});p.on('pageerror',e=>errs.push(e.message));
 const themes=['sidi','kairouan','oldmoney','sauge','bordeaux','sahara'];

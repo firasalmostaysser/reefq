@@ -1,0 +1,23 @@
+// Unit test for team alerts: both channels, with fetch mocked.
+import assert from 'node:assert';
+const E = { TELEGRAM_BOT_TOKEN: 'tok', TELEGRAM_CHAT_ID: '42', RESEND_API_KEY: 'rk', ALERT_EMAIL: 'a@x.tn, b@x.tn' };
+globalThis.Netlify = { env: { get: k => E[k] || '' } };
+const calls = [];
+globalThis.fetch = async (url, init) => { calls.push({ url, init }); return new Response('{}'); };
+const { notify, alertsConfigured } = await import('../netlify/lib/notify.mts');
+assert.deepEqual(alertsConfigured(), { telegram: true, email: true });
+await notify('Nouvelle commande RQ-TEST', 'hello');
+assert.equal(calls.length, 2);
+assert.match(calls[0].url, /api\.telegram\.org\/bottok\/sendMessage/);
+assert.equal(JSON.parse(calls[0].init.body).chat_id, '42');
+const mail = JSON.parse(calls[1].init.body);
+assert.deepEqual(mail.to, ['a@x.tn', 'b@x.tn']);
+calls.length = 0;
+await notify('Justificatif', 'x', { name: 'RQ-TEST.jpg', type: 'image/jpeg', data: new Uint8Array(2000).buffer });
+assert.match(calls[0].url, /sendDocument/);
+assert.ok(calls[0].init.body instanceof FormData);
+assert.equal(JSON.parse(calls[1].init.body).attachments[0].filename, 'RQ-TEST.jpg');
+for (const k in E) delete E[k]; calls.length = 0;
+await notify('none', 'x');
+assert.equal(calls.length, 0);
+console.log('Team alerts: ok');

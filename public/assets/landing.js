@@ -12,7 +12,7 @@ var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[];
 function demo(){if(h)h.destroy();var el=document.createElement('div');$('#demo').innerHTML='';$('#demo').appendChild(el);var d=JSON.parse(JSON.stringify(DEMO));d.theme=cur;if(demoCanva)d.canva=demoCanva;
   h=ReefqInvite.render(el,d,{lang:lang,guest:{id:'x',name:lang==='ar'?'عائلة بن صالح':'Famille Ben Salah',seats:4},preview:true,badge:lang==='ar'?'دعوة تجريبية':'Démo',onRsvp:function(){return new Promise(function(r){setTimeout(function(){r({})},500)})}})}
 function themes(){$('#themes').innerHTML=THEMES.map(function(t){return '<button type="button" data-t="'+t[0]+'" aria-pressed="'+(cur===t[0])+'"><i style="background:'+t[2]+'"></i>'+t[1]+'</button>'}).join('');
-  $$('[data-t]').forEach(function(b){b.onclick=function(){cur=b.dataset.t;themes();demo()}})}
+  $$('[data-t]').forEach(function(b){b.onclick=function(){cur=b.dataset.t;themes();demo();if(window.rqTrack)window.rqTrack('theme_previewed',{theme:cur})}})}
 var AR={nav_how:'كيف نعمل',nav_offers:'العروض',nav_faq:'أسئلة',cta_short:'اطلب الآن',eyebrow:'دعوات زفاف رقمية · تونس',h1:'دعوة تُفتح كأنها ظرف حقيقي.',lead:'ورق قطني، ختم من الشمع بالحروف الأولى من اسميكما، وبطانة مذهّبة. كل ضيف يصله استدعاؤه باسمه على واتساب، وتتابعون الردود مباشرة.',cta:'احجزوا موعدكم',cta2:'شاهدوا العروض · ابتداءً من 149 د',p1:'Français · العربية · English',p2:'جاهزة في 48 ساعة',p3:'الردود مباشرة',demo_hint:'المسوا الختم لفتح الدعوة التجريبية.',
  how_t:'كيف نعمل',s1t:'ترسلون لنا التفاصيل',s1d:'الأسماء، التواريخ، الأماكن، الصور وأغنيتكم. خمس دقائق على واتساب.',s2t:'نصمّم دعوتكم',s2d:'الظرف، الختم، الألوان والنصوص بثلاث لغات. تراجعونها ونعدّلها.',s3t:'يصل كل ضيف دعوته باسمه',s3d:'رابط خاص لكل عائلة على واتساب، مع عدد المقاعد المحجوزة.',s4t:'تتابعون الردود',s4d:'من سيحضر، كم شخصاً، والملاحظات الغذائية. ملف جاهز للمموّن.',
  f1t:'ظرف حقيقي',f1d:'ورق بملمس، حافة مذهّبة، بطانة زليج أو ياسمين، وختم شمع لامع بحروفكما.',f2t:'دعوة خاصة لكل ضيف',f2d:'«عائلة بن صالح» يظهر على الظرف مع المقاعد المحجوزة لهم.',f3t:'ثلاث لغات',f3d:'يقرأ ضيوفكم بالعربية أو الفرنسية أو الإنجليزية. نكتب النصوص لكم.',f4t:'البرنامج كاملاً',f4d:'الحنّة، العقد، السهرة: المواعيد، الأماكن على الخريطة، اللباس، العدّ التنازلي وموسيقاكم.',f5t:'الردود مباشرة',f5d:'لوحة متابعة بكل الردود وعدد الأشخاص وملف CSV.',f6t:'بطاقات مطبوعة مع رمز QR',f6d:'للأجداد: نفس البطاقة ورقياً مع رمز QR يفتح الدعوة الرقمية.',
@@ -31,7 +31,7 @@ $('#of').onsubmit=function(e){e.preventDefault();
   btn.disabled=true;
   fetch('/api/public/orders',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({names:names,date:$('#o-date').value,city:$('#o-city').value,guests:$('#o-guests').value,plan:$('#o-plan').value,theme:$('#o-theme').value,model:$('#o-model').value,note:$('#o-note').value,phone:phone,lang:lang,website:$('#o-web').value})})
    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Erreur');return j})})
-   .then(function(o){if(o.url)location.href=o.url})
+   .then(function(o){if(window.rqTrack)window.rqTrack('order_created',{plan:$('#o-plan').value,theme:$('#o-theme').value,lang:lang,has_model:!!$('#o-model').value},true);if(o.url)setTimeout(function(){location.href=o.url},150)})
    .catch(function(x){err.textContent=(lang==='ar'?'تعذّر إرسال الطلب: ':'Commande non envoyée : ')+x.message;err.hidden=false;btn.disabled=false});
 };
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}

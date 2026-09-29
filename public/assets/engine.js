@@ -280,7 +280,7 @@ function render(root,inv,opts){
       var go=function(){
         if(busy)return;busy=true;
         var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-        sc.classList.add('opening');
+        sc.classList.add('opening');if(window.rqTrack)window.rqTrack('invitation_opened',{theme:th,layout:inv.layout||'classic',preview:!!opts.preview,personal:!!guest,lang:st.lang});
         setTimeout(function(){var cov=sc,fl=sc.querySelector('.rq3-flap');if(fl){fl.style.animation='none';fl.style.zIndex='0';fl.style.transition='none'}var cd=sc.querySelector('.rq3-card');if(cd){cd.style.transition='none';cd.style.transform='translateY(-54%)'}st.open=true;draw();var s=root.querySelector('.rq-scroll');if(s)s.scrollTop=0;cov.classList.add('handoff');root.appendChild(cov);requestAnimationFrame(function(){requestAnimationFrame(function(){cov.classList.add('fadeout')})});setTimeout(function(){if(cov.parentNode)cov.parentNode.removeChild(cov)},900)},reduce?200:2500);
       };
       sb.onclick=function(e){e.stopPropagation();go()};sc.querySelector('.rq3-env').onclick=go;

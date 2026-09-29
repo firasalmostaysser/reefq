@@ -15,7 +15,7 @@ function show(inv,guest,demo){
     if(demo)return new Promise(function(res){setTimeout(function(){res({})},500)});
     var w=ReefqInvite.waLink(inv,r);
     return fetch('/api/public/invitations/'+encodeURIComponent(inv.id)+'/rsvp',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(r)})
-      .then(function(x){if(!x.ok)throw 0;return{}})
+      .then(function(x){if(!x.ok)throw 0;if(window.rqTrack)window.rqTrack('rsvp_sent',{attending:!!r.attending,seats:r.attending?(+r.guests||1):0,theme:inv.theme});return{}})
       .catch(function(){if(w)return{whatsapp:w};throw 0});
   }});
 }

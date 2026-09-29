@@ -13,7 +13,9 @@ if(!m||!t){fail('Lien incomplet. Utilisez le lien reçu après votre commande.')
 
 function load(){return fetch(API+Q,{cache:'no-store'}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Erreur');return j})}).then(render).catch(function(e){if(!O)fail(e.message)})}
 
+var seen=false;
 function render(o){
+  if(!seen&&window.rqTrack){seen=true;window.rqTrack('client_space_viewed',{status:o.status,plan:o.plan})}
   O=o;$('#loading').hidden=true;$('#view').hidden=false;
   $('#h-names').textContent=o.names||'Votre commande';$('#h-code').textContent=o.code;$('#h-plan').textContent='Offre '+o.plan+' · '+o.price+' DT';
   var st=STATUS[o.status]||[o.status,''];$('#h-status').textContent=st[0];$('#h-status').className='pill '+st[1];
@@ -57,7 +59,7 @@ $('#proof-form').onsubmit=function(e){
   e.preventDefault();if(!file)return;var btn=$('#proof-send'),er=$('#proof-err');btn.disabled=true;btn.textContent='Envoi…';er.hidden=true;
   shrink(file).then(function(b){return fetch(API+'/proof'+Q,{method:'POST',headers:{'content-type':b.type||file.type},body:b})})
    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Envoi impossible');return j})})
-   .then(function(o){file=null;$('#proof-file').value='';$('#proof-prev').hidden=true;$('#drop-txt').textContent='Choisir une photo ou un PDF';render(o);toast('Justificatif envoyé')})
+   .then(function(o){file=null;$('#proof-file').value='';$('#proof-prev').hidden=true;$('#drop-txt').textContent='Choisir une photo ou un PDF';render(o);toast('Justificatif envoyé');if(window.rqTrack)window.rqTrack('payment_proof_uploaded',{plan:o.plan,type:(file&&file.type)||''})})
    .catch(function(x){er.textContent=x.message;er.hidden=false}).then(function(){btn.textContent='Envoyer le justificatif';btn.disabled=!file});
 };
 $('#c-again').onclick=function(){$('#checking').hidden=true;$('#pay').hidden=false;render(Object.assign({},O,{status:'awaiting_payment'}));$('#checking').hidden=false};
