@@ -7,7 +7,7 @@ var $=function(s){return document.querySelector(s)},$$=function(s){return Array.
 var DEMO={id:'demo',theme:'reefq',eventType:'wedding',lang:'fr',a:{name:'Yasmine',ar:'ياسمين'},b:{name:'Karim',ar:'كريم'},date:'2027-06-12',time:'20:30',venue:'Dar El Marsa',city:'La Marsa, Tunis',dress:'Tenue de soirée, tons clairs',
   events:[{type:'henna',date:'2027-06-10',time:'19:00',place:'Maison familiale, Sousse'},{type:'contract',date:'2027-06-11',time:'17:00',place:'Municipalité de La Marsa'},{type:'dinner',date:'2027-06-12',time:'20:30',place:'Dar El Marsa, La Marsa'}],
   message:{fr:'',ar:'',en:''},rsvpBy:'2027-05-20',maxGuests:4};
-var THEMES=[['reefq','Reefq','#147d82'],['zitouna','Zitouna','#5b6b33'],['yasmine','Yasmine','#27549a'],['layl','Layl','#1e2c48']];
+var THEMES=ReefqInvite.THEME_LIST.map(function(t){return [t.id,t.name,t.fg]});
 var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[];
 function demo(){if(h)h.destroy();var el=document.createElement('div');$('#demo').innerHTML='';$('#demo').appendChild(el);var d=JSON.parse(JSON.stringify(DEMO));d.theme=cur;if(demoCanva)d.canva=demoCanva;
   h=ReefqInvite.render(el,d,{lang:lang,guest:{id:'x',name:lang==='ar'?'عائلة بن صالح':'Famille Ben Salah',seats:4},preview:true,badge:lang==='ar'?'دعوة تجريبية':'Démo',onRsvp:function(){return new Promise(function(r){setTimeout(function(){r({})},500)})}})}
@@ -35,7 +35,7 @@ $('#of').onsubmit=function(e){e.preventDefault();
    .catch(function(x){err.textContent=(lang==='ar'?'تعذّر إرسال الطلب: ':'Commande non envoyée : ')+x.message;err.hidden=false;btn.disabled=false});
 };
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function themeId(name){var n=String(name||'').toLowerCase();return ['reefq','zitouna','yasmine','layl'].indexOf(n)>=0?n:null}
+function themeId(name){var n=String(name||'').toLowerCase().replace(/[^a-z]/g,'');var m=THEMES.filter(function(t){return t[0]===n||t[1].toLowerCase().replace(/[^a-z]/g,'')===n})[0];return m?m[0]:null}
 function renderModels(){
   if(!MODELS.length){$('#models').hidden=true;$('#o-model-wrap').hidden=true;return}
   $('#models').hidden=false;$('#o-model-wrap').hidden=false;
@@ -47,5 +47,6 @@ function renderModels(){
 }
 function loadModels(){fetch('/templates.json').then(function(r){return r.ok?r.json():{items:[]}}).then(function(c){MODELS=(c.items||[]).filter(function(m){return m.image});renderModels()}).catch(function(){})}
 fetch('/api/config').then(function(r){return r.json()}).then(function(c){REEFQ_WA=String(c.whatsapp||'').replace(/[^0-9]/g,'')}).catch(function(){});
+$('#o-theme').innerHTML=THEMES.map(function(t){return '<option value="'+t[0]+'">'+t[1]+'</option>'}).join('');
 themes();demo();loadModels();setInterval(loadModels,5*60*1000);
 })();

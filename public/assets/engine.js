@@ -1,17 +1,30 @@
 (function(){
 'use strict';
 var T={
- en:{k_engagement:'are getting engaged',k_henna:'invite you to their henna night',k_contract:'are tying the knot',dear:'Dear',seatsFor:'Seats reserved for you',married:'are getting married',tap:'Touch the seal to open',msg:'Together with their families, they joyfully invite you to celebrate their wedding',count:'Until we say yes',just:'Just married',d:'Days',h:'Hours',m:'Minutes',s:'Seconds',program:'The celebrations',dress:'Dress code',rsvp:'Kindly reply',by:'Please reply by',name:'Your full name',att:'Will you join us?',yes:'Joyfully accepts',no:'Regretfully declines',guests:'Number of guests',diet:'Dietary needs',note:'A note for the couple',send:'Send my reply',thanks:'Thank you. Your reply has reached the couple.',wa:'Send it on WhatsApp',preview:'Preview only. Replies are not recorded.',map:'Open in Maps',music:'Our song',err:'Your reply could not be sent. Please try again.',need:'Please enter your name and choose an answer.',at:'at',
+ en:{k_engagement:'are getting engaged',k_henna:'invite you to their henna night',k_contract:'are tying the knot',dear:'Dear',seatsFor:'Seats reserved for you',married:'are getting married',tap:'Touch the seal to open',msg:'Together with their families, they joyfully invite you to celebrate their wedding',count:'Until we say yes',story:'Our story',gallery:'Our moments',close:'Close',just:'Just married',d:'Days',h:'Hours',m:'Minutes',s:'Seconds',program:'The celebrations',dress:'Dress code',rsvp:'Kindly reply',by:'Please reply by',name:'Your full name',att:'Will you join us?',yes:'Joyfully accepts',no:'Regretfully declines',guests:'Number of guests',diet:'Dietary needs',note:'A note for the couple',send:'Send my reply',thanks:'Thank you. Your reply has reached the couple.',wa:'Send it on WhatsApp',preview:'Preview only. Replies are not recorded.',map:'Open in Maps',music:'Our song',err:'Your reply could not be sent. Please try again.',need:'Please enter your name and choose an answer.',at:'at',
   ev:{henna:'Henna Night',contract:'Marriage Contract',ceremony:'Wedding Ceremony',dinner:'Wedding Dinner',outia:'Outia',brunch:'Farewell Brunch'}},
- fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',music:'Notre chanson',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',at:'à',
+ fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',story:'Notre histoire',gallery:'Nos moments',close:'Fermer',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',music:'Notre chanson',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',at:'à',
   ev:{henna:'Soirée du henné',contract:'Contrat de mariage',ceremony:'Cérémonie',dinner:'Dîner de fête',outia:'Outia',brunch:"Brunch d'au revoir"}},
- ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',music:'أغنيتنا',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',at:'على الساعة',
+ ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',gallery:'لحظاتنا',close:'إغلاق',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',music:'أغنيتنا',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',at:'على الساعة',
   ev:{henna:'ليلة الحنّة',contract:'عقد القران',ceremony:'حفل الزفاف',dinner:'عشاء الزفاف',outia:'الوطية',brunch:'فطور الوداع'}}
 };
 var RQA={pocket:'/assets/env/pocket.webp',flap:'/assets/env/flap.webp',flapshadow:'/assets/env/flapshadow.webp',interior:'/assets/env/interior.webp',card:'/assets/env/card.webp',linen:'/assets/env/linen.webp'};
 var LOGO='/assets/logo-light.webp';
 var LOGO_DARK='/assets/logo-dark.webp';
-var THEMES={reefq:{sprig:'gold',lace:false,gild:true},zitouna:{sprig:'olive',lace:true,gild:true},yasmine:{sprig:'jasmine',lace:false,gild:true},layl:{sprig:'gold',lace:false,gild:false}};
+var THEMES={reefq:{sprig:'gold'},zitouna:{sprig:'olive'},yasmine:{sprig:'jasmine'},layl:{sprig:'gold'},sidi:{sprig:'jasmine'},kairouan:{sprig:'gold'},oldmoney:{sprig:'gold'},sauge:{sprig:'olive'},bordeaux:{sprig:'jasmine'},sahara:{sprig:'gold'}};
+/* One list for the studio, the landing page and the server: id, name, one-line mood, swatch colours */
+var THEME_LIST=[
+  {id:'reefq',name:'Reefq',sub:'Signature teal, ivory, gold line',bg:'#f6f3ea',fg:'#147d82'},
+  {id:'zitouna',name:'Zitouna',sub:'Olive, ivory, antique gold, lace',bg:'#f5f1e6',fg:'#66753a'},
+  {id:'yasmine',name:'Yasmine',sub:'Jasmine, soft blue, arch',bg:'#eef2f7',fg:'#1f4f96'},
+  {id:'layl',name:'Layl',sub:'Midnight, gold foil, stars',bg:'#0f1a2d',fg:'#e2c47d'},
+  {id:'sidi',name:'Sidi Bou Said',sub:'Whitewash, cobalt doors, bougainvillea',bg:'#f7f8f6',fg:'#1d4f91'},
+  {id:'kairouan',name:'Kairouan',sub:'Kilim red, ochre, copper',bg:'#f3e9dc',fg:'#9c3b22'},
+  {id:'oldmoney',name:'Old Money',sub:'Espresso, cream, serif italics',bg:'#efe7da',fg:'#3b2a20'},
+  {id:'sauge',name:'Sauge',sub:'Sage green, linen, olive leaves',bg:'#f1f2ea',fg:'#667a55'},
+  {id:'bordeaux',name:'Bordeaux',sub:'Burgundy, blush, rose gold',bg:'#f6ece8',fg:'#6e1f2c'},
+  {id:'sahara',name:'Sahara',sub:'Sand, terracotta, Tozeur brick',bg:'#efe3cf',fg:'#9c4a2a'}
+];
 var uidN=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -80,11 +93,17 @@ var ENV_DEFAULTS={
   reefq:{paper:'#f4efe6',seal:'#147d82',liner:'zellige',linerBg:'#147d82',table:'#ece5d8'},
   zitouna:{paper:'#f3eee3',seal:'#5b6b33',liner:'olive',linerBg:'#56662f',table:'#ebe4d6'},
   yasmine:{paper:'#fbfaf7',seal:'#27549a',liner:'jasmine',linerBg:'#1f4f96',table:'#e6eaee'},
-  layl:{paper:'#1e2c48',seal:'#b8913f',liner:'zellige',linerBg:'#0f1a2d',table:'#141c2c'}
+  layl:{paper:'#1e2c48',seal:'#b8913f',liner:'zellige',linerBg:'#0f1a2d',table:'#141c2c'},
+  sidi:{paper:'#fbfbf8',seal:'#1d4f91',liner:'tiles',linerBg:'#1d4f91',linerInk:'#f4f1e8',table:'#dfe7ee'},
+  kairouan:{paper:'#f1e6d6',seal:'#8f2f1c',liner:'kilim',linerBg:'#8f2f1c',linerInk:'#e8c37e',table:'#e6d6c1'},
+  oldmoney:{paper:'#efe6d6',seal:'#4a2f22',liner:'lattice',linerBg:'#3b2a20',linerInk:'#c9a86a',table:'#d9ccb8'},
+  sauge:{paper:'#f3f3ea',seal:'#6f8260',liner:'olive',linerBg:'#7d8f6a',linerInk:'#f4efe2',table:'#e4e6da'},
+  bordeaux:{paper:'#f7ece8',seal:'#6e1f2c',liner:'jasmine',linerBg:'#6e1f2c',linerInk:'#e9c3b8',table:'#eadbd6'},
+  sahara:{paper:'#f0e3cd',seal:'#9c4a2a',liner:'tozeur',linerBg:'#b0603a',linerInk:'#f3dcb8',table:'#e3d1b3'}
 };
-var PAPERS=[['#f4efe6','Ivoire'],['#fbfaf7','Blanc coton'],['#ead6cf','Rose poudré'],['#dfe5d6','Sauge'],['#d9e4ea','Bleu brume'],['#e8dcc6','Sable'],['#147d82','Teal Reefq'],['#1e2c48','Nuit'],['#6e1f2c','Bordeaux'],['#2b2b2b','Noir']];
-var SEALS=[['#147d82','Teal'],['#b8913f','Or'],['#8e1f2f','Bordeaux'],['#5b6b33','Olive'],['#27549a','Bleu'],['#d9b8b0','Rose'],['#efe8da','Nacre'],['#1b1b1b','Noir']];
-var LINERS=[['zellige','Zellige'],['jasmine','Jasmin'],['olive','Olivier'],['lattice','Treillis'],['plain','Uni']];
+var PAPERS=[['#f4efe6','Ivoire'],['#efe6d6','Crème'],['#f0e3cd','Sable doré'],['#fbfaf7','Blanc coton'],['#ead6cf','Rose poudré'],['#dfe5d6','Sauge'],['#d9e4ea','Bleu brume'],['#e8dcc6','Sable'],['#147d82','Teal Reefq'],['#1e2c48','Nuit'],['#6e1f2c','Bordeaux'],['#2b2b2b','Noir']];
+var SEALS=[['#147d82','Teal'],['#1d4f91','Cobalt'],['#8f2f1c','Brique'],['#4a2f22','Espresso'],['#6f8260','Sauge'],['#b8913f','Or'],['#8e1f2f','Bordeaux'],['#5b6b33','Olive'],['#27549a','Bleu'],['#d9b8b0','Rose'],['#efe8da','Nacre'],['#1b1b1b','Noir']];
+var LINERS=[['zellige','Zellige'],['tiles','Faïence'],['kilim','Kilim'],['tozeur','Brique Tozeur'],['jasmine','Jasmin'],['olive','Olivier'],['lattice','Treillis'],['plain','Uni']];
 function hex2rgb(h){h=String(h||'#888').replace('#','');if(h.length===3)h=h.split('').map(function(c){return c+c}).join('');var n=parseInt(h,16);return[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]}
 function lum(h){var c=hex2rgb(h);return .2126*c[0]+.7152*c[1]+.0722*c[2]}
 function linerTile(kind,bg,gold){
@@ -94,6 +113,9 @@ function linerTile(kind,bg,gold){
   else if(kind==='jasmine'){var fl=function(x,y,r){var o='';for(var k=0;k<5;k++){var a=k*72*Math.PI/180;o+='<ellipse cx="'+(x+Math.sin(a)*r).toFixed(1)+'" cy="'+(y-Math.cos(a)*r).toFixed(1)+'" rx="'+(r*.5).toFixed(1)+'" ry="'+(r*.95).toFixed(1)+'" transform="rotate('+(k*72)+' '+(x+Math.sin(a)*r).toFixed(1)+' '+(y-Math.cos(a)*r).toFixed(1)+')" '+st+'/>'}return o+'<circle cx="'+x+'" cy="'+y+'" r="1.6" fill="'+gold+'"/>'};
     s=fl(16,16,5)+fl(48,48,5)+'<path d="M26 22q6 6 14 4M58 54q2 8 -4 12M6 48q6-6 12-2" '+st+'/>'}
   else if(kind==='olive'){s='<path d="M8 56Q30 34 56 10" '+st+'/>';for(var j=0;j<5;j++){var t=.15+j*.17,x=8+48*t,y=56-46*t;s+='<ellipse cx="'+(x-5)+'" cy="'+(y-3)+'" rx="2.4" ry="7" transform="rotate(-70 '+(x-5)+' '+(y-3)+')" '+st+'/><ellipse cx="'+(x+3)+'" cy="'+(y+5)+'" rx="2.4" ry="7" transform="rotate(10 '+(x+3)+' '+(y+5)+')" '+st+'/>'}}
+  else if(kind==='tiles'){sz=64;s='<circle cx="32" cy="32" r="13" '+st+'/><path d="M32 19Q38 26 32 32Q26 26 32 19ZM45 32Q38 38 32 32Q38 26 45 32ZM32 45Q26 38 32 32Q38 38 32 45ZM19 32Q26 26 32 32Q26 38 19 32Z" fill="'+gold+'" fill-opacity=".55"/><path d="M0 12A12 12 0 0 0 12 0M52 0A12 12 0 0 0 64 12M64 52A12 12 0 0 0 52 64M12 64A12 12 0 0 0 0 52" '+st+'/><rect x=".5" y=".5" width="63" height="63" '+st+' stroke-opacity=".45"/><circle cx="32" cy="32" r="2.2" fill="'+gold+'"/>'}
+  else if(kind==='kilim'){sz=48;s='<path d="M24 4L40 24L24 44L8 24Z" '+st+'/><path d="M24 14L32 24L24 34L16 24Z" fill="'+gold+'" fill-opacity=".5"/><path d="M0 0L6 6M48 0L42 6M0 48L6 42M48 48L42 42M24 4V0M24 44V48M8 24H2M40 24H46" '+st+'/><path d="M2 20V28M46 20V28" '+st+'/>'}
+  else if(kind==='tozeur'){sz=40;s='<path d="M0 10H40M0 30H40M10 0V10M30 10V30M10 30V40" '+st+'/><path d="M20 16L24 20L20 24L16 20Z" fill="'+gold+'" fill-opacity=".6"/><path d="M0 16L4 20L0 24M40 16L36 20L40 24" '+st+'/>'}
   else if(kind==='lattice'){s='<path d="M0 32L32 0L64 32L32 64Z" '+st+'/><circle cx="32" cy="32" r="3" '+st+'/><circle cx="0" cy="0" r="2" fill="'+gold+'"/>'}
   var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+sz+'" height="'+sz+'"><rect width="100%" height="100%" fill="'+bg+'"/>'+s+'</svg>';
   return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")';
@@ -148,7 +170,7 @@ function flapGild(){ // gold edge inset along the flap cut, in the flap's 720x93
   return '<svg class="rq3-gild" viewBox="0 0 720 936" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="gd'+(++uidN)+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e6b0"/><stop offset=".4" stop-color="#c9a24f"/><stop offset=".6" stop-color="#8a6526"/><stop offset="1" stop-color="#e8cf8b"/></linearGradient></defs>'+
    '<path d="M22 8 L336 402 Q360 426 384 402 L698 8" fill="none" stroke="url(#gd'+uidN+')" stroke-width="2.6"/><path d="M34 8 L340 390 Q360 410 380 390 L686 8" fill="none" stroke="url(#gd'+uidN+')" stroke-width="1" opacity=".8"/></svg>';
 }
-function envOpts(inv,th){var d=ENV_DEFAULTS[th]||ENV_DEFAULTS.reefq,e=inv.env||{};return{paper:e.paper||d.paper,seal:e.seal||d.seal,liner:e.liner||d.liner,linerBg:e.linerBg||d.linerBg,table:e.table||d.table}}
+function envOpts(inv,th){var d=ENV_DEFAULTS[th]||ENV_DEFAULTS.reefq,e=inv.env||{};return{paper:e.paper||d.paper,seal:e.seal||d.seal,liner:e.liner||d.liner,linerBg:e.linerBg||d.linerBg,linerInk:e.linerInk||d.linerInk||'#d4b26a',table:e.table||d.table}}
 
 function pad(n){return String(n).padStart(2,'0')}
 function loc(l){return l==='ar'?'ar-TN':l==='fr'?'fr-TN':'en-GB'}
@@ -183,7 +205,7 @@ function render(root,inv,opts){
     var html=badge+langBar+'<div class="rq-scroll">';
     if(!st.open){
       var eo=envOpts(inv,th),cv=inv.canva||null;
-      html+='<section class="rq-cover rq3" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,'#d4b26a'))+';--linerbg:'+esc(eo.linerBg)+'">'+
+      html+='<section class="rq-cover rq3" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,eo.linerInk))+';--linerbg:'+esc(eo.linerBg)+'">'+
        '<div class="rq3-table"></div>'+
        '<div class="rq3-top">'+(guest&&guest.name?'<p class="rq3-dear">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-caps rq3-kick">'+esc(t('married'))+'</p><h1 class="rq-names rq-foil">'+esc(n[0])+' <span class="amp">'+amp+'</span> '+esc(n[1])+'</h1><p class="rq-date-s">'+esc(dots(inv.date))+'</p></div>'+
        '<div class="rq3-env"><div class="rq3-shadow"></div><div class="rq3-int"></div>'+
@@ -195,22 +217,29 @@ function render(root,inv,opts){
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div><p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      var allPh=(inv.photos||[]).filter(Boolean),lay=inv.layout==='arch'||inv.layout==='photo'?inv.layout:'classic';if(!allPh.length)lay='classic';
+      var cover=lay==='classic'?'':allPh[0],restPh=lay==='classic'?allPh:allPh.slice(1);
+      if(lay==='photo')html+='<figure class="rq-fullph"><img alt="" src="'+esc(cover)+'"><figcaption><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names">'+esc(n[0])+' <span class="amp">'+amp+'</span> '+esc(n[1])+'</span><span class="rq-caps">'+esc(dots(inv.date))+'</span></figcaption></figure>';
+      html+='<div class="rq-sheet hero lay-'+lay+'">'+(lay==='arch'?'<figure class="rq-archph"><img alt="" src="'+esc(cover)+'"></figure>':'<div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>')+'<p class="rq-msg">'+esc(msg)+'</p>'+(lay==='photo'?'':nameH)+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+'</div>';
       if(on('countdown'))html+='<div class="rq-sheet"><h2 class="rq-h2 rq-foil">'+esc(t('count'))+'</h2><div class="rq-count" aria-live="off"><div><b data-c="d">00</b><span>'+esc(t('d'))+'</span></div><div><b data-c="h">00</b><span>'+esc(t('h'))+'</span></div><div><b data-c="m">00</b><span>'+esc(t('m'))+'</span></div><div><b data-c="s">00</b><span>'+esc(t('s'))+'</span></div></div></div>';
+      var story=inv.story&&(inv.story[L]||inv.story.fr||inv.story.en||inv.story.ar)||'';
+      if(on('story')&&story)html+='<div class="rq-sheet rq-story"><h2 class="rq-h2 rq-foil">'+esc(t('story'))+'</h2>'+String(story).split(/\n+/).filter(function(x){return x.trim()}).map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>';
       var evs=(inv.events||[]).filter(function(e){return e&&(e.type||e.label)});
-      if(on('program')&&(evs.length||inv.dress)){
+      var dcols=(inv.dressColors||[]).filter(function(c){return /^#[0-9a-f]{3,8}$/i.test(c)}).slice(0,6);
+      if(on('program')&&(evs.length||inv.dress||dcols.length)){
         html+='<div class="rq-sheet"><h2 class="rq-h2 rq-foil">'+esc(t('program'))+'</h2><ul class="rq-events">'+evs.map(function(e){
           var lbl=e.type==='custom'?(e.label||''):(t('ev')[e.type]||e.label||'');
           var mq=[e.place].filter(Boolean).join(', ');
           return '<li><span class="rq-ev-t">'+esc(lbl)+'</span><span class="rq-ev-d">'+esc(fmtDate(e.date,L,{weekday:'long',day:'numeric',month:'long'}))+(e.time?' · '+esc(e.time):'')+'</span>'+(e.place?'<span class="rq-muted">'+esc(e.place)+'</span>':'')+(mq||e.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref(mq,e.maps))+'">'+esc(t('map'))+'</a>':'')+'</li>'}).join('')+'</ul>'+
-          (inv.dress?'<div class="rq-dress"><div class="rq-caps">'+esc(t('dress'))+'</div><div>'+esc(inv.dress)+'</div></div>':'')+
+          (inv.dress||dcols.length?'<div class="rq-dress"><div class="rq-caps">'+esc(t('dress'))+'</div>'+(inv.dress?'<div>'+esc(inv.dress)+'</div>':'')+(dcols.length?'<div class="rq-swatches">'+dcols.map(function(c){return '<i style="background:'+esc(c)+'"></i>'}).join('')+'</div>':'')+'</div>':'')+
           (inv.note?'<p class="rq-muted" style="margin:14px 0 0;font-style:italic">'+esc(inv.note)+'</p>':'')+'</div>';
       }
-      var ph=(inv.photos||[]).filter(Boolean).slice(0,3);
-      if(on('photos')&&ph.length)html+='<div class="rq-photos">'+ph.map(function(p){return '<figure class="rq-pol" style="margin-block:0"><img alt="" src="'+esc(p)+'"></figure>'}).join('')+'</div>';
+      var ph=restPh.slice(0,12);
+      if(on('photos')&&ph.length){if(ph.length<=3)html+='<div class="rq-photos">'+ph.map(function(p){return '<figure class="rq-pol" style="margin-block:0"><img alt="" src="'+esc(p)+'"></figure>'}).join('')+'</div>';
+        else html+='<div class="rq-sheet rq-galwrap"><h2 class="rq-h2 rq-foil">'+esc(t('gallery'))+'</h2><div class="rq-gal">'+ph.map(function(p,i){return '<button type="button" class="rq-gi" data-gi="'+i+'"><img alt="" loading="lazy" src="'+esc(p)+'"></button>'}).join('')+'</div></div>'}
       if(on('rsvp')){html+='<div class="rq-sheet" id="rq-rsvp"><h2 class="rq-h2 rq-foil">'+esc(t('rsvp'))+'</h2>'+(inv.rsvpBy?'<p class="rq-caps rq-muted" style="margin:-6px 0 20px">'+esc(t('by'))+' '+esc(fmtDate(inv.rsvpBy,L,{day:'numeric',month:'long'}))+'</p>':'');
       if(st.sent){
         html+='<div class="rq-thanks"><p class="rq-msg" style="margin:0">'+esc(t('thanks'))+'</p>'+(st.sent.whatsapp?'<a class="rq-send" target="_blank" rel="noopener" href="'+esc(st.sent.whatsapp)+'">'+esc(t('wa'))+'</a>':'')+'</div>';
@@ -257,6 +286,7 @@ function render(root,inv,opts){
       sb.onclick=function(e){e.stopPropagation();go()};sc.querySelector('.rq3-env').onclick=go;
     }
     if(root.querySelector('[data-c]')){tick();st.timer=setInterval(tick,1000)}
+    root.querySelectorAll('[data-gi]').forEach(function(b){b.onclick=function(){var src=b.querySelector('img').src,lb=document.createElement('div');lb.className='rq-lb';lb.setAttribute('role','dialog');lb.innerHTML='<img alt="" src="'+esc(src)+'"><button type="button" aria-label="'+esc(t('close'))+'">✕</button>';lb.onclick=function(){lb.remove()};root.appendChild(lb)}});
     var vb=root.querySelector('button.rq-vinyl');
     if(vb)vb.onclick=function(){
       if(!st.audio){st.audio=new Audio(inv.musicUrl);st.audio.loop=true}
@@ -278,5 +308,5 @@ function render(root,inv,opts){
   draw();
   return{destroy:function(){clearInterval(st.timer);if(st.audio)st.audio.pause();root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()}};
 }
-window.ReefqInvite={sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
+window.ReefqInvite={THEME_LIST:THEME_LIST,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();

@@ -4,6 +4,7 @@ import { invitations, rsvps, orders, files, listJSON, rateLimit } from '../lib/s
 import { isStudio, login, logout } from '../lib/auth.mts';
 import { wording } from '../lib/wording.mts';
 import { canvaStatus } from '../lib/canva.mts';
+import { THEME_IDS } from '../lib/themes.mts';
 
 const MAX_INVITE_BYTES = 900_000;
 const PRICES: Record<string, number> = { Essentiel: 149, Signature: 249, Prestige: 349 };
@@ -121,7 +122,7 @@ async function route(req: Request, context: Context): Promise<Response> {
     const o = await getOrder(mm[1]);
     if (o.inviteId) { const ex = await invitations().get(o.inviteId, { type: 'json' }); if (ex) return json({ order: o, invitation: ex }); }
     const [a, bn] = String(o.names || '').split(/\s*(?:&|et|\+|و)\s*/i);
-    const inv = { theme: ['reefq', 'zitouna', 'yasmine', 'layl'].includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'ar' ? 'ar' : 'fr',
+    const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'ar' ? 'ar' : 'fr',
       a: { name: (a || o.names || '').trim(), ar: '' }, b: { name: (bn || '').trim() || '—', ar: '' }, date: o.date || '', time: '20:00', city: o.city || '',
       venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code };
     const saved = await saveInvitation(slug(o.names) + '-' + id(4), inv);

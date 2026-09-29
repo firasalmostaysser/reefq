@@ -6,12 +6,9 @@ function api(path,opts){opts=opts||{};var o={method:opts.method||'GET',headers:{
   if(opts.body!==undefined){if(opts.raw){o.body=opts.body;o.headers['content-type']=opts.type}else{o.body=JSON.stringify(opts.body);o.headers['content-type']='application/json'}}
   return fetch(path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(r.status===401&&path!=='/api/login'){showLogin()}if(!r.ok){var e=new Error(j.error||('Error '+r.status));e.status=r.status;throw e}return j})})}
 function download(name,text,type){var b=new Blob([text],{type:type||'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
-var THEME_INFO=[
-  {id:'reefq',name:'Reefq',sub:'Signature teal, ivory, gold line',bg:'#f6f3ea',fg:'#147d82'},
-  {id:'zitouna',name:'Zitouna',sub:'Olive, ivory, antique gold, lace',bg:'#f5f1e6',fg:'#a9843a'},
-  {id:'yasmine',name:'Yasmine',sub:'Jasmine, Sidi Bou Said blue, arch',bg:'#eef2f7',fg:'#1f4f96'},
-  {id:'layl',name:'Layl',sub:'Midnight, gold foil, stars',bg:'#0f1a2d',fg:'#e2c47d'}
-];
+var THEME_INFO=ReefqInvite.THEME_LIST;
+var LAYOUTS=[['classic','Classic','Names under a botanical sprig'],['arch','Arch photo','First photo framed in an arch'],['photo','Full photo','First photo full-width, names on it']];
+var DRESS=['#f4efe6','#e9d8c4','#d9b8b0','#c9a45f','#9fb3c8','#a9b89a','#6e1f2c','#1d4f91','#3b2a20','#1b1b1b'];
 var EV_TYPES=[['henna','Henna night'],['outia','Outia'],['contract','Marriage contract'],['ceremony','Wedding ceremony'],['dinner','Wedding dinner'],['brunch','Farewell brunch'],['custom','Other (type label)']];
 var SAMPLE={id:null,sample:true,theme:'reefq',eventType:'wedding',lang:'fr',
   a:{name:'Yasmine',ar:'ياسمين'},b:{name:'Karim',ar:'كريم'},
@@ -47,11 +44,21 @@ function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
 /* ---------- form ---------- */
 function fillForm(){
   $$('[data-k]').forEach(function(el){var v=getK(draft,el.dataset.k);el.value=v==null?'':v;if(el.tagName==='SELECT'&&el.selectedIndex<0)el.selectedIndex=0});
-  renderThemes();renderEvents();renderPhotos();renderEnv();renderShows();renderCanva();
+  renderThemes();renderLayouts();renderDress();renderEvents();renderPhotos();renderEnv();renderShows();renderCanva();
 }
 function renderThemes(){
   $('#themes').innerHTML=THEME_INFO.map(function(t){return '<button type="button" class="theme" data-theme-id="'+t.id+'" aria-pressed="'+(draft.theme===t.id)+'"><span class="sw" style="background:'+t.bg+';color:'+t.fg+'">Y &amp; K</span><span class="tn">'+t.name+'<small>'+t.sub+'</small></span></button>'}).join('');
   $$('[data-theme-id]').forEach(function(b){b.onclick=function(){draft.theme=b.dataset.themeId;touch();renderThemes();preview(true)}});
+}
+function renderLayouts(){
+  var cur=draft.layout||'classic';
+  $('#layouts').innerHTML=LAYOUTS.map(function(l){return '<button type="button" class="layout" data-layout="'+l[0]+'" aria-pressed="'+(cur===l[0])+'"><span class="lay-ic lay-'+l[0]+'" aria-hidden="true"></span><b>'+l[1]+'</b><small>'+l[2]+'</small></button>'}).join('');
+  $$('[data-layout]').forEach(function(b){b.onclick=function(){draft.layout=b.dataset.layout;touch();renderLayouts();pvOpen=true;preview(true);if(draft.layout!=='classic'&&!(draft.photos||[]).length)status('Add a photo: it becomes the cover','')}});
+}
+function renderDress(){
+  var cur=draft.dressColors||[];
+  $('#dcols').innerHTML=DRESS.map(function(c){return '<button type="button" class="sw" data-dc="'+c+'" aria-label="'+c+'" aria-pressed="'+(cur.indexOf(c)>=0)+'" style="background:'+c+'"></button>'}).join('');
+  $$('[data-dc]').forEach(function(b){b.onclick=function(){var c=b.dataset.dc,a=(draft.dressColors||[]).slice(),i=a.indexOf(c);if(i>=0)a.splice(i,1);else if(a.length<6)a.push(c);draft.dressColors=a;touch();renderDress();pvOpen=true;preview()}});
 }
 function renderEvents(){
   var box=$('#events');
@@ -70,12 +77,12 @@ function renderEvents(){
 }
 function renderPhotos(){
   var ph=draft.photos||[];
-  $('#photos').innerHTML=ph.map(function(p,i){return '<div class="ph"><img alt="Photo '+(i+1)+'" src="'+esc(p)+'"><button type="button" data-ph="'+i+'" aria-label="Remove photo">✕</button></div>'}).join('')+(ph.length<3?'<label class="upl">+ Add photo<input type="file" id="ph-in" accept="image/*" multiple></label>':'');
+  $('#photos').innerHTML=ph.map(function(p,i){return '<div class="ph"><img alt="Photo '+(i+1)+'" src="'+esc(p)+'"><button type="button" data-ph="'+i+'" aria-label="Remove photo">✕</button></div>'}).join('')+(ph.length<12?'<label class="upl">+ Add photo<input type="file" id="ph-in" accept="image/*" multiple></label>':'');
   $$('[data-ph]').forEach(function(b){b.onclick=function(){draft.photos.splice(+b.dataset.ph,1);touch();renderPhotos();preview()}});
   var inp=$('#ph-in');if(inp)inp.onchange=function(){
-    var files=Array.prototype.slice.call(inp.files).slice(0,3-ph.length);
+    var files=Array.prototype.slice.call(inp.files).slice(0,12-ph.length);
     status('Uploading photos…','');
-    Promise.all(files.map(function(f){return shrink(f).then(function(blob){return blob?api('/api/upload',{method:'POST',raw:true,type:'image/jpeg',body:blob}).then(function(r){return r.url}).catch(function(){return null}):null})})).then(function(urls){var ok=urls.filter(Boolean);draft.photos=(draft.photos||[]).concat(ok).slice(0,3);touch();renderPhotos();pvOpen=true;preview(true);if(ok.length<urls.length)status('Some photos could not be uploaded','bad')});
+    Promise.all(files.map(function(f){return shrink(f).then(function(blob){return blob?api('/api/upload',{method:'POST',raw:true,type:'image/jpeg',body:blob}).then(function(r){return r.url}).catch(function(){return null}):null})})).then(function(urls){var ok=urls.filter(Boolean);draft.photos=(draft.photos||[]).concat(ok).slice(0,12);touch();renderPhotos();pvOpen=true;preview(true);if(ok.length<urls.length)status('Some photos could not be uploaded','bad')});
   };
 }
 function shrink(file){return new Promise(function(res){var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,1200/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(function(b){res(b)},'image/jpeg',.8)};im.onerror=function(){res(null)};im.src=fr.result};fr.onerror=function(){res(null)};fr.readAsDataURL(file)})}
@@ -127,7 +134,7 @@ $$('[data-show]').forEach(function(c){c.onchange=function(){draft.show=draft.sho
 /* ---------- chips / save ---------- */
 function names(i){return ((i.a&&i.a.name)||'?')+' & '+((i.b&&i.b.name)||'?')}
 function renderChips(){
-  var col={reefq:'#147d82',zitouna:'#a9843a',yasmine:'#1f4f96',layl:'#0f1a2d'};
+  var col={};THEME_INFO.forEach(function(t){col[t.id]=t.fg});
   var html='';
   if(!draft.id)html+='<button class="chip" type="button" aria-pressed="true"><span class="dot" style="background:'+col[draft.theme]+'"></span>'+esc(draft.sample?'Example: '+names(draft):(names(draft)==='? & ?'?'New couple':names(draft)))+'</button>';
   html+=invites.map(function(i){return '<button class="chip" type="button" data-inv="'+esc(i.id)+'" aria-pressed="'+(draft.id===i.id)+'"><span class="dot" style="background:'+(col[i.theme]||'#999')+'"></span>'+esc(names(i))+'</button>'}).join('');
