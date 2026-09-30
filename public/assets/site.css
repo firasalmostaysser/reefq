@@ -23,8 +23,10 @@ html[lang=ar] .btn{font-family:var(--ar);font-size:17px;font-weight:700}
 .btn:focus-visible,.lang:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .lang{all:unset;cursor:pointer;font:600 14px var(--ar);color:var(--accent);padding:6px 10px;border-radius:8px}
 main{max-width:1120px;margin:0 auto;padding:0 16px}
-.lhero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding-block:48px 56px}
-@media (max-width:900px){.lhero{grid-template-columns:minmax(0,1fr);padding-block:28px 40px}}
+.lhero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding-block:28px 40px}
+/* Mobile: the text block dissolves so the phone sits right after the headline, before the paragraph and buttons. */
+@media (max-width:900px){.lhero{grid-template-columns:minmax(0,1fr);gap:0;padding-block:24px 40px}
+ .hero-txt{display:contents}.eyebrow{order:1}h1{order:2;margin-bottom:16px}.hero-demo{order:3;margin-bottom:28px}.lead{order:4}.cta-row{order:5}.proof{order:6}}
 .eyebrow{margin:0 0 10px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
 html[lang=ar] .eyebrow{letter-spacing:0;font-size:16px}
 h1{font:500 clamp(40px,6vw,66px)/1.05 var(--display);margin:0 0 18px;text-wrap:balance;letter-spacing:-.01em}
@@ -33,11 +35,20 @@ html[lang=ar] h1{font:700 clamp(34px,5vw,54px)/1.35 'Aref Ruqaa',var(--ar)}
 .cta-row{display:flex;gap:10px;flex-wrap:wrap}
 .proof{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:14px}
 .proof li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-inline-end:8px;vertical-align:middle}
-.hero-demo{display:flex;flex-direction:column;align-items:center;gap:12px}
-.phone{width:min(340px,100%);aspect-ratio:9/18.5;border-radius:44px;padding:10px;background:#15140f;box-shadow:0 40px 70px -30px rgb(0 0 0 / .55),inset 0 0 0 1.5px #3a382e}
+.hero-demo{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.demo-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.demo-replay,.demo-full{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px/1 var(--ui);display:inline-flex;align-items:center}
+.demo-replay{color:var(--accent);border-color:var(--accent)}
+html[lang=ar] .demo-replay,html[lang=ar] .demo-full{font:700 15px/1 var(--ar)}
+.demo-replay:focus-visible,.demo-full:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.phone{box-sizing:border-box;height:max(420px,min(720px,calc(100svh - 210px)));width:auto;max-width:100%;aspect-ratio:9/18.5;flex:none;border-radius:44px;padding:10px;background:#15140f;box-shadow:0 40px 70px -30px rgb(0 0 0 / .55),inset 0 0 0 1.5px #3a382e}
+@media (max-width:900px){.phone{height:max(420px,min(720px,calc(100svh - 320px)))}}
 .screen{height:100%;border-radius:35px;overflow:hidden;position:relative;isolation:isolate}
-.themes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
-.themes button{all:unset;cursor:pointer;padding:7px 12px;border-radius:999px;border:1px solid var(--line);font:600 13px var(--ui);display:flex;align-items:center;gap:7px;background:var(--surface)}
+.themes{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:2px 2px 6px;scrollbar-width:none}.themes::-webkit-scrollbar{display:none}
+/* Touch screens: swiping over the phone scrolls the page; the tour scrolls the invitation itself. */
+@media (pointer:coarse){.screen,.screen *{touch-action:pan-y}.screen .rq-scroll{overflow-y:hidden;overscroll-behavior:auto}}
+
+.themes button{all:unset;flex:none;cursor:pointer;padding:7px 12px;border-radius:999px;border:1px solid var(--line);font:600 13px var(--ui);display:flex;align-items:center;gap:7px;background:var(--surface)}
 .themes button i{width:10px;height:10px;border-radius:50%}
 .themes button[aria-pressed=true]{border-color:var(--accent);background:var(--soft)}
 .demo-hint{margin:0;font-size:13px;color:var(--muted)}
