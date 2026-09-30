@@ -19,23 +19,30 @@ var tour=(function(){
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   function clear(){timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf)}
   function later(fn,ms){var id=run;timers.push(setTimeout(function(){if(id===run&&visible&&!stopped)fn()},ms))}
+  function scroller(){return h&&h.scroller&&h.scroller()}
+  /* The scroller exists behind the closed envelope too; the invitation is open once the envelope layer (.rq3) is gone. */
+  function isOpen(){return !!scroller()&&!document.querySelector('#demo .rq3')}
   function scrollDown(done){
-    var sc=h&&h.scroller&&h.scroller();if(!sc)return done();
-    sc.style.scrollBehavior='auto';var id=run,last=0,speed=Math.max(38,sc.clientHeight/11);
+    var sc=scroller();if(!sc)return done();
+    sc.style.scrollBehavior='auto';var id=run,last=0,speed=Math.max(38,sc.clientHeight/7);
     function step(t){if(id!==run||stopped)return;if(!visible){last=0;raf=requestAnimationFrame(step);return}
       if(last){sc.scrollTop+=Math.min(60,(t-last))*speed/1000}last=t;
       if(sc.scrollTop+sc.clientHeight>=sc.scrollHeight-2)return done();raf=requestAnimationFrame(step)}
     raf=requestAnimationFrame(step)}
-  function next(){if(userPicked)return demo();var i=THEMES.findIndex(function(t){return t[0]===cur});cur=THEMES[(i+1)%THEMES.length][0];themes();demo()}
+  /* A picked theme is kept: the tour plays it once and stays at the bottom. Otherwise it moves on to the next theme. */
+  function next(){if(userPicked)return;var i=THEMES.findIndex(function(t){return t[0]===cur});cur=THEMES[(i+1)%THEMES.length][0];themes();demo()}
+  function finish(){scrollDown(function(){later(next,2600)})}
   function play(){clear();run++;
     if(reduce){if(h)h.open();return}
-    later(function(){h&&h.play();later(function(){scrollDown(function(){later(next,2600)})},3600)},1500)}
+    later(function(){h&&h.play();later(finish,3600)},1500)}
+  /* Back in view after an interruption: carry on from where the invitation is, or start over if it is still closed. */
+  function resume(){clear();run++;if(!isOpen())return play();later(finish,600)}
   return{
-    start:function(){if(stopped){clear();return}if(visible)play();else{clear();run++}},
-    show:function(v){var was=visible;visible=v;if(v&&!was&&!stopped){var sc=h&&h.scroller&&h.scroller();if(!sc||sc.scrollTop===0)play()}},
-    stop:function(){stopped=true;clear();document.getElementById('demo').classList.remove('rq-auto')},
-    pick:function(){userPicked=true;stopped=false},
-    replay:function(){stopped=false;demo()}
+    start:function(){clear();run++;if(!stopped&&visible)play()},
+    show:function(v){var was=visible;visible=v;if(!v)return clear();if(!was&&!stopped)reduce?play():resume()},
+    stop:function(){stopped=true;clear();run++},
+    pick:function(){userPicked=true},
+    replay:function(){stopped=false;userPicked=false;demo()}
   };
 })();
 function themes(){$('#themes').innerHTML=THEMES.map(function(t){return '<button type="button" data-t="'+t[0]+'" aria-pressed="'+(cur===t[0])+'"><i style="background:'+t[2]+'"></i>'+t[1]+'</button>'}).join('');
@@ -75,8 +82,11 @@ function renderModels(){
 function loadModels(){fetch('/templates.json').then(function(r){return r.ok?r.json():{items:[]}}).then(function(c){MODELS=(c.items||[]).filter(function(m){return m.image});renderModels()}).catch(function(){})}
 fetch('/api/config').then(function(r){return r.json()}).then(function(c){REEFQ_WA=String(c.whatsapp||'').replace(/[^0-9]/g,'')}).catch(function(){});
 $('#o-theme').innerHTML=THEMES.map(function(t){return '<option value="'+t[0]+'">'+t[1]+'</option>'}).join('');
-var dm=$('#demo');dm.classList.add('rq-auto');
-['pointerdown','wheel','keydown'].forEach(function(ev){dm.addEventListener(ev,function(){tour.stop()},{passive:true})});
+var dm=$('#demo');
+/* Only real visitor input stops the tour (the tour's own seal click is not trusted). Mouse and keys stop it at once; on touch only a tap does,
+   so a swipe that scrolls the page over the phone leaves it playing. */
+dm.addEventListener('pointerdown',function(e){if(e.isTrusted&&e.pointerType!=='touch')tour.stop()},{passive:true});
+['click','wheel','keydown'].forEach(function(ev){dm.addEventListener(ev,function(e){if(e.isTrusted)tour.stop()},{passive:true})});
 $('#demo-replay').onclick=function(){tour.replay()};
 if('IntersectionObserver' in window)new IntersectionObserver(function(es){tour.show(es[0].isIntersecting)},{threshold:.45}).observe(dm);else tour.show(true);
 document.addEventListener('visibilitychange',function(){tour.show(!document.hidden&&dm.getBoundingClientRect().top<innerHeight)});
