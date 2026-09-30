@@ -158,7 +158,7 @@ function doSave(quiet){
    .catch(function(e){status(e.status===413?'This invitation is too large to save. Shorten the texts and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;btn.textContent='Save invitation';return v});
 }
 $('#btn-save').onclick=function(){doSave()};
-$('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];c.a.name=c.a.name;draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
+$('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];delete c.archived;delete c.archivedAt;delete c.orderCode;draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
 $('#btn-del').onclick=function(){if(draft.id)confirmDelete(draft)};
 
 /* ---------- dialog (confirmations, quick preview) ---------- */
