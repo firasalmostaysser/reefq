@@ -38,7 +38,7 @@ if(process.env.PERF==='1'){
 const audit=()=>{
   const res=[],sc=document.querySelector('.rq-scroll');
   if(document.documentElement.scrollWidth>innerWidth+1||(sc&&sc.scrollWidth>sc.clientWidth+1))res.push('horizontal overflow');
-  const rgb=s=>{const m=s.match(/[\d.]+/g)||[0,0,0,0];return[+m[0],+m[1],+m[2],m[3]==null?1:+m[3]]};
+  const rgb=s=>{const m=s.match(/[\d.]+/g)||[0,0,0,0],k=s.startsWith('color(srgb')?255:1;return[m[0]*k,m[1]*k,m[2]*k,m[3]==null?1:+m[3]]}; // color-mix() computes to color(srgb 0-1)
   const L=c=>{const f=v=>(v/=255)<=.03928?v/12.92:((v+.055)/1.055)**2.4;return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2])};
   const bgOf=el=>{for(let e=el;e;e=e.parentElement){const c=rgb(getComputedStyle(e).backgroundColor);if(c[3]>.5)return c}return[255,255,255,1]};
   for(const el of document.querySelectorAll('.rq-inv *')){
