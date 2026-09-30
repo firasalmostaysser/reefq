@@ -205,23 +205,23 @@ var PANELS=['list','design','guests','deliver','orders','settings'];
 function showTab(t){if(t!==tab)scrollTo(0,0);tab=t;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(t==='design')refit()}
 $$('[data-tab]').forEach(function(b){b.onclick=function(){showTab(b.dataset.tab)}});
 
-function refreshSide(){if(tab==='list'){renderList();loadCounts()}if(tab==='guests'){renderGuests();renderGuestList()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings')renderSettings()}
+function refreshSide(){if(tab==='list'){renderList();if(lState==='ok')api('/api/invitations').then(function(r){invites=r.items;renderChips();renderList();loadCounts()}).catch(function(){})}if(tab==='guests'){renderGuests();renderGuestList()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings')renderSettings()}
 
 /* ---------- invitations list ---------- */
-var lFilter='active',lState='loading',rCount={},rCountAt=0;
+var lFilter='active',lState='loading',rCount={},cBusy=0;
 function themeOf(id){return THEME_INFO.filter(function(t){return t.id===id})[0]||THEME_INFO[0]}
 /* Live: the couple or guests may already have the link (linked to a paid order, a guest link sent, or a reply received). */
 function invStatus(i){if(i.archived)return['Archived','arch'];var c=rCount[i.id];if(i.orderCode||(c&&c.n)||(i.guests||[]).some(function(g){return g.sent}))return['Live','good'];return['Draft','wait']}
 function fold(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
 function fmtD(d){var t=new Date(d+'T12:00');return isNaN(t)?d:t.toLocaleDateString('fr-TN',{day:'numeric',month:'short',year:'numeric'})}
 function rcText(c){return c?c.n+(c.n===1?' reply':' replies')+(c.n?' · '+c.coming+' coming':''):'Counting replies…'}
-/* reply counts, four invitations at a time; each card is patched in place so focus is never lost */
-function loadCounts(force){
-  if(!force&&Date.now()-rCountAt<60000)return;rCountAt=Date.now();
+/* reply counts, refreshed each time the list is shown, four invitations at a time; each card is patched in place so focus is never lost */
+function loadCounts(){
+  if(cBusy)return;
   var q=invites.map(function(i){return i.id});
-  var run=function(){var id=q.shift();if(!id)return;
+  var run=function(){var id=q.shift();if(!id){cBusy--;return}
     api('/api/invitations/'+encodeURIComponent(id)+'/rsvps').then(function(r){var yes=r.items.filter(function(x){return x.attending});rCount[id]={n:r.items.length,coming:yes.reduce(function(s,x){return s+(+x.guests||1)},0)};patchCard(id)}).catch(function(){}).then(run)};
-  for(var k=0;k<4;k++)run();
+  for(var k=0;k<4;k++){cBusy++;run()}
 }
 function patchCard(id){var el=$('[data-card="'+id+'"]'),i=invites.find(function(x){return x.id===id});if(!el||!i)return;
   $('[data-rc]',el).textContent=rcText(rCount[id]);var st=invStatus(i),p=$('[data-st]',el);p.textContent=st[0];p.className='pill '+st[1]}
@@ -283,7 +283,7 @@ $('#qv').addEventListener('click',function(e){if(e.target===this)this.close()});
 $('#qv').addEventListener('close',function(){if(qvHandle){qvHandle.destroy();qvHandle=null}$('#qv-screen').innerHTML=''});
 $('#l-q').oninput=renderList;$('#l-sort').onchange=renderList;
 $('#l-new').onclick=function(){$('#btn-new').click();showTab('design');$('#k-a-name').focus()};
-function loadInvites(){lState='loading';renderList();return api('/api/invitations').then(function(r){invites=r.items;lState='ok';renderChips();renderList();loadCounts(true)}).catch(function(e){if(e.status!==401){lState='error';renderList()}})}
+function loadInvites(){lState='loading';renderList();return api('/api/invitations').then(function(r){invites=r.items;lState='ok';renderChips();renderList();loadCounts()}).catch(function(e){if(e.status!==401){lState='error';renderList()}})}
 
 
 /* ---------- guests ---------- */
