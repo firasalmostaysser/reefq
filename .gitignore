@@ -10,3 +10,4 @@ public/_promo/
 test/out-*.png
 .wrangler/
 test/out-themes/
+deno.lock
