@@ -359,7 +359,6 @@ function shareMsg(l){
   if(l==='en')return 'Hello,\nWe would love you to celebrate the wedding of '+n[0]+' & '+n[1]+' on '+d+'.\nOpen your invitation and reply here:\n'+link;
   return 'Bonjour,\nNous avons la joie de vous inviter au mariage de '+n[0]+' & '+n[1]+', le '+d+'.\nOuvrez votre invitation et confirmez votre présence ici :\n'+link;
 }
-var qrLib=null;
 function renderDeliver(){
   $('#msg-langs').innerHTML=[['fr','Français'],['ar','العربية'],['en','English']].map(function(x){return '<button class="chip" type="button" data-ml="'+x[0]+'" aria-pressed="'+(msgLang===x[0])+'">'+x[1]+'</button>'}).join('');
   $$('[data-ml]').forEach(function(b){b.onclick=function(){msgLang=b.dataset.ml;renderDeliver()}});
@@ -367,12 +366,76 @@ function renderDeliver(){
   var gl=guestLink();
   $('#glink').textContent=gl||'Save the invitation to get its link';$('#glink-open').hidden=!gl;if(gl)$('#glink-open').href=gl;
   $('#glink-hint').textContent='Anyone can open this link on their phone. For a personal link per family, use the guest list.';
-  var q=$('#qr');q.innerHTML='';
-  if(window.QRCode&&(gl||draft.id)){new QRCode(q,{text:gl||('reefq:'+draft.id),width:148,height:148,colorDark:'#0f5c60',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}
-  else q.textContent=draft.id?'QR unavailable':'Save first';
+  var q=$('#qr');q.innerHTML=gl?qrSvg(gl,qrInk(draft)):'<p class="hint">Save the invitation to get its QR code.</p>';q.classList.toggle('none',!gl);$('#qr-png').disabled=$('#qr-svg').disabled=!gl;
+  renderGuestQr();
 }
 $('#btn-copymsg').onclick=function(){copy($('#msgbox').textContent,this)};
 $('#btn-copylink').onclick=function(){var g=guestLink();if(g)copy(g,this);else toast('No link yet')};
+/* ---------- QR codes (vendor/qrcode.js) ---------- */
+function qrOf(text){var q=qrcode(0,'M');q.addData(text);q.make();return q}
+function lum(hex){var n=parseInt(String(hex).slice(1),16),c=[n>>16&255,n>>8&255,n&255].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+/* codes stay dark on white so every phone scans them: the theme ink when it is dark enough, else the theme background (dark themes), else near-black */
+function qrInk(inv){var t=themeOf(inv.theme),ok=function(c){return /^#[0-9a-f]{6}$/i.test(c)&&1.05/(lum(c)+.05)>=4.5};return ok(t.fg)?t.fg:ok(t.bg)?t.bg:'#1b1b1b'}
+function qrPath(q,cell,x0,y0){var n=q.getModuleCount(),d='';for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.isDark(r,c))d+='M'+(x0+c*cell)+' '+(y0+r*cell)+'h'+cell+'v'+cell+'h-'+cell+'z';return d}
+/* SVG with a 4-module white margin; with cap, the couple names (and sub, the guest name) sit under the code */
+function qrSvg(text,ink,cap,sub){
+  var q=qrOf(text),n=q.getModuleCount(),cell=10,m=4*cell,W=n*cell+2*m,capH=cap?(sub?110:70):0,H=W+capH;
+  var txt=cap?'<text x="'+W/2+'" y="'+(W+22)+'" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-weight="600" font-size="34" fill="'+ink+'">'+esc(cap)+'</text>'+(sub?'<text x="'+W/2+'" y="'+(W+70)+'" text-anchor="middle" font-family="Figtree, Arial, sans-serif" font-size="22" fill="#555">'+esc(sub)+'</text>':''):'';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" shape-rendering="crispEdges"><rect width="'+W+'" height="'+H+'" fill="#fff"/><path fill="'+ink+'" d="'+qrPath(q,cell,m,m)+'"/>'+txt+'</svg>';
+}
+/* 1024 px square PNG: white margin, the code, the couple names under it (and the guest name) */
+function qrPng(text,ink,cap,sub,file){
+  var fonts=document.fonts?Promise.all([document.fonts.load("600 64px 'Cormorant Garamond'"),document.fonts.load("40px Figtree")]).catch(function(){}):Promise.resolve();
+  return fonts.then(function(){
+    var S=1024,textH=sub?124:64,q=qrOf(text),n=q.getModuleCount(),cell=Math.floor((S-60-textH)/(n+8)),size=cell*n,x0=Math.round((S-size)/2),y0=Math.round((S-cell*(n+8)-textH)/2)+cell*4;
+    var cv=document.createElement('canvas');cv.width=cv.height=S;var g=cv.getContext('2d');
+    g.fillStyle='#fff';g.fillRect(0,0,S,S);g.fillStyle=ink;
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.isDark(r,c))g.fillRect(x0+c*cell,y0+r*cell,cell,cell);
+    var fit=function(t,px,fam,w){do{g.font=w+' '+px+'px '+fam;px-=2}while(g.measureText(t).width>S-120&&px>20)};
+    g.textAlign='center';g.textBaseline='alphabetic';var ty=y0+size+cell*4+44;
+    fit(cap,64,"'Cormorant Garamond', Amiri, Georgia, serif",'600');g.fillText(cap,S/2,ty);
+    if(sub){g.fillStyle='#555';fit(sub,40,"Figtree, Amiri, Arial, sans-serif",'500');g.fillText(sub,S/2,ty+64)}
+    return new Promise(function(res){cv.toBlob(function(b){download(file,b,'image/png');res()},'image/png')});
+  });
+}
+function qrFile(base,ext){return 'qr-'+slug(base)+'.'+ext}
+function inviteQr(kind){var link=guestLink();if(!link){toast('Save the invitation first');return}
+  var ink=qrInk(draft),n=names(draft);
+  if(kind==='svg')download(qrFile(n,'svg'),qrSvg(link,ink,n),'image/svg+xml');else qrPng(link,ink,n,'',qrFile(n,'png'))}
+function guestQr(i,kind){var g=(draft.guests||[])[i],link=g&&personalLink(g);if(!link)return;
+  var ink=qrInk(draft),n=names(draft);
+  if(kind==='svg')download(qrFile(g.name,'svg'),qrSvg(link,ink,n,g.name),'image/svg+xml');else qrPng(link,ink,n,g.name,qrFile(g.name,'png'))}
+$('#qr-png').onclick=function(){inviteQr('png')};$('#qr-svg').onclick=function(){inviteQr('svg')};
+function renderGuestQr(){
+  var gl=draft.guests||[],box=$('#gq-list'),ink=qrInk(draft);
+  $('#gq-print').disabled=!draft.id||!gl.length;
+  $('#gq-hint').textContent=!draft.id?'Save the invitation to get the guest codes.':gl.length?'One code per family, opening their personal invitation. Cards print 8 per A4 page.':'Add guests in Guests & RSVPs to get one code per family.';
+  box.innerHTML=draft.id?gl.map(function(g,i){return '<li><span class="gq-code">'+qrSvg(personalLink(g),ink)+'</span><span class="gq-name">'+esc(g.name)+'<small>'+(+g.seats||1)+(+g.seats>1?' seats':' seat')+'</small></span><span class="gq-btns"><button class="btn sm" type="button" data-gq="'+i+'" data-k="png" aria-label="Download PNG for '+esc(g.name)+'">PNG</button><button class="btn sm" type="button" data-gq="'+i+'" data-k="svg" aria-label="Download SVG for '+esc(g.name)+'">SVG</button></span></li>'}).join(''):'';
+  $$('[data-gq]',box).forEach(function(b){b.onclick=function(){guestQr(+b.dataset.gq,b.dataset.k)}});
+}
+/* printable A4 sheet, 8 cards per page (2 × 4, 105 × 74 mm), in the invitation's colours */
+var SCAN={fr:'Scannez pour ouvrir votre invitation',ar:'امسحوا الرمز لفتح دعوتكم',en:'Scan to open your invitation'};
+$('#gq-print').onclick=function(){
+  var gl=draft.guests||[];if(!draft.id||!gl.length)return;
+  var w=window.open('','_blank');if(!w){toast('Allow pop-ups for this site to open the print page.',true);return}
+  var t=themeOf(draft.theme),ink=qrInk(draft),n=names(draft),l=draft.lang||'fr',pages=[];
+  for(var p=0;p<gl.length;p+=8)pages.push('<section class="page">'+gl.slice(p,p+8).map(function(g){return '<div class="c"><div class="in"><p class="g">'+esc(g.name)+'</p><div class="q">'+qrSvg(personalLink(g),ink)+'</div><p class="n">'+esc(n)+'</p><p class="s"'+(l==='ar'?' dir="rtl"':'')+'>'+esc(SCAN[l]||SCAN.fr)+'</p></div></div>'}).join('')+'</section>');
+  w.document.write('<!doctype html><html lang="'+l+'"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QR cards · '+esc(n)+'</title>'+
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri&family=Cormorant+Garamond:wght@600&family=Figtree:wght@500;600&family=Pinyon+Script&display=swap">'+
+    '<style>@page{size:A4;margin:0}*{box-sizing:border-box}html,body{margin:0}body{background:#e9ecec;font-family:Figtree,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+    '.bar{position:sticky;top:0;display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px;background:#fff;border-bottom:1px solid #d2dedd;font-size:14px;color:#13292a;z-index:2}.bar b{flex:1;min-width:200px}.bar small{display:block;font-weight:400;color:#546a69}'+
+    '.bar button{font:600 14px Figtree,Arial,sans-serif;padding:10px 18px;border-radius:8px;border:0;background:#147d82;color:#fff;cursor:pointer}'+
+    '.sheet{zoom:var(--z,1);padding:16px 0}.page{width:210mm;height:297mm;margin:0 auto 16px;background:#fff;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);box-shadow:0 4px 18px rgb(0 0 0 / .12);overflow:hidden}'+
+    '.c{padding:3mm;border:.2mm dashed #c9c9c9;margin:-.1mm}.in{height:100%;background:'+t.bg+';color:'+t.fg+';border-radius:2mm;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6mm;padding:3mm;text-align:center;outline:.3mm solid color-mix(in srgb,'+t.fg+' 35%,transparent);outline-offset:-1.6mm}'+
+    '.g{margin:0;font:600 12pt/1.15 "Cormorant Garamond",Amiri,Georgia,serif;max-width:90%;overflow-wrap:anywhere}.q{background:#fff;padding:1.5mm;border-radius:1.5mm;width:36mm;height:36mm}.q svg{display:block;width:100%;height:100%}'+
+    '.n{margin:0;font:17pt/1.1 "Pinyon Script",cursive}.s{margin:0;font:500 7pt/1.2 Figtree,Arial,sans-serif;letter-spacing:.04em;opacity:.8}.s[dir=rtl]{font:9pt Amiri,serif;letter-spacing:0}'+
+    '@media print{body{background:#fff}.bar{display:none}.sheet{zoom:1;padding:0}.page{margin:0;box-shadow:none;break-after:page}.page:last-child{break-after:auto}}</style></head><body>'+
+    '<div class="bar"><b>'+gl.length+' QR cards · '+pages.length+(pages.length>1?' A4 pages':' A4 page')+'<small>Print at 100% scale with margins set to None, then cut along the dotted lines.</small></b><button type="button" id="p">Print</button></div>'+
+    '<div class="sheet">'+pages.join('')+'</div></body></html>');
+  w.document.close();
+  var fit=function(){w.document.documentElement.style.setProperty('--z',Math.min(1,(w.innerWidth-16)/794).toFixed(3))};fit();w.addEventListener('resize',fit);
+  w.document.getElementById('p').onclick=function(){w.print()};
+};
 /* ---------- orders & RIB payments ---------- */
 var orders=[],oFilter='verify',oSel=null,proofUrl=null,oState='loading',oBusy=false,oSeq=0;
 var OST={awaiting_payment:['Awaiting transfer','info'],proof_sent:['Proof to verify','warn'],paid:['Paid · client','good'],rejected:['Proof rejected','bad'],cancelled:['Cancelled','bad']};

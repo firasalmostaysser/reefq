@@ -289,3 +289,15 @@ a.btn:focus-visible,button:focus-visible,.toggles input:focus-visible{outline:2p
 .qv-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .qv-head h2{margin:0;flex:1;min-width:0;font-size:21px}
 .qv-box{position:relative;margin:0 auto}
+
+/* QR codes */
+.qrmain{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.qr svg{display:block;width:148px;height:148px}
+.qr.none{background:var(--bg);width:auto;padding:14px 16px}.qr.none .hint{margin:0}
+.qrbtns{display:flex;flex-direction:column;gap:8px}
+.gqhead{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}.gqhead>div{flex:1;min-width:220px}
+.gqlist{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.gqlist li{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.gq-code svg{display:block;width:56px;height:56px;border-radius:4px}
+.gq-name{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}.gq-name small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.gq-btns{display:flex;gap:6px}
