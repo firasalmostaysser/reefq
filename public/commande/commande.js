@@ -40,8 +40,10 @@ function render(o){
       $('#csv').href=API+'/rsvps.csv'+Q;
       $('#rows').innerHTML=r.items.length?r.items.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td>'+(x.attending?'Présent':'Absent')+'</td><td class="num">'+(x.attending?x.guests:0)+'</td><td>'+esc(x.dietary)+'</td><td>'+esc(x.message)+'</td></tr>'}).join(''):'<tr><td colspan="5" class="empty">Pas encore de réponse.</td></tr>';
       var gl=inv.guests||[];$('#glist').hidden=!gl.length;
-      $('#glinks').innerHTML=gl.map(function(g,i){return '<li><span>'+esc(g.name)+' · '+(g.seats||1)+' pl.</span><button class="btn sm" type="button" data-gl="'+i+'">Copier le lien</button></li>'}).join('');
+      var cn=(inv.names||[]).filter(Boolean).join(' & ');
+      $('#glinks').innerHTML=gl.map(function(g,i){return '<li><span>'+esc(g.name)+' · '+(g.seats||1)+' pl.</span><span class="gbtns"><button class="btn sm" type="button" data-gl="'+i+'">Copier le lien</button>'+(window.qrcode?'<button class="btn sm ghost" type="button" data-gq="'+i+'" data-k="png" aria-label="QR code PNG pour '+esc(g.name)+'">QR PNG</button><button class="btn sm ghost" type="button" data-gq="'+i+'" data-k="svg" aria-label="QR code SVG pour '+esc(g.name)+'">QR SVG</button>':'')+'</span></li>'}).join('');
       document.querySelectorAll('[data-gl]').forEach(function(x){x.onclick=function(){copy(location.origin+gl[+x.dataset.gl].link)}});
+      document.querySelectorAll('[data-gq]').forEach(function(x){x.onclick=function(){var g=gl[+x.dataset.gq];guestQr(location.origin+g.link,cn,g.name,x.dataset.k)}});
     }
   }
   clearInterval(poll);if(o.status==='proof_sent'||o.status==='paid')poll=setInterval(load,o.status==='paid'?60000:30000);
@@ -64,5 +66,25 @@ $('#proof-form').onsubmit=function(e){
 };
 $('#c-again').onclick=function(){$('#checking').hidden=true;$('#pay').hidden=false;render(Object.assign({},O,{status:'awaiting_payment'}));$('#checking').hidden=false};
 $('#copy-page').onclick=function(){copy(location.href)};
+
+/* QR code of a personal link (vendor/qrcode.js): PNG 1024 px with white margin and names under the code, or SVG */
+var INK='#0f5c60';
+function slug(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'invite'}
+function save(name,blob){var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function guestQr(link,cap,sub,kind){
+  var q=qrcode(0,'M');q.addData(link);q.make();var n=q.getModuleCount(),file='qr-'+slug(sub)+'.'+kind;
+  if(kind==='svg'){var c=10,m=40,W=n*c+2*m,H=W+110,d='';for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))d+='M'+(m+k*c)+' '+(m+r*c)+'h'+c+'v'+c+'h-'+c+'z';
+    save(file,new Blob(['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" shape-rendering="crispEdges"><rect width="'+W+'" height="'+H+'" fill="#fff"/><path fill="'+INK+'" d="'+d+'"/><text x="'+W/2+'" y="'+(W+22)+'" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-weight="600" font-size="34" fill="'+INK+'">'+esc(cap)+'</text><text x="'+W/2+'" y="'+(W+70)+'" text-anchor="middle" font-family="Figtree, Arial, sans-serif" font-size="22" fill="#555">'+esc(sub)+'</text></svg>'],{type:'image/svg+xml'}));return}
+  var fonts=document.fonts?document.fonts.load("600 64px 'Cormorant Garamond'").catch(function(){}):Promise.resolve();
+  fonts.then(function(){
+    var S=1024,textH=124,cell=Math.floor((S-60-textH)/(n+8)),size=cell*n,x0=Math.round((S-size)/2),y0=Math.round((S-cell*(n+8)-textH)/2)+cell*4;
+    var cv=document.createElement('canvas');cv.width=cv.height=S;var g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,S,S);g.fillStyle=INK;
+    for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(q.isDark(r,k))g.fillRect(x0+k*cell,y0+r*cell,cell,cell);
+    var fit=function(t,px,fam,w){do{g.font=w+' '+px+'px '+fam;px-=2}while(g.measureText(t).width>S-120&&px>20)};
+    g.textAlign='center';var ty=y0+size+cell*4+44;fit(cap,64,"'Cormorant Garamond', Amiri, Georgia, serif",'600');g.fillText(cap,S/2,ty);
+    g.fillStyle='#555';fit(sub,40,'Figtree, Amiri, Arial, sans-serif','500');g.fillText(sub,S/2,ty+64);
+    cv.toBlob(function(b){save(file,b)},'image/png');
+  });
+}
 load();
 })();

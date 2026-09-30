@@ -47,3 +47,5 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .keep{text-align:center}
 .linkbtn{all:unset;cursor:pointer;color:var(--accent);font-weight:600;text-decoration:underline}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-weight:600;font-size:14px;z-index:50}
+.gbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:520px){.glinks li{flex-wrap:wrap}.gbtns{width:100%;justify-content:flex-start}}
