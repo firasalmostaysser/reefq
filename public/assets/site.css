@@ -15,15 +15,21 @@ html[lang=ar] body{font-family:var(--ar);font-size:18px}
 .links a:hover{color:var(--fg)}
 .navr{display:flex;gap:8px;align-items:center}
 @media (max-width:760px){.links{display:none}.navr{margin-inline-start:auto}}
+@media (max-width:400px){.nav{gap:10px;padding-inline:12px}.logo img{height:32px}.navr{gap:6px}.lsw a{min-width:26px;padding-inline:7px}.btn.sm{padding-inline:11px}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:999px;font:600 15px/1 var(--ui);text-decoration:none;border:1px solid var(--line);color:var(--fg);background:var(--surface);cursor:pointer}
 html[lang=ar] .btn{font-family:var(--ar);font-size:17px;font-weight:700}
 .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .btn.ghost{background:transparent}
 .btn.sm{padding:8px 14px;font-size:13px}
-.btn:focus-visible,.lang:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.lang{all:unset;cursor:pointer;font:600 14px var(--ar);color:var(--accent);padding:6px 10px;border-radius:8px}
+/* FR · عربي · EN: each name in its own script; the current one is filled. */
+.lsw{display:flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
+.lsw a{min-width:30px;box-sizing:border-box;text-align:center;padding:6px 9px;border-radius:999px;color:var(--muted);text-decoration:none;font:600 12px/1 var(--ui);letter-spacing:.04em}
+.lsw a[lang=ar]{font:700 14px/1 var(--ar);letter-spacing:0;padding-block:4px 5px}
+.lsw a:hover{color:var(--fg)}
+.lsw a[aria-current]{background:var(--accent);color:var(--accent-fg)}
+.btn:focus-visible,.lsw a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 main{max-width:1120px;margin:0 auto;padding:0 16px}
-.lhero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:center;padding-block:28px 40px}
+.lhero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:48px;align-items:center;padding-block:24px 40px}
 /* Mobile: the text block dissolves so the phone sits right after the headline, before the paragraph and buttons. */
 @media (max-width:900px){.lhero{grid-template-columns:minmax(0,1fr);gap:0;padding-block:24px 40px}
  .hero-txt{display:contents}.eyebrow{order:1}h1{order:2;margin-bottom:16px}.hero-demo{order:3;margin-bottom:28px}.lead{order:4}.cta-row{order:5}.proof{order:6}}
@@ -35,23 +41,45 @@ html[lang=ar] h1{font:700 clamp(34px,5vw,54px)/1.35 'Aref Ruqaa',var(--ar)}
 .cta-row{display:flex;gap:10px;flex-wrap:wrap}
 .proof{list-style:none;padding:0;margin:22px 0 0;display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:14px}
 .proof li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-inline-end:8px;vertical-align:middle}
-.hero-demo{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
-.demo-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.demo-replay,.demo-full{all:unset;box-sizing:border-box;cursor:pointer;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px/1 var(--ui);display:inline-flex;align-items:center}
+/* Live demo. The invitation renders in a fixed 390x844 "virtual phone" (.vp) that landing.js scales to the screen,
+   so it looks exactly as on a real phone. Laptops: the phone takes the full height under the nav and the theme list
+   runs beside it. Phones and tablets: theme row and Replay / Full screen under the phone. */
+.hero-demo{--ph:min(820px,calc(100svh - 120px));display:flex;flex-direction:row;align-items:center;justify-content:center;gap:24px;min-width:0}
+.phone{box-sizing:border-box;height:var(--ph);width:calc((var(--ph) - 20px) * 390 / 844 + 20px);flex:none;border-radius:calc(var(--ph) * .058);padding:10px;background:#15140f;box-shadow:0 40px 70px -30px rgb(0 0 0 / .55),inset 0 0 0 1.5px #3a382e}
+.screen{height:100%;border-radius:calc(var(--ph) * .058 - 9px);overflow:hidden;position:relative;isolation:isolate;transition:opacity .45s ease}
+.screen.fade{opacity:0}
+.vp{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0}
+.vp>div{height:100%}
+/* The invitation sizes a few titles with vw; inside the frame they take their 390px-phone values. */
+.vp .rq-sheet .rq-names{font-size:46.8px}
+.vp .rq-inv[lang=ar] .rq-sheet .rq-names{font-size:42.9px}
+.vp .rq-inv[data-t=oldmoney]:not([lang=ar]) .rq-sheet .rq-names{font-size:39px}
+.vp .rq-h2{font-size:36.7px}
+.vp .rq-inv[lang=ar] .rq-h2{font-size:32px}
+.demo-ctl{display:flex;flex-direction:column;align-items:stretch;gap:18px;min-width:0;max-height:var(--ph)}
+.themes{box-sizing:border-box;display:flex;flex-direction:column;gap:6px;overflow-y:auto;min-height:0;padding:3px;scrollbar-width:none}
+.themes::-webkit-scrollbar{display:none}
+.themes button{all:unset;box-sizing:border-box;flex:none;scroll-snap-align:start;cursor:pointer;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);font:600 13px/1 var(--ui);display:flex;align-items:center;gap:8px;background:var(--surface);color:var(--fg);white-space:nowrap}
+.themes button i{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgb(0 0 0 / .12)}
+.themes button[aria-pressed=true]{border-color:var(--accent);background:var(--soft)}
+.themes button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.demo-bar{display:flex;flex-direction:column;gap:8px}
+.demo-replay,.demo-full{all:unset;box-sizing:border-box;cursor:pointer;min-height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 14px/1 var(--ui);display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
 .demo-replay{color:var(--accent);border-color:var(--accent)}
-html[lang=ar] .demo-replay,html[lang=ar] .demo-full{font:700 15px/1 var(--ar)}
+.demo-bar svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+html[dir=rtl] .demo-bar svg{transform:scaleX(-1)}
+html[lang=ar] .demo-replay,html[lang=ar] .demo-full{font:700 16px/1 var(--ar)}
 .demo-replay:focus-visible,.demo-full:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.phone{box-sizing:border-box;height:max(420px,min(720px,calc(100svh - 210px)));width:auto;max-width:100%;aspect-ratio:9/18.5;flex:none;border-radius:44px;padding:10px;background:#15140f;box-shadow:0 40px 70px -30px rgb(0 0 0 / .55),inset 0 0 0 1.5px #3a382e}
-@media (max-width:900px){.phone{height:max(420px,min(720px,calc(100svh - 320px)))}}
-.screen{height:100%;border-radius:35px;overflow:hidden;position:relative;isolation:isolate}
-.themes{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:2px 2px 6px;scrollbar-width:none}.themes::-webkit-scrollbar{display:none}
+@media (max-width:900px){
+ .hero-demo{--ph:min(640px,78svh);flex-direction:column;gap:20px}
+ .demo-ctl{width:100%;max-height:none;align-items:center;gap:14px}
+ /* The theme row scrolls sideways, bleeds to the screen edge and fades at both ends so it reads as more to swipe. */
+ .themes{flex-direction:row;overflow:auto hidden;width:calc(100% + 32px);margin-inline:-16px;padding:3px 20px;scroll-padding-inline:20px;scroll-snap-type:x proximity;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 20px,#000 calc(100% - 20px),transparent);mask-image:linear-gradient(to right,transparent,#000 20px,#000 calc(100% - 20px),transparent)}
+ .demo-bar{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:10px}}
 /* Touch screens: swiping over the phone scrolls the page; the tour scrolls the invitation itself. */
 @media (pointer:coarse){.screen,.screen *{touch-action:pan-y}.screen .rq-scroll{overflow-y:hidden;overscroll-behavior:auto}}
 
-.themes button{all:unset;flex:none;cursor:pointer;padding:7px 12px;border-radius:999px;border:1px solid var(--line);font:600 13px var(--ui);display:flex;align-items:center;gap:7px;background:var(--surface)}
-.themes button i{width:10px;height:10px;border-radius:50%}
-.themes button[aria-pressed=true]{border-color:var(--accent);background:var(--soft)}
-.demo-hint{margin:0;font-size:13px;color:var(--muted)}
 .band{padding-block:56px;border-top:1px solid var(--line)}
 h2{font:500 clamp(32px,4vw,44px)/1.15 var(--display);margin:0 0 8px;text-wrap:balance}
 html[lang=ar] h2{font:700 clamp(28px,3.4vw,38px)/1.4 'Aref Ruqaa',var(--ar)}
@@ -114,3 +142,22 @@ form .btn{align-self:flex-start}
 .model .acts .btn{padding:8px 12px;font-size:13px}
 
 .studio-link{color:var(--muted);font-size:13px}
+
+/* Arabic: Amiri for text, Aref Ruqaa for big titles, no letter-spacing, looser lines. The demo invitation keeps its own type. */
+html[lang=ar] body{line-height:1.9}
+html[lang=ar] :is(.nav,.hero-txt,.eyebrow,h1,.lead,.proof,.demo-ctl,.band,.features,.faq,.order,.foot) *,html[lang=ar] :is(.eyebrow,h1,h2,.tag,.th){letter-spacing:0}
+html[lang=ar] .lead{font-size:20px;line-height:1.9}
+html[lang=ar] .proof{font-size:16px}
+html[lang=ar] .steps b{font:700 19px/1.6 var(--ar)}
+html[lang=ar] .steps span,html[lang=ar] .feat p,html[lang=ar] .plan ul{font-size:17px;line-height:1.8}
+html[lang=ar] .plan h3,html[lang=ar] .price b{font-family:var(--display)}
+html[lang=ar] .price small,html[lang=ar] .addons,html[lang=ar] details p{font-size:17px}
+html[lang=ar] summary{font:700 19px/1.6 var(--ar)}
+html[lang=ar] .f span{font-size:16px}
+html[lang=ar] .foot{font-size:16px}
+html[lang=ar] .links a{font:700 16px var(--ar)}
+html[lang=ar] .btn.sm{font-size:15px}
+/* Text and form fields read from the start edge in either direction; the phone number stays left-to-right. */
+.sub,.addons,details p,.f span{text-align:start}
+html[dir=rtl] #o-phone{text-align:end}
+html[dir=rtl] #o-phone::placeholder{text-align:end}
