@@ -306,7 +306,7 @@ function render(root,inv,opts){
     };
   }
   draw();
-  return{destroy:function(){clearInterval(st.timer);if(st.audio)st.audio.pause();root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()}};
+  return{destroy:function(){clearInterval(st.timer);if(st.audio)st.audio.pause();root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
 window.ReefqInvite={THEME_LIST:THEME_LIST,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();
