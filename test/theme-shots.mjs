@@ -1,14 +1,14 @@
 // Theme screenshots on phone viewports: every theme closed + open (+ full length), per language,
 // with contact sheets and automatic checks (page errors, horizontal overflow, text contrast).
 // Needs `npm run dev` running.  BASE=http://localhost:8888 OUT=test/out-themes node test/theme-shots.mjs
-// Filters: THEMES=sidi,kairouan  LANGS=fr,ar,en  VPS=390x844  FULL=0 (skip full-length shots)
+// Filters: THEMES=sidi,kairouan  LANGS=fr,ar,en  VPS=390x844  OPS=none,bismillah,verse (opening line)  FULL=0 (skip full-length shots)
 // PERF=1 measures the envelope opening at 4x CPU throttling instead of taking screenshots.
 import { chromium } from 'playwright';
 import { mkdirSync, readFileSync } from 'node:fs';
 const out=process.env.OUT||'test/out-themes', B=(process.env.BASE||'http://localhost:8888')+'/theme-preview.html';
 const ALL=['reefq','zitouna','yasmine','layl','sidi','kairouan','oldmoney','sauge','bordeaux','sahara'];
 const list=(v,d)=>v?v.split(',').filter(Boolean):d;
-const themes=list(process.env.THEMES,ALL), langs=list(process.env.LANGS,['fr','ar']);
+const themes=list(process.env.THEMES,ALL), langs=list(process.env.LANGS,['fr','ar']), ops=list(process.env.OPS,['none']);
 const vps=list(process.env.VPS,['360x740','390x844','430x932']).map(s=>{const[w,h]=s.split('x').map(Number);return{w,h}});
 mkdirSync(out,{recursive:true});
 const b=await chromium.launch(process.env.CHROMIUM?{executablePath:process.env.CHROMIUM}:{});
@@ -57,19 +57,19 @@ const shots=[];
 for(const {w,h} of vps){
   const ctx=await b.newContext({viewport:{width:w,height:h},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   const p=await ctx.newPage();p.on('pageerror',e=>errs.push(`${w}: ${e.message}`));
-  for(const lang of langs)for(const t of themes){
-    const tag=`${t}-${lang}-${w}`;
-    await p.goto(`${B}?t=${t}&lang=${lang}&guest=1`);await p.waitForSelector('.rq3-seal canvas');await ready(p);await p.waitForTimeout(500);
+  for(const op of ops)for(const lang of langs)for(const t of themes){
+    const tag=`${t}-${lang}${op==='none'?'':'-'+op}-${w}`,q=`t=${t}&lang=${lang}&op=${op}&guest=1`;
+    await p.goto(`${B}?${q}`);await p.waitForSelector('.rq3-seal canvas');await ready(p);await p.waitForTimeout(500);
     await p.screenshot({path:`${out}/${tag}-closed.png`});
     (await p.evaluate(audit)).forEach(x=>issues.push(`${tag} closed: ${x}`));
-    await p.goto(`${B}?t=${t}&lang=${lang}&open=1&guest=1`);await ready(p);await p.waitForTimeout(1600);
+    await p.goto(`${B}?${q}&open=1`);await ready(p);await p.waitForTimeout(1600);
     await p.screenshot({path:`${out}/${tag}-open.png`});
     (await p.evaluate(audit)).forEach(x=>issues.push(`${tag} open: ${x}`));
     if(process.env.FULL!=='0'){
       await p.addStyleTag({content:'#r,.rq-inv,.rq-scroll{height:auto!important;overflow-y:visible!important;overflow-x:clip!important}'});
       await p.screenshot({path:`${out}/${tag}-full.png`,fullPage:true});
     }
-    shots.push({tag,t,lang,w});
+    shots.push({tag,t,lang,op,w});
   }
   await ctx.close();
 }
@@ -77,11 +77,11 @@ for(const {w,h} of vps){
 // Contact sheets: one per viewport + language, themes side by side, closed above open
 const sheet=await (await b.newContext({viewport:{width:1800,height:900}})).newPage();
 const src=f=>'data:image/png;base64,'+readFileSync(f).toString('base64');
-for(const {w} of vps)for(const lang of langs){
-  const row=shots.filter(s=>s.w===w&&s.lang===lang);
+for(const {w} of vps)for(const op of ops)for(const lang of langs){
+  const row=shots.filter(s=>s.w===w&&s.lang===lang&&s.op===op);
   const cell=s=>`<figure><img src="${src(`${out}/${s.tag}-closed.png`)}"><img src="${src(`${out}/${s.tag}-open.png`)}"><figcaption>${s.t}</figcaption></figure>`;
   await sheet.setContent(`<style>body{margin:0;background:#222;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:10px;font:14px system-ui;color:#ddd}figure{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px}figcaption{grid-column:1/3;text-align:center}img{width:100%}</style>${row.map(cell).join('')}`);
-  await sheet.waitForLoadState('load');await sheet.screenshot({path:`${out}/_sheet-${lang}-${w}.png`,fullPage:true});
+  await sheet.waitForLoadState('load');await sheet.screenshot({path:`${out}/_sheet-${lang}${op==='none'?'':'-'+op}-${w}.png`,fullPage:true});
 }
 console.log(`${shots.length*(process.env.FULL==='0'?2:3)} screenshots in ${out}`);
 console.log('issues',issues.length?'\n  '+issues.join('\n  '):'none');
