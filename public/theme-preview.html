@@ -2,10 +2,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&family=Pinyon+Script&display=swap">
 <link rel="stylesheet" href="/assets/invitation.css"><style>html,body{margin:0;height:100%}#r{height:100vh;height:100dvh}</style></head><body><div id="r"></div>
 <script src="/assets/engine.js"></script><script>
-/* ?t=theme &lang=fr|ar|en &open=1 &guest=1 (personal link: greeting + reserved seats) */
+/* ?t=theme &lang=fr|ar|en &open=1 &guest=1 (personal link: greeting + reserved seats) &op=none|bismillah|verse (opening line) */
 var q=new URLSearchParams(location.search),g=q.get('guest')==='1'?{id:'g1',name:q.get('lang')==='ar'?'عائلة بن سالم':'Famille Ben Salem',seats:3}:null;
 ReefqInvite.render(document.getElementById('r'),{id:'x',theme:q.get('t')||'reefq',lang:q.get('lang')||'fr',eventType:'wedding',
  a:{name:'Yasmine',ar:'ياسمين'},b:{name:'Karim',ar:'كريم'},date:'2027-06-12',time:'20:30',venue:'Dar El Marsa',city:'La Marsa, Tunis',dress:'Tenue de soirée, tons clairs',dressColors:['#f4efe6','#c9a45f','#9fb3c8'],
  story:{fr:"Tout a commencé sur un quai de la gare de Sousse, un matin de juillet.\nSept ans plus tard, ils vous invitent à célébrer leur union.",en:'It all began on a train platform in Sousse, one July morning.\nSeven years later, they invite you to celebrate their union.',ar:'بدأت الحكاية على رصيف محطة سوسة، في صباحٍ من شهر جويلية.\nوبعد سبع سنوات، يدعوانكم لمشاركتهما فرحة الزفاف.'},
- events:[{type:'henna',date:'2027-06-10',time:'19:00',place:'Maison familiale, Sousse'},{type:'dinner',date:'2027-06-12',time:'20:30',place:'Dar El Marsa'}],message:{},rsvpBy:'2027-05-20',maxGuests:2},{startOpen:q.get('open')==='1',guest:g,lang:q.get('lang')||undefined});
+ events:[{type:'henna',date:'2027-06-10',time:'19:00',place:'Maison familiale, Sousse'},{type:'dinner',date:'2027-06-12',time:'20:30',place:'Dar El Marsa'}],opening:q.get('op')||'none',message:{},rsvpBy:'2027-05-20',maxGuests:2},{startOpen:q.get('open')==='1',guest:g,lang:q.get('lang')||undefined});
 </script></body></html>

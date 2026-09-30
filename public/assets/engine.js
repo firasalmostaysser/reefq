@@ -8,6 +8,22 @@ var T={
  ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',at:'على الساعة',
   ev:{henna:'ليلة الحنّة',contract:'عقد القران',ceremony:'حفل الزفاف',dinner:'عشاء الزفاف',outia:'الوطية',brunch:'فطور الوداع'}}
 };
+/* Optional opening line at the top of the invitation (inv.opening: 'none' | 'bismillah' | 'verse'). Texts mirror wording-templates.js. */
+var OPENINGS={
+  bismillah:{ar:'بسم الله الرحمن الرحيم'},
+  verse:{text:{
+      ar:'﴿ وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ﴾',
+      fr:'Et parmi Ses signes, Il vous a créé des épouses issues de vous-mêmes, afin que vous trouviez auprès d\'elles la sérénité, et Il a mis entre vous affection et miséricorde.',
+      en:'And among His signs is that He created for you spouses from among yourselves, that you may find tranquillity in them, and He placed between you affection and mercy.'},
+    ref:{ar:'الروم: ٢١',fr:'Sourate Ar-Rûm, 21',en:'Surah Ar-Rum, 21'}}
+};
+function openingHtml(kind,L){
+  if(kind==='bismillah')return '<div class="rq-opening"><p class="rq-basmala" lang="ar" dir="rtl">'+esc(OPENINGS.bismillah.ar)+'</p></div>';
+  if(kind!=='verse')return '';
+  var v=OPENINGS.verse;
+  return '<figure class="rq-opening rq-verse"><blockquote><p class="rq-ayah" lang="ar" dir="rtl">'+esc(v.text.ar)+'</p>'+(L!=='ar'?'<p class="rq-ayah-tr">'+esc(v.text[L]||v.text.fr)+'</p>':'')+'</blockquote>'+
+    '<figcaption class="rq-ayah-ref"'+(L==='ar'?' lang="ar"':'')+'>'+esc(v.ref[L]||v.ref.fr)+'</figcaption></figure>';
+}
 var RQA={pocket:'/assets/env/pocket.webp',flap:'/assets/env/flap.webp',flapshadow:'/assets/env/flapshadow.webp',interior:'/assets/env/interior.webp',card:'/assets/env/card.webp',linen:'/assets/env/linen.webp'};
 var LOGO='/assets/logo-light.webp';
 var LOGO_DARK='/assets/logo-dark.webp';
@@ -213,7 +229,7 @@ function render(root,inv,opts){
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+openingHtml(inv.opening,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
@@ -288,5 +304,5 @@ function render(root,inv,opts){
   draw();
   return{destroy:function(){clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
-window.ReefqInvite={THEME_LIST:THEME_LIST,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
+window.ReefqInvite={THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();
