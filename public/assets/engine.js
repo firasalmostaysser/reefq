@@ -1,11 +1,11 @@
 (function(){
 'use strict';
 var T={
- en:{k_engagement:'are getting engaged',k_henna:'invite you to their henna night',k_contract:'are tying the knot',dear:'Dear',seatsFor:'Seats reserved for you',married:'are getting married',tap:'Touch the seal to open',msg:'Together with their families, they joyfully invite you to celebrate their wedding',count:'Until we say yes',story:'Our story',gallery:'Our moments',close:'Close',just:'Just married',d:'Days',h:'Hours',m:'Minutes',s:'Seconds',program:'The celebrations',dress:'Dress code',rsvp:'Kindly reply',by:'Please reply by',name:'Your full name',att:'Will you join us?',yes:'Joyfully accepts',no:'Regretfully declines',guests:'Number of guests',diet:'Dietary needs',note:'A note for the couple',send:'Send my reply',thanks:'Thank you. Your reply has reached the couple.',wa:'Send it on WhatsApp',preview:'Preview only. Replies are not recorded.',map:'Open in Maps',music:'Our song',err:'Your reply could not be sent. Please try again.',need:'Please enter your name and choose an answer.',at:'at',
+ en:{k_engagement:'are getting engaged',k_henna:'invite you to their henna night',k_contract:'are tying the knot',dear:'Dear',seatsFor:'Seats reserved for you',married:'are getting married',tap:'Touch the seal to open',msg:'Together with their families, they joyfully invite you to celebrate their wedding',count:'Until we say yes',story:'Our story',just:'Just married',d:'Days',h:'Hours',m:'Minutes',s:'Seconds',program:'The celebrations',dress:'Dress code',rsvp:'Kindly reply',by:'Please reply by',name:'Your full name',att:'Will you join us?',yes:'Joyfully accepts',no:'Regretfully declines',guests:'Number of guests',diet:'Dietary needs',note:'A note for the couple',send:'Send my reply',thanks:'Thank you. Your reply has reached the couple.',wa:'Send it on WhatsApp',preview:'Preview only. Replies are not recorded.',map:'Open in Maps',err:'Your reply could not be sent. Please try again.',need:'Please enter your name and choose an answer.',at:'at',
   ev:{henna:'Henna Night',contract:'Marriage Contract',ceremony:'Wedding Ceremony',dinner:'Wedding Dinner',outia:'Outia',brunch:'Farewell Brunch'}},
- fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',story:'Notre histoire',gallery:'Nos moments',close:'Fermer',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',music:'Notre chanson',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',at:'à',
+ fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',story:'Notre histoire',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',at:'à',
   ev:{henna:'Soirée du henné',contract:'Contrat de mariage',ceremony:'Cérémonie',dinner:'Dîner de fête',outia:'Outia',brunch:"Brunch d'au revoir"}},
- ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',gallery:'لحظاتنا',close:'إغلاق',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',music:'أغنيتنا',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',at:'على الساعة',
+ ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',at:'على الساعة',
   ev:{henna:'ليلة الحنّة',contract:'عقد القران',ceremony:'حفل الزفاف',dinner:'عشاء الزفاف',outia:'الوطية',brunch:'فطور الوداع'}}
 };
 var RQA={pocket:'/assets/env/pocket.webp',flap:'/assets/env/flap.webp',flapshadow:'/assets/env/flapshadow.webp',interior:'/assets/env/interior.webp',card:'/assets/env/card.webp',linen:'/assets/env/linen.webp'};
@@ -77,10 +77,6 @@ function sprig(kind,seed){
     }
   }
   return '<svg viewBox="0 0 140 300" aria-hidden="true">'+defs+out+'</svg>';
-}
-function vinyl(){
-  var g='';for(var i=0;i<6;i++)g+='<circle cx="50" cy="50" r="'+(44-i*4.5)+'" fill="none" stroke="#fff" stroke-opacity=".07"/>';
-  return '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="49" fill="#141414"/>'+g+'<path d="M20 30A36 36 0 0 1 44 15" stroke="#fff" stroke-opacity=".22" stroke-width="3" fill="none"/><circle cx="50" cy="50" r="17" style="fill:var(--foil-solid)"/><circle cx="50" cy="50" r="3" fill="#141414"/></svg>';
 }
 function smoothClosed(pts){
   var n=pts.length,d='M'+f1(pts[0][0])+' '+f1(pts[0][1]);
@@ -187,7 +183,7 @@ function mapsHref(q,link){if(link&&/^https?:\/\//.test(link))return link;return 
 
 function render(root,inv,opts){
   opts=opts||{};
-  var st={lang:opts.lang||inv.lang||'fr',open:!!opts.startOpen,timer:null,audio:null,sent:null,guests:1};
+  var st={lang:opts.lang||inv.lang||'fr',open:!!opts.startOpen,timer:null,sent:null,guests:1};
   var seed=hash((inv.a&&inv.a.name)+'|'+(inv.b&&inv.b.name)+'|'+(inv.id||''));
   var th=THEMES[inv.theme]?inv.theme:'zitouna';
   root.className='rq-inv';root.setAttribute('data-t',th);for(var ak in RQA)root.style.setProperty('--a-'+ak,'url('+RQA[ak]+')');
@@ -217,10 +213,7 @@ function render(root,inv,opts){
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      var allPh=(inv.photos||[]).filter(Boolean),lay=inv.layout==='arch'||inv.layout==='photo'?inv.layout:'classic';if(!allPh.length)lay='classic';
-      var cover=lay==='classic'?'':allPh[0],restPh=lay==='classic'?allPh:allPh.slice(1);
-      if(lay==='photo')html+='<figure class="rq-fullph"><img alt="" src="'+esc(cover)+'"><figcaption><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names">'+esc(n[0])+' <span class="amp">'+amp+'</span> '+esc(n[1])+'</span><span class="rq-caps">'+esc(dots(inv.date))+'</span></figcaption></figure>';
-      html+='<div class="rq-sheet hero lay-'+lay+'">'+(lay==='arch'?'<figure class="rq-archph"><img alt="" src="'+esc(cover)+'"></figure>':'<div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>')+'<p class="rq-msg">'+esc(msg)+'</p>'+(lay==='photo'?'':nameH)+'<div class="rq-rule"></div>'+
+      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div><p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+'</div>';
@@ -237,9 +230,6 @@ function render(root,inv,opts){
           (inv.dress||dcols.length?'<div class="rq-dress"><div class="rq-caps">'+esc(t('dress'))+'</div>'+(inv.dress?'<div>'+esc(inv.dress)+'</div>':'')+(dcols.length?'<div class="rq-swatches">'+dcols.map(function(c){return '<i style="background:'+esc(c)+'"></i>'}).join('')+'</div>':'')+'</div>':'')+
           (inv.note?'<p class="rq-muted" style="margin:14px 0 0;font-style:italic">'+esc(inv.note)+'</p>':'')+'</div>';
       }
-      var ph=restPh.slice(0,12);
-      if(on('photos')&&ph.length){if(ph.length<=3)html+='<div class="rq-photos">'+ph.map(function(p){return '<figure class="rq-pol" style="margin-block:0"><img alt="" src="'+esc(p)+'"></figure>'}).join('')+'</div>';
-        else html+='<div class="rq-sheet rq-galwrap"><h2 class="rq-h2 rq-foil">'+esc(t('gallery'))+'</h2><div class="rq-gal">'+ph.map(function(p,i){return '<button type="button" class="rq-gi" data-gi="'+i+'"><img alt="" loading="lazy" src="'+esc(p)+'"></button>'}).join('')+'</div></div>'}
       if(on('rsvp')){html+='<div class="rq-sheet" id="rq-rsvp"><h2 class="rq-h2 rq-foil">'+esc(t('rsvp'))+'</h2>'+(inv.rsvpBy?'<p class="rq-caps rq-muted" style="margin:-6px 0 20px">'+esc(t('by'))+' '+esc(fmtDate(inv.rsvpBy,L,{day:'numeric',month:'long'}))+'</p>':'');
       if(st.sent){
         html+='<div class="rq-thanks"><p class="rq-msg" style="margin:0">'+esc(t('thanks'))+'</p>'+(st.sent.whatsapp?'<a class="rq-send" target="_blank" rel="noopener" href="'+esc(st.sent.whatsapp)+'">'+esc(t('wa'))+'</a>':'')+'</div>';
@@ -256,11 +246,6 @@ function render(root,inv,opts){
       html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span><img alt="Reefq رِفق" src="'+LOGO+'"></div></section>';
     }
     html+='</div>';
-    if(inv.musicUrl){
-      var direct=/\.(mp3|m4a|ogg|wav|aac)(\?|$)/i.test(inv.musicUrl);
-      html+=direct?'<button type="button" class="rq-vinyl'+(st.audio&&!st.audio.paused?' playing':'')+'" aria-label="'+esc(t('music'))+'">'+vinyl()+'<span>'+esc(t('music'))+'</span></button>'
-        :'<a class="rq-vinyl" target="_blank" rel="noopener" href="'+esc(inv.musicUrl)+'" aria-label="'+esc(t('music'))+'">'+vinyl()+'<span>'+esc(t('music'))+'</span></a>';
-    }
     root.innerHTML=html;
     wire();
   }
@@ -286,12 +271,6 @@ function render(root,inv,opts){
       sb.onclick=function(e){e.stopPropagation();go()};sc.querySelector('.rq3-env').onclick=go;
     }
     if(root.querySelector('[data-c]')){tick();st.timer=setInterval(tick,1000)}
-    root.querySelectorAll('[data-gi]').forEach(function(b){b.onclick=function(){var src=b.querySelector('img').src,lb=document.createElement('div');lb.className='rq-lb';lb.setAttribute('role','dialog');lb.innerHTML='<img alt="" src="'+esc(src)+'"><button type="button" aria-label="'+esc(t('close'))+'">✕</button>';lb.onclick=function(){lb.remove()};root.appendChild(lb)}});
-    var vb=root.querySelector('button.rq-vinyl');
-    if(vb)vb.onclick=function(){
-      if(!st.audio){st.audio=new Audio(inv.musicUrl);st.audio.loop=true}
-      if(st.audio.paused){st.audio.play().then(function(){vb.classList.add('playing')}).catch(function(){})}else{st.audio.pause();vb.classList.remove('playing')}
-    };
     root.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){var mx=maxSeats();st.guests=Math.min(mx,Math.max(1,st.guests+ +b.dataset.g));root.querySelector('#rq-guests').textContent=st.guests}});
     var yes=root.querySelector('#rq-att-yes'),no=root.querySelector('#rq-att-no'),gw=root.querySelector('.rq-gwrap');
     if(yes&&gw){var upd=function(){gw.hidden=!!(no&&no.checked)};yes.onchange=upd;no.onchange=upd}
@@ -306,7 +285,7 @@ function render(root,inv,opts){
     };
   }
   draw();
-  return{destroy:function(){clearInterval(st.timer);if(st.audio)st.audio.pause();root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
+  return{destroy:function(){clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
 window.ReefqInvite={THEME_LIST:THEME_LIST,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();

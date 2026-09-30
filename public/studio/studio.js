@@ -7,15 +7,14 @@ function api(path,opts){opts=opts||{};var o={method:opts.method||'GET',headers:{
   return fetch(path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(r.status===401&&path!=='/api/login'){showLogin()}if(!r.ok){var e=new Error(j.error||('Error '+r.status));e.status=r.status;throw e}return j})})}
 function download(name,text,type){var b=new Blob([text],{type:type||'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
 var THEME_INFO=ReefqInvite.THEME_LIST;
-var LAYOUTS=[['classic','Classic','Names under a botanical sprig'],['arch','Arch photo','First photo framed in an arch'],['photo','Full photo','First photo full-width, names on it']];
 var DRESS=['#f4efe6','#e9d8c4','#d9b8b0','#c9a45f','#9fb3c8','#a9b89a','#6e1f2c','#1d4f91','#3b2a20','#1b1b1b'];
 var EV_TYPES=[['henna','Henna night'],['outia','Outia'],['contract','Marriage contract'],['ceremony','Wedding ceremony'],['dinner','Wedding dinner'],['brunch','Farewell brunch'],['custom','Other (type label)']];
 var SAMPLE={id:null,sample:true,theme:'reefq',eventType:'wedding',lang:'fr',
   a:{name:'Yasmine',ar:'ياسمين'},b:{name:'Karim',ar:'كريم'},
   date:'2027-06-12',time:'20:30',venue:'Dar El Marsa',city:'La Marsa, Tunis',maps:'',dress:'Tenue de soirée, tons clairs',note:'',
   events:[{type:'henna',date:'2027-06-10',time:'19:00',place:'Maison familiale, Sousse'},{type:'contract',date:'2027-06-11',time:'17:00',place:'Municipalité de La Marsa'},{type:'dinner',date:'2027-06-12',time:'20:30',place:'Dar El Marsa, La Marsa'}],
-  message:{fr:'',ar:'',en:''},musicUrl:'',photos:[],rsvpBy:'2027-05-20',maxGuests:2,whatsapp:'',rsvpEndpoint:''};
-var BLANK={id:null,theme:'reefq',eventType:'wedding',lang:'fr',a:{name:'',ar:''},b:{name:'',ar:''},date:'',time:'20:00',venue:'',city:'',maps:'',dress:'',note:'',events:[{type:'henna',date:'',time:'',place:''},{type:'dinner',date:'',time:'',place:''}],message:{fr:'',ar:'',en:''},musicUrl:'',photos:[],rsvpBy:'',maxGuests:2,whatsapp:'',rsvpEndpoint:''};
+  message:{fr:'',ar:'',en:''},rsvpBy:'2027-05-20',maxGuests:2,whatsapp:'',rsvpEndpoint:''};
+var BLANK={id:null,theme:'reefq',eventType:'wedding',lang:'fr',a:{name:'',ar:''},b:{name:'',ar:''},date:'',time:'20:00',venue:'',city:'',maps:'',dress:'',note:'',events:[{type:'henna',date:'',time:'',place:''},{type:'dinner',date:'',time:'',place:''}],message:{fr:'',ar:'',en:''},rsvpBy:'',maxGuests:2,whatsapp:'',rsvpEndpoint:''};
 
 var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
 function clone(o){return JSON.parse(JSON.stringify(o))}
@@ -44,16 +43,11 @@ function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
 /* ---------- form ---------- */
 function fillForm(){
   $$('[data-k]').forEach(function(el){var v=getK(draft,el.dataset.k);el.value=v==null?'':v;if(el.tagName==='SELECT'&&el.selectedIndex<0)el.selectedIndex=0});
-  renderThemes();renderLayouts();renderDress();renderEvents();renderPhotos();renderEnv();renderShows();renderCanva();
+  renderThemes();renderDress();renderEvents();renderEnv();renderShows();renderCanva();
 }
 function renderThemes(){
   $('#themes').innerHTML=THEME_INFO.map(function(t){return '<button type="button" class="theme" data-theme-id="'+t.id+'" aria-pressed="'+(draft.theme===t.id)+'"><span class="sw" style="background:'+t.bg+';color:'+t.fg+'">Y &amp; K</span><span class="tn">'+t.name+'<small>'+t.sub+'</small></span></button>'}).join('');
   $$('[data-theme-id]').forEach(function(b){b.onclick=function(){draft.theme=b.dataset.themeId;touch();renderThemes();preview(true)}});
-}
-function renderLayouts(){
-  var cur=draft.layout||'classic';
-  $('#layouts').innerHTML=LAYOUTS.map(function(l){return '<button type="button" class="layout" data-layout="'+l[0]+'" aria-pressed="'+(cur===l[0])+'"><span class="lay-ic lay-'+l[0]+'" aria-hidden="true"></span><b>'+l[1]+'</b><small>'+l[2]+'</small></button>'}).join('');
-  $$('[data-layout]').forEach(function(b){b.onclick=function(){draft.layout=b.dataset.layout;touch();renderLayouts();pvOpen=true;preview(true);if(draft.layout!=='classic'&&!(draft.photos||[]).length)status('Add a photo: it becomes the cover','')}});
 }
 function renderDress(){
   var cur=draft.dressColors||[];
@@ -75,17 +69,6 @@ function renderEvents(){
   });
   $$('[data-rm]',box).forEach(function(b){b.onclick=function(){draft.events.splice(+b.dataset.rm,1);touch();renderEvents();preview()}});
 }
-function renderPhotos(){
-  var ph=draft.photos||[];
-  $('#photos').innerHTML=ph.map(function(p,i){return '<div class="ph"><img alt="Photo '+(i+1)+'" src="'+esc(p)+'"><button type="button" data-ph="'+i+'" aria-label="Remove photo">✕</button></div>'}).join('')+(ph.length<12?'<label class="upl">+ Add photo<input type="file" id="ph-in" accept="image/*" multiple></label>':'');
-  $$('[data-ph]').forEach(function(b){b.onclick=function(){draft.photos.splice(+b.dataset.ph,1);touch();renderPhotos();preview()}});
-  var inp=$('#ph-in');if(inp)inp.onchange=function(){
-    var files=Array.prototype.slice.call(inp.files).slice(0,12-ph.length);
-    status('Uploading photos…','');
-    Promise.all(files.map(function(f){return shrink(f).then(function(blob){return blob?api('/api/upload',{method:'POST',raw:true,type:'image/jpeg',body:blob}).then(function(r){return r.url}).catch(function(){return null}):null})})).then(function(urls){var ok=urls.filter(Boolean);draft.photos=(draft.photos||[]).concat(ok).slice(0,12);touch();renderPhotos();pvOpen=true;preview(true);if(ok.length<urls.length)status('Some photos could not be uploaded','bad')});
-  };
-}
-function shrink(file){return new Promise(function(res){var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,1200/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(function(b){res(b)},'image/jpeg',.8)};im.onerror=function(){res(null)};im.src=fr.result};fr.onerror=function(){res(null)};fr.readAsDataURL(file)})}
 function touch(){dirty=true;status(draft.id?'Unsaved changes':'Not saved yet','')}
 function status(t,c){var s=$('#status');s.textContent=t;s.className='status'+(c?' '+c:'')}
 

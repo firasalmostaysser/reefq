@@ -40,4 +40,4 @@ STORIES
 story-1-commentez-lien.png : add a "Link" sticker to the landing page.
 story-2-ouverture.png : add a poll sticker: "Paper or digital?"
 
-Tip: add a trending audio in Instagram/TikTok when posting the reels (they are exported without music).
+Post the reels as exported: no music track added.
