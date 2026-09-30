@@ -1,6 +1,7 @@
 // End-to-end test against `npm run dev` (http://localhost:8888).
 // Covers: order on the landing page → client space → bank-transfer proof → studio verification →
-// invitation created → client space unlocked → guest opens personal link and replies → reply visible.
+// invitation created (wording from templates) → Deliver QR codes → client space unlocked (guest QR) →
+// guest opens personal link and replies → reply visible → archive keeps the link working.
 // Usage: BASE=http://localhost:8888 PASSWORD=change-me node test/smoke.mjs
 import { chromium } from 'playwright';
 import assert from 'node:assert';
@@ -40,19 +41,27 @@ await shot(s, '3-review');
 await s.fill('#od-amount', '125'); await s.click('#od-confirm');
 await s.waitForFunction(() => /Paid/.test(document.querySelector('#od-status').textContent));
 await s.click('#od-invite'); await s.waitForFunction(() => document.querySelector('#k-a-name').value === 'Nour');
+// wording comes from the ready-made texts (no AI): occasion + tone fill the three languages
+await s.selectOption('#w-tone', 'families'); await s.selectOption('#w-open', 'bismillah'); await s.click('#w-use');
+await s.waitForFunction(() => document.querySelector('#k-msg-fr').value.length > 20 && document.querySelector('#k-msg-ar').value.length > 10);
 await s.fill('#k-venue', 'Dar Sfax'); await s.click('#btn-save'); await s.waitForFunction(() => document.querySelector('#status').textContent === 'Saved');
 await s.click('#tab-guests'); await s.fill('#g-paste', 'Famille Karray, 22 111 333, 2'); await s.click('#g-add');
 await s.waitForFunction(() => document.querySelector('#status').textContent === 'Saved');
+// Deliver shows the invitation QR and one QR per guest
+await s.click('#tab-deliver'); await s.waitForSelector('#qr svg'); await s.waitForSelector('[data-gq="0"][data-k=png]');
+assert.equal(await s.isDisabled('#gq-print'), false);
 
 // 4. Client space is unlocked (client role): invitation link + guest links
 await c.reload(); await c.waitForSelector('#space:not([hidden]) #inv-box:not([hidden])');
 const invUrl = await c.textContent('#inv-link');
-await c.waitForSelector('[data-gl="0"]');
+await c.waitForSelector('[data-gl="0"]'); await c.waitForSelector('[data-gq="0"][data-k=png]');
 await shot(c, '4-client-space');
 
 // 5. The guest opens their personal link and replies
 const inv = invUrl.split('/i/')[1];
-const gid = await s.evaluate(async id => (await (await fetch('/api/invitations/' + id)).json()).guests[0].id, inv);
+const saved = await s.evaluate(async id => (await (await fetch('/api/invitations/' + id)).json()), inv);
+assert.equal(saved.opening, 'bismillah');
+const gid = saved.guests[0].id;
 const g = await page(390, 844);
 await g.goto(`${BASE}/i/${inv}?g=${gid}`); await g.waitForSelector('.rq3-seal');
 assert.match(await g.textContent('.rq3-dear'), /Famille Karray/);
@@ -62,5 +71,13 @@ await g.check('#rq-att-yes'); await g.click('.rq-send'); await g.waitForSelector
 // 6. Couple sees the reply in their client space
 await c.reload(); await c.waitForFunction(() => document.querySelector('#t-coming').textContent === '2');
 await shot(c, '5-client-replies');
+
+// 7. Invitations list: the card shows the reply; archiving hides it from Active but the link keeps working
+await s.click('#tab-list'); await s.waitForSelector(`[data-card="${inv}"]`);
+await s.waitForFunction(id => /1 reply/.test(document.querySelector(`[data-card="${id}"] [data-rc]`).textContent), inv);
+await s.click(`[data-card="${inv}"] [data-la=arch]`); await s.waitForSelector(`[data-card="${inv}"]`, { state: 'detached' });
+assert.equal((await g.request.get(`${BASE}/api/public/invitations/${inv}`)).status(), 200);
+await s.click('[data-lf=archived]'); await s.click(`[data-card="${inv}"] [data-la=arch]`);
+await s.waitForSelector(`[data-card="${inv}"]`, { state: 'detached' });
 console.log('E2E passed:', code, invUrl, errs.length ? errs : '');
 await b.close();
