@@ -24,38 +24,69 @@ var THEMES=ReefqInvite.THEME_LIST.map(function(t){return [t.id,t.name,t.fg]});
 var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[];
 function demoData(){var d=JSON.parse(JSON.stringify(DEMO)),o=ui('demo');d.theme=cur;d.lang=lang;if(demoCanva)d.canva=demoCanva;
   ['venue','city','dress'].forEach(function(k){if(o[k])d[k]=o[k]});if(o.places)d.events.forEach(function(e,i){e.place=o.places[i]});return d}
-function demo(){if(h)h.destroy();var el=document.createElement('div');$('#demo').innerHTML='';$('#demo').appendChild(el);
+/* The invitation lives in a fixed 390x844 frame scaled to the phone's screen, so its layout is the one a real phone shows. */
+var VP_W=390,vp=document.createElement('div');vp.className='vp';$('#demo').appendChild(vp);
+function fit(){var s=$('#demo').clientWidth/VP_W;if(s>0)vp.style.transform='scale('+s+')'}
+if('ResizeObserver' in window)new ResizeObserver(fit).observe($('#demo'));else addEventListener('resize',fit);fit();
+function demo(){if(h)h.destroy();var el=document.createElement('div');vp.innerHTML='';vp.appendChild(el);$('#demo').classList.remove('fade');
   h=ReefqInvite.render(el,demoData(),{lang:lang,guest:{id:'x',name:ui('guest'),seats:4},preview:true,badge:ui('badge'),onRsvp:function(){return new Promise(function(r){setTimeout(function(){r({})},500)})}});
   $('#demo-full').href='/i/demo?t='+cur+(lang!=='fr'?'&lang='+lang:'');tour.start()}
-/* Self-playing demo: the envelope opens by itself, then the invitation scrolls slowly from top to bottom and starts again
-   with the next theme. It pauses off-screen and stops for good as soon as the visitor touches the phone. */
+/* Self-playing demo: the envelope opens by itself, then the invitation moves section by section like a thumb scrolling:
+   a quick eased flick brings each section near the top, it rests long enough to be read, tall sections glide through
+   slowly, and after the last one the phone fades to the next theme. It pauses off-screen and stops for good as soon as
+   the visitor touches the phone. */
 var tour=(function(){
   var run=0,visible=false,stopped=false,userPicked=false,raf=0,timers=[];
   var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TOP=24,FIRST=1500,END=2500,GLIDE=40;
   function clear(){timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf)}
   function later(fn,ms){var id=run;timers.push(setTimeout(function(){if(id===run&&visible&&!stopped)fn()},ms))}
   function scroller(){return h&&h.scroller&&h.scroller()}
   /* The scroller exists behind the closed envelope too; the invitation is open once the envelope layer (.rq3) is gone. */
   function isOpen(){return !!scroller()&&!document.querySelector('#demo .rq3')}
-  function scrollDown(done){
-    var sc=scroller();if(!sc)return done();
-    sc.style.scrollBehavior='auto';var id=run,last=0,speed=Math.max(38,sc.clientHeight/7);
-    function step(t){if(id!==run||stopped)return;if(!visible){last=0;raf=requestAnimationFrame(step);return}
-      if(last){sc.scrollTop+=Math.min(60,(t-last))*speed/1000}last=t;
-      if(sc.scrollTop+sc.clientHeight>=sc.scrollHeight-2)return done();raf=requestAnimationFrame(step)}
+  /* Sections in the scroller's own (unscaled) pixels: the frame is scaled, so screen rects are divided back. */
+  function sections(sc){var r=sc.getBoundingClientRect(),k=r.height/sc.clientHeight||1;
+    return $$('#demo .rq-sheet').map(function(el){var b=el.getBoundingClientRect();return{top:(b.top-r.top)/k+sc.scrollTop,h:b.height/k,len:el.textContent.replace(/\s+/g,' ').trim().length}})}
+  function bottom(sc){return sc.scrollHeight-sc.clientHeight}
+  function easeInOut(p){return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2}
+  function linear(p){return p}
+  function animate(sc,to,ms,curve,done){
+    var id=run,from=sc.scrollTop,t0=0;to=Math.max(0,Math.min(bottom(sc),to));
+    if(Math.abs(to-from)<2)return done();
+    sc.style.scrollBehavior='auto';
+    function step(t){if(id!==run||stopped)return;if(!t0)t0=t;var p=Math.min(1,(t-t0)/ms);sc.scrollTop=from+(to-from)*curve(p);
+      if(p<1)raf=requestAnimationFrame(step);else done()}
     raf=requestAnimationFrame(step)}
-  /* A picked theme is kept: the tour plays it once and stays at the bottom. Otherwise it moves on to the next theme. */
-  function next(){if(userPicked)return;var i=THEMES.findIndex(function(t){return t[0]===cur});cur=THEMES[(i+1)%THEMES.length][0];themes();demo()}
-  function finish(){scrollDown(function(){later(next,2600)})}
+  /* A flick: 700 ms for a short hop up to 1.1 s for a long one, fast in the middle and settling on arrival. */
+  function flick(sc,to,done){animate(sc,to,Math.min(1100,700+Math.abs(to-sc.scrollTop)*.5),easeInOut,done)}
+  function glide(sc,to,done){animate(sc,to,Math.abs(to-sc.scrollTop)/GLIDE*1000,linear,done)}
+  /* Reading time grows with the text: 1.2 s for a short card (the countdown), about 1.5 s for a few lines, 3 s at most. */
+  function readMs(len){return Math.max(1200,Math.min(3000,len*10))}
+  /* Arrive at section i, rest, glide through what is below the fold, then move on. `read` false skips the rest (already read). */
+  function walk(i,read){
+    var sc=scroller();if(!sc)return;var g=sections(sc);
+    if(i>=g.length)return flick(sc,bottom(sc),function(){later(next,END)});
+    var s=g[i],target=s.top-TOP;
+    function through(){var end=s.top+s.h+TOP-sc.clientHeight;
+      if(end>sc.scrollTop+4)glide(sc,end,function(){later(function(){walk(i+1,true)},700)});else walk(i+1,true)}
+    if(!read||sc.scrollTop>target+4)return through();
+    flick(sc,target,function(){later(through,readMs(s.len))})}
+  /* The section the invitation is showing now: the last one whose top has reached the resting line. */
+  function current(sc){var g=sections(sc),i=0;g.forEach(function(s,j){if(s.top-TOP<=sc.scrollTop+4)i=j});return sc.scrollTop>=bottom(sc)-2?g.length:i}
+  /* A picked theme is kept: the tour plays it once and stays at the bottom. Otherwise it fades to the next theme. */
+  function next(){if(userPicked)return;$('#demo').classList.add('fade');
+    later(function(){var i=THEMES.findIndex(function(t){return t[0]===cur});cur=THEMES[(i+1)%THEMES.length][0];themes();demo()},450)}
+  function whenOpen(fn){if(isOpen())return fn();later(function(){whenOpen(fn)},150)}
+  /* The opened card rests first; the hero card is read during that pause. */
   function play(){clear();run++;
     if(reduce){if(h)h.open();return}
-    later(function(){h&&h.play();later(finish,3600)},1500)}
+    later(function(){h&&h.play();whenOpen(function(){later(function(){walk(0,false)},FIRST)})},1500)}
   /* Back in view after an interruption: carry on from where the invitation is, or start over if it is still closed. */
-  function resume(){clear();run++;if(!isOpen())return play();later(finish,600)}
+  function resume(){clear();run++;if(!isOpen())return play();later(function(){var sc=scroller();if(sc)walk(current(sc),true)},600)}
   return{
     start:function(){clear();run++;if(!stopped&&visible)play()},
     show:function(v){var was=visible;visible=v;if(!v)return clear();if(!was&&!stopped)reduce?play():resume()},
-    stop:function(){stopped=true;clear();run++},
+    stop:function(){stopped=true;clear();run++;$('#demo').classList.remove('fade')},
     pick:function(){userPicked=true},
     replay:function(){stopped=false;userPicked=false;demo()}
   };
