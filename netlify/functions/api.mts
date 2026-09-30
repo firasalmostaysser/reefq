@@ -2,7 +2,6 @@ import type { Context, Config } from '@netlify/functions';
 import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError } from '../lib/util.mts';
 import { invitations, rsvps, orders, files, listJSON, rateLimit } from '../lib/stores.mts';
 import { isStudio, login, logout } from '../lib/auth.mts';
-import { wording } from '../lib/wording.mts';
 import { canvaStatus } from '../lib/canva.mts';
 import { THEME_IDS } from '../lib/themes.mts';
 import { notify, later, siteUrl, alertsConfigured } from '../lib/notify.mts';
@@ -52,7 +51,7 @@ async function route(req: Request, context: Context): Promise<Response> {
 
   /* ---------------- studio (signed in) ---------------- */
   if (!(await isStudio(req))) return err(401, 'Sign in to the studio.');
-  if (p === '/api/me') return json({ ok: true, wording: !!env('ANTHROPIC_API_KEY'), canva: !!env('CANVA_CLIENT_ID'), canvaStatus: await canvaStatus().catch(() => null), bankReady: !!env('BANK_RIB'), alerts: alertsConfigured(), posthog: !!env('POSTHOG_KEY') });
+  if (p === '/api/me') return json({ ok: true, canva: !!env('CANVA_CLIENT_ID'), canvaStatus: await canvaStatus().catch(() => null), bankReady: !!env('BANK_RIB'), alerts: alertsConfigured(), posthog: !!env('POSTHOG_KEY') });
 
   if (p === '/api/invitations' && m === 'GET') {
     const items = (await listJSON(invitations())).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
@@ -133,7 +132,6 @@ async function route(req: Request, context: Context): Promise<Response> {
   }
 
   if (p === '/api/upload' && m === 'POST') return upload(req);
-  if (p === '/api/wording' && m === 'POST') return wording(req);
   if (p === '/api/canva/sync' && m === 'POST') {
     const r = await fetch(new URL('/.netlify/functions/canva-sync-background', url), { method: 'POST', headers: { 'x-reefq-key': env('SESSION_SECRET') } });
     return json({ started: r.status === 202, note: 'Sync started. New templates appear within a few minutes.' });

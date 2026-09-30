@@ -80,12 +80,14 @@
 
       <fieldset>
         <legend>Wording</legend>
+        <p class="hint">Start from a ready-made text, then adjust it freely. The line sits just above the couple's names.</p>
         <div class="write-row">
-          <label class="f" style="flex:0 1 200px"><span>Tone</span>
-            <select id="tone"><option value="classic and elegant">Classic &amp; elegant</option><option value="poetic and romantic">Poetic &amp; romantic</option><option value="warm, modern and simple">Warm &amp; modern</option><option value="traditional and formal, in the voice of both families">Traditional, from the families</option></select></label>
-          <button class="btn" type="button" id="btn-write" style="align-self:flex-end">Write it with Claude</button>
-          <span class="status" id="write-status" style="align-self:flex-end"></span>
+          <label class="f"><span>Occasion</span><select id="w-occ"></select></label>
+          <label class="f"><span>Tone</span><select id="w-tone"></select></label>
+          <label class="f"><span>Opening line</span><select id="w-open"></select></label>
+          <button class="btn primary" type="button" id="w-use">Use this text</button>
         </div>
+        <div class="w-sugg" id="w-sugg" aria-live="polite"></div>
         <div class="grid three">
           <label class="f"><span>Français</span><textarea id="k-msg-fr" data-k="message.fr"></textarea></label>
           <label class="f"><span>العربية</span><textarea id="k-msg-ar" data-k="message.ar" dir="rtl"></textarea></label>
@@ -188,7 +190,7 @@
       <div class="flow">
         <div><span class="who">Couple</span><b>1. Brief</b>Names, dates, venues, theme.</div>
         <div><span class="who">Reefq Studio</span><b>2. Generate</b>Fill this form. The envelope, seal, botanicals and pages build themselves.</div>
-        <div><span class="who">Claude</span><b>3. Wording</b>Invitation text in French, Arabic and English, in the tone they choose.</div>
+        <div><span class="who">Reefq Studio</span><b>3. Wording</b>Invitation text in French, Arabic and English, in the tone they choose.</div>
         <div><span class="who">You</span><b>4. Deliver</b>A personal link per family on WhatsApp, and a QR code for printed cards.</div>
         <div><span class="who">Guests</span><b>5. Reply</b>RSVPs land in Guests &amp; RSVPs. Download as CSV for the caterer.</div>
       </div>
@@ -265,7 +267,15 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<dialog class="dlg" id="dlg" aria-labelledby="dlg-title">
+  <h2 id="dlg-title"></h2>
+  <div id="dlg-body"></div>
+  <label class="f" id="dlg-typewrap" hidden><span id="dlg-typelabel"></span><input id="dlg-type" autocomplete="off" spellcheck="false"></label>
+  <div class="dlg-actions"><button class="btn ghost" type="button" id="dlg-cancel">Cancel</button><button class="btn primary" type="button" id="dlg-ok">OK</button></div>
+</dialog>
+
 <script src="/assets/engine.js"></script>
+<script src="/assets/wording-templates.js"></script>
 <script src="/studio/studio.js"></script>
 </body>
 </html>

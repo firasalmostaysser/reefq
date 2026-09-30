@@ -64,7 +64,7 @@ function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
 /* ---------- form ---------- */
 function fillForm(){
   $$('[data-k]').forEach(function(el){var v=getK(draft,el.dataset.k);el.value=v==null?'':v;if(el.tagName==='SELECT'&&el.selectedIndex<0)el.selectedIndex=0});
-  renderThemes();renderDress();renderEvents();renderEnv();renderShows();renderCanva();
+  renderThemes();renderDress();renderEvents();renderEnv();renderShows();renderCanva();renderWording();
 }
 function renderThemes(){
   $('#themes').innerHTML=THEME_INFO.map(function(t){return '<button type="button" class="theme" data-theme-id="'+t.id+'" aria-pressed="'+(draft.theme===t.id)+'"><span class="sw" style="background:'+t.bg+';color:'+t.fg+'">Y &amp; K</span><span class="tn">'+t.name+'<small>'+t.sub+'</small></span></button>'}).join('');
@@ -146,8 +146,8 @@ function renderChips(){
   $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f)load(f)}});
   $('#btn-del').hidden=!draft.id;$('#btn-dup').hidden=!draft.id;
 }
-function load(inv){draft=clone(inv);delete draft.sample;delete draft.photos;delete draft.musicUrl;delete draft.music;dirty=false;rsvps=[];status('Saved','ok');fillForm();renderChips();preview(true);loadRsvps();refreshSide()}
-$('#btn-new').onclick=function(){draft=clone(BLANK);dirty=true;pvOpen=false;fillForm();renderChips();preview(true);status('Not saved yet','');$('#k-a-name').focus();refreshSide()};
+function load(inv){wOcc=null;draft=clone(inv);delete draft.sample;delete draft.photos;delete draft.musicUrl;delete draft.music;dirty=false;rsvps=[];status('Saved','ok');fillForm();renderChips();preview(true);loadRsvps();refreshSide()}
+$('#btn-new').onclick=function(){wOcc=null;draft=clone(BLANK);dirty=true;pvOpen=false;fillForm();renderChips();preview(true);status('Not saved yet','');$('#k-a-name').focus();refreshSide()};
 function doSave(quiet){
   if(!(draft.a&&draft.a.name&&draft.b&&draft.b.name)){status('Add both names first','bad');return Promise.resolve(false)}
   var body=clone(draft);delete body.sample;
@@ -166,12 +166,43 @@ $('#btn-del').onclick=function(){
   $('#btn-del').textContent='Delete';delArm=0;
 };
 
-/* ---------- Claude writes the wording ---------- */
-$('#btn-write').onclick=function(){
-  var ws=$('#write-status'),n=draft,btn=$('#btn-write');btn.disabled=true;ws.textContent='Writing in three languages…';
-  api('/api/wording',{method:'POST',body:{tone:$('#tone').value,eventType:n.eventType,bride:n.a.name,groom:n.b.name,city:n.city}}).then(function(o){
-    draft.message={fr:o.fr,ar:o.ar,en:o.en};$('#k-msg-fr').value=o.fr;$('#k-msg-ar').value=o.ar;$('#k-msg-en').value=o.en;touch();pvOpen=true;preview(true);ws.textContent='Done. Edit freely.';
-  }).catch(function(e){ws.textContent=e.message||'Could not write the wording. Try again.'}).then(function(){btn.disabled=false});
+/* ---------- dialog (confirmations, quick preview) ---------- */
+/* ask({title,body,ok,danger,typeToConfirm}) → Promise<boolean>. body is trusted HTML built here. */
+function ask(o){return new Promise(function(res){
+  var d=$('#dlg'),ok=$('#dlg-ok'),inp=$('#dlg-type');
+  $('#dlg-title').textContent=o.title;$('#dlg-body').innerHTML=o.body||'';
+  ok.textContent=o.ok||'OK';ok.className='btn '+(o.danger?'danger':'primary');
+  $('#dlg-typewrap').hidden=!o.typeToConfirm;inp.value='';$('#dlg-typelabel').textContent=o.typeToConfirm?'Type “'+o.typeToConfirm+'” to confirm':'';
+  var norm=function(s){return String(s).trim().replace(/\s+/g,' ').toLowerCase()};
+  var check=function(){ok.disabled=!!o.typeToConfirm&&norm(inp.value)!==norm(o.typeToConfirm)};inp.oninput=check;check();
+  var done=function(v){d.onclose=null;if(d.open)d.close();res(v)};
+  ok.onclick=function(){if(!ok.disabled)done(true)};$('#dlg-cancel').onclick=function(){done(false)};d.onclose=function(){res(false)};
+  d.showModal();(o.typeToConfirm?inp:$('#dlg-cancel')).focus();
+})}
+
+/* ---------- wording from ready-made texts ---------- */
+var RW=window.ReefqWording,wOcc=null;
+function wEvent(){return wOcc||(RW.TEXTS[draft.eventType]?draft.eventType:'wedding')}
+function renderWording(){
+  var opt=function(list,cur){return list.map(function(x){return '<option value="'+x.id+'"'+(x.id===cur?' selected':'')+'>'+esc(x.label.fr)+'</option>'}).join('')};
+  $('#w-occ').innerHTML=opt(RW.EVENTS,wEvent());
+  if(!$('#w-tone').options.length)$('#w-tone').innerHTML=opt(RW.TONES,'classic');
+  $('#w-open').innerHTML=opt(RW.OPENINGS,draft.opening||'none');
+  renderSugg();
+}
+function renderSugg(){var t=RW.get(wEvent(),$('#w-tone').value),op=RW.OPENINGS.filter(function(x){return x.id===(draft.opening||'none')})[0];
+  $('#w-sugg').innerHTML=(op&&op.text?'<p class="w-open" dir="rtl" lang="ar">'+esc(op.text.ar)+'</p>':'')+'<p>'+esc(t.fr)+'</p><p dir="rtl" lang="ar">'+esc(t.ar)+'</p><p>'+esc(t.en)+'</p>'}
+$('#w-occ').onchange=function(){wOcc=this.value;renderSugg()};
+$('#w-tone').onchange=renderSugg;
+$('#w-open').onchange=function(){draft.opening=this.value;touch();renderSugg();pvOpen=true;preview()};
+$('#k-type').addEventListener('change',function(){if(!wOcc)renderWording()});
+$('#w-use').onclick=function(){
+  var t=RW.get(wEvent(),$('#w-tone').value),m=draft.message||{};
+  var typed=['fr','ar','en'].some(function(l){return m[l]&&m[l].trim()&&m[l].trim()!==t[l]});
+  (typed?ask({title:'Replace the current wording?',body:'<p>The French, Arabic and English texts already have wording. It will be replaced by the ready-made text.</p>',ok:'Replace'}):Promise.resolve(true)).then(function(go){
+    if(!go)return;
+    draft.message={fr:t.fr,ar:t.ar,en:t.en};$('#k-msg-fr').value=t.fr;$('#k-msg-ar').value=t.ar;$('#k-msg-en').value=t.en;touch();pvOpen=true;preview(true);toast('Wording added. Edit it freely.');
+  });
 };
 
 /* ---------- tabs ---------- */
@@ -334,7 +365,6 @@ function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME
     ['Team alerts on Telegram',ME&&ME.alerts&&ME.alerts.telegram,'New orders and payment receipts arrive on your phone.',['TELEGRAM_BOT_TOKEN','TELEGRAM_CHAT_ID']],
     ['Team alerts by email',ME&&ME.alerts&&ME.alerts.email,'The same alerts arrive by email (Resend).',['RESEND_API_KEY','ALERT_EMAIL']],
     ['PostHog analytics',ME&&ME.posthog,'Visits, orders, invitations opened and replies are counted.',['POSTHOG_KEY']],
-    ['Wording with Claude',ME&&ME.wording,'The "Write it with Claude" button drafts the texts in French, Arabic and English.',['ANTHROPIC_API_KEY']],
     ['Canva templates',ME&&ME.canva,'Designer templates appear on the website and in Design.',['CANVA_CLIENT_ID','CANVA_CLIENT_SECRET','CANVA_FOLDER_ID']]];
   var on=ig.filter(function(x){return x[1]}).length;
   $('#s-integ-sum').textContent=ME?on+' of '+ig.length+' are on.':'';
@@ -351,7 +381,7 @@ $('#l-form').onsubmit=function(e){e.preventDefault();var err=$('#l-err');err.hid
 $$('#brand-logo,#l-logo').forEach(function(i){i.src=ReefqInvite.LOGO});$('#brand-logo-d').src=ReefqInvite.LOGO_DARK;
 fillForm();renderChips();preview(true);status('Example couple. Press "+ New couple" or edit and save.','');
 function start(){
-  api('/api/me').then(function(me){ME=me;$('#btn-write').hidden=!me.wording;renderSettings();
+  api('/api/me').then(function(me){ME=me;renderSettings();
     loadLeads();return api('/api/invitations')}).then(function(r){invites=r.items;renderChips()}).catch(function(){});
   loadCanva();
 }

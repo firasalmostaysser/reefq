@@ -238,3 +238,20 @@ a.btn:focus-visible,button:focus-visible,.toggles input:focus-visible{outline:2p
   #o-rows .pill{white-space:nowrap}
   #o-rows tr:not([class]) td{display:block;padding:26px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 }
+
+/* wording from ready-made texts */
+.write-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end}
+@media (max-width:700px){.write-row{grid-template-columns:minmax(0,1fr)}}
+.w-sugg{margin:0 0 14px;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;background:var(--bg);color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px}
+.w-sugg p{margin:0}
+.w-sugg [dir=rtl]{font-family:var(--ar);font-size:15px}
+.w-sugg .w-open{color:var(--gold);text-align:center}
+
+/* dialog */
+.dlg{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg);padding:20px 22px;width:min(460px,calc(100vw - 32px));box-sizing:border-box;box-shadow:0 30px 60px -20px rgb(0 0 0 / .35)}
+.dlg::backdrop{background:rgb(10 20 20 / .45)}
+.dlg h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 8px}
+.dlg p{margin:0 0 10px}
+.dlg .f{margin-top:6px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
