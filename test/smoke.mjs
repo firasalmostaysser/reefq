@@ -14,6 +14,8 @@ const shot = (p, n) => process.env.SHOTS && p.screenshot({ path: `test/out-${n}.
 // 1. A couple orders on the landing page and lands on their client space
 const c = await page(390, 844);
 await c.goto(BASE + '/'); await c.waitForSelector('#demo .rq3-seal');
+// the landing demo opens its envelope by itself once it is on screen (about 1.5 s + the opening animation)
+await c.waitForFunction(() => !document.querySelector('#demo .rq3') && document.querySelector('#demo .rq-scroll'), null, { timeout: 10000 });
 await c.fill('#o-names', 'Nour & Sami'); await c.fill('#o-phone', '98 765 432'); await c.fill('#o-date', '2027-06-19'); await c.fill('#o-city', 'Sfax');
 await c.selectOption('#o-plan', 'Signature');
 await c.click('#of button[type=submit]');
