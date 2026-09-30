@@ -4,7 +4,8 @@ var ORIGIN=location.origin;
 /* ---------- API ---------- */
 function api(path,opts){opts=opts||{};var o={method:opts.method||'GET',headers:{},credentials:'same-origin'};
   if(opts.body!==undefined){if(opts.raw){o.body=opts.body;o.headers['content-type']=opts.type}else{o.body=JSON.stringify(opts.body);o.headers['content-type']='application/json'}}
-  return fetch(path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(r.status===401&&path!=='/api/login'){showLogin()}if(!r.ok){var e=new Error(j.error||('Error '+r.status));e.status=r.status;throw e}return j})})}
+  return fetch(path,o).catch(function(){var e=new Error("Can't reach the server. Check your connection and try again.");e.status=0;throw e}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(r.status===401&&path!=='/api/login'){showLogin()}if(!r.ok){var e=new Error(j.error||plainStatus(r.status));e.status=r.status;throw e}return j})})}
+function plainStatus(s){return s===401?'Your session ended. Sign in again.':s===404?'That item was not found. Refresh and try again.':s===413?'That is too large to save.':s===429?'Too many tries. Wait a minute and try again.':s>=500?'The server had a problem. Try again in a moment.':'Something went wrong. Try again.'}
 function download(name,text,type){var b=new Blob([text],{type:type||'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
 var THEME_INFO=ReefqInvite.THEME_LIST;
 var DRESS=['#f4efe6','#e9d8c4','#d9b8b0','#c9a45f','#9fb3c8','#a9b89a','#6e1f2c','#1d4f91','#3b2a20','#1b1b1b'];
@@ -22,7 +23,8 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){retur
 function getK(o,k){return k.split('.').reduce(function(a,p){return a==null?a:a[p]},o)}
 function setK(o,k,v){var p=k.split('.'),x=o;for(var i=0;i<p.length-1;i++){if(x[p[i]]==null||typeof x[p[i]]!=='object')x[p[i]]={};x=x[p[i]]}x[p[p.length-1]]=v}
 function slug(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'couple'}
-function toast(m){var t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},2400)}
+function toast(m,bad){var t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.setAttribute('role',bad?'alert':'status');t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove()},bad?4200:2400)}
+function fail(e){toast(e&&e.message||'Something went wrong. Try again.',true)}
 function copy(text,btn){
   var done=function(){toast('Copied')};
   try{navigator.clipboard.writeText(text).then(done,function(){sel(btn)})}catch(e){sel(btn)}
@@ -33,8 +35,27 @@ var ME=null,invites=[],rsvps=[],leads=[];
 var draft=clone(SAMPLE),dirty=false,handle=null,pvOpen=false,tab='design',msgLang='fr',delArm=0;
 
 /* ---------- preview ---------- */
-var pvTimer=null;
+var pvTimer=null,pvSize='';
+/* Size the phone from the height really available, so the whole screen and its buttons are always in view (no crop, no scroll). */
+function fitPv(){
+  var col=$('.previewcol'),ph=$('.phone'),box=$('#phonebox'),tools=$('.pv-tools'),cs=getComputedStyle(col);
+  if($('#p-design').hidden||cs.display==='none')return false;
+  var sheet=document.body.classList.contains('pv-sheet'),gap=parseFloat(cs.rowGap)||10,toolsH=tools.offsetHeight+gap,availH,availW;
+  if(sheet){availH=col.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-toolsH;availW=col.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)}
+  else{availH=innerHeight-($('#p-design').getBoundingClientRect().top+scrollY+8)-toolsH-12;availW=col.clientWidth}
+  /* the invitation lays out at a real phone width (up to 360px); when the height is short the whole phone is scaled down, never cropped */
+  var W=Math.floor(Math.min(360,availW)),H=W*2,k=Math.min(1,Math.max(0.3,availH/H)),key=W+'x'+Math.round(k*100);
+  ph.style.width=W+'px';ph.style.height=H+'px';ph.style.transform=k<1?'scale('+k+')':'';
+  box.style.width=Math.round(W*k)+'px';box.style.height=Math.round(H*k)+'px';
+  var changed=key!==pvSize;pvSize=key;return changed;
+}
+var fitTimer=null;
+function refit(){clearTimeout(fitTimer);fitTimer=setTimeout(function(){if(fitPv())preview(true)},120)}
+addEventListener('resize',refit);addEventListener('orientationchange',refit);addEventListener('load',refit);
+/* the header and the invitation bar change height when the logo loads or the chips wrap; the phone follows */
+if(window.ResizeObserver){var pvRo=new ResizeObserver(refit);pvRo.observe($('.top'));pvRo.observe($('.bar'))}
 function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
+  fitPv();
   if(handle)handle.destroy();
   var el=document.createElement('div');var sc=$('#screen');sc.innerHTML='';sc.appendChild(el);
   handle=ReefqInvite.render(el,draft,{preview:true,badge:draft.sample?'Example couple':'Preview',startOpen:pvOpen,onRsvp:function(){return new Promise(function(r){setTimeout(function(){r({})},500)})}});
@@ -78,12 +99,12 @@ $('#pv-cover').onclick=function(){pvOpen=false;preview(true)};
 $('#pv-open').onclick=function(){pvOpen=true;preview(true)};
 var mq=window.matchMedia('(max-width:980px)');
 function narrow(){return mq.matches}
-function showPv(){if(narrow()){document.body.classList.add('pv-sheet')}else{document.body.classList.remove('pv-hidden');try{localStorage.setItem('rq-pv','1')}catch(e){}}preview(true)}
-function hidePv(){if(narrow()){document.body.classList.remove('pv-sheet')}else{document.body.classList.add('pv-hidden');try{localStorage.setItem('rq-pv','0')}catch(e){}}}
+function showPv(){if(narrow()){document.body.classList.add('pv-sheet');$('#pv-close').focus()}else{document.body.classList.remove('pv-hidden');try{localStorage.setItem('rq-pv','1')}catch(e){}}preview(true)}
+function hidePv(){if(narrow()){document.body.classList.remove('pv-sheet');$('#pv-fab').focus()}else{document.body.classList.add('pv-hidden');try{localStorage.setItem('rq-pv','0')}catch(e){}}}
 $('#pv-fab').onclick=showPv;$('#pv-close').onclick=hidePv;
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('pv-sheet'))hidePv()});
 function syncPvLabel(){$('#pv-close').textContent=narrow()?'Back to the form':'Hide preview'}
-if(mq.addEventListener)mq.addEventListener('change',function(){document.body.classList.remove('pv-sheet');syncPvLabel()});
+if(mq.addEventListener)mq.addEventListener('change',function(){document.body.classList.remove('pv-sheet');syncPvLabel();refit()});
 syncPvLabel();
 try{if(localStorage.getItem('rq-pv')==='0')document.body.classList.add('pv-hidden')}catch(e){}
 
@@ -125,23 +146,23 @@ function renderChips(){
   $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f)load(f)}});
   $('#btn-del').hidden=!draft.id;$('#btn-dup').hidden=!draft.id;
 }
-function load(inv){draft=clone(inv);delete draft.sample;dirty=false;rsvps=[];status('Saved','ok');fillForm();renderChips();preview(true);loadRsvps();refreshSide()}
+function load(inv){draft=clone(inv);delete draft.sample;delete draft.photos;delete draft.musicUrl;delete draft.music;dirty=false;rsvps=[];status('Saved','ok');fillForm();renderChips();preview(true);loadRsvps();refreshSide()}
 $('#btn-new').onclick=function(){draft=clone(BLANK);dirty=true;pvOpen=false;fillForm();renderChips();preview(true);status('Not saved yet','');$('#k-a-name').focus();refreshSide()};
 function doSave(quiet){
   if(!(draft.a&&draft.a.name&&draft.b&&draft.b.name)){status('Add both names first','bad');return Promise.resolve(false)}
   var body=clone(draft);delete body.sample;
-  var btn=$('#btn-save');btn.disabled=true;status('Saving…','');
+  var btn=$('#btn-save');if(btn.disabled)return Promise.resolve(false);btn.disabled=true;btn.textContent='Saving…';status('Saving…','');
   var req=draft.id?api('/api/invitations/'+encodeURIComponent(draft.id),{method:'PUT',body:body}):api('/api/invitations',{method:'POST',body:body});
   return req.then(function(saved){var editedSince=JSON.stringify(draft)!==JSON.stringify(body);if(!editedSince){draft=saved;dirty=false;status('Saved','ok')}else{draft.id=saved.id;status('Unsaved changes','')}
     var i=invites.findIndex(function(x){return x.id===saved.id});if(i>=0)invites[i]=saved;else invites.unshift(saved);renderChips();refreshSide();return true})
-   .catch(function(e){status(e.status===413?'Too large to save. Remove a photo and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;return v});
+   .catch(function(e){status(e.status===413?'This invitation is too large to save. Shorten the texts and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;btn.textContent='Save invitation';return v});
 }
 $('#btn-save').onclick=function(){doSave()};
 $('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];c.a.name=c.a.name;draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
 $('#btn-del').onclick=function(){
   if(!draft.id)return;
   if(Date.now()-delArm>4000){delArm=Date.now();$('#btn-del').textContent='Confirm delete';setTimeout(function(){$('#btn-del').textContent='Delete'},4000);return}
-  var id=draft.id;api('/api/invitations/'+encodeURIComponent(id),{method:'DELETE'}).then(function(){toast('Invitation deleted');invites=invites.filter(function(x){return x.id!==id});draft=clone(SAMPLE);fillForm();renderChips();preview(true);refreshSide()}).catch(function(e){toast(e.message)});
+  var id=draft.id;api('/api/invitations/'+encodeURIComponent(id),{method:'DELETE'}).then(function(){toast('Invitation deleted');invites=invites.filter(function(x){return x.id!==id});draft=clone(SAMPLE);fillForm();renderChips();preview(true);refreshSide()}).catch(fail);
   $('#btn-del').textContent='Delete';delArm=0;
 };
 
@@ -150,11 +171,11 @@ $('#btn-write').onclick=function(){
   var ws=$('#write-status'),n=draft,btn=$('#btn-write');btn.disabled=true;ws.textContent='Writing in three languages…';
   api('/api/wording',{method:'POST',body:{tone:$('#tone').value,eventType:n.eventType,bride:n.a.name,groom:n.b.name,city:n.city}}).then(function(o){
     draft.message={fr:o.fr,ar:o.ar,en:o.en};$('#k-msg-fr').value=o.fr;$('#k-msg-ar').value=o.ar;$('#k-msg-en').value=o.en;touch();pvOpen=true;preview(true);ws.textContent='Done. Edit freely.';
-  }).catch(function(e){ws.textContent=e.message}).then(function(){btn.disabled=false});
+  }).catch(function(e){ws.textContent=e.message||'Could not write the wording. Try again.'}).then(function(){btn.disabled=false});
 };
 
 /* ---------- tabs ---------- */
-$$('[data-tab]').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x===b)});$('#p-design').hidden=tab!=='design';$('#p-guests').hidden=tab!=='guests';$('#p-deliver').hidden=tab!=='deliver';$('#p-orders').hidden=tab!=='orders';$('#p-settings').hidden=tab!=='settings';$('#pv-fab').hidden=tab!=='design';document.body.classList.remove('pv-sheet');refreshSide()}});
+$$('[data-tab]').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x===b)});$('#p-design').hidden=tab!=='design';$('#p-guests').hidden=tab!=='guests';$('#p-deliver').hidden=tab!=='deliver';$('#p-orders').hidden=tab!=='orders';$('#p-settings').hidden=tab!=='settings';$('#pv-fab').hidden=tab!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(tab==='design')refit()}});
 
 function refreshSide(){if(tab==='guests'){renderGuests();renderGuestList()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings')renderSettings()}
 
@@ -170,10 +191,10 @@ function renderGuests(){
   rows.innerHTML=list.length?list.map(function(r){return '<tr><td>'+esc(r.name)+(r.source==='manual'?' <span class="status">(added by hand)</span>':'')+'</td><td><span class="pill '+(r.attending?'yes':'no')+'">'+(r.attending?'Coming':'Not coming')+'</span></td><td class="num">'+(r.attending?(+r.guests||1):0)+'</td><td>'+esc(r.dietary)+'</td><td>'+esc(r.message)+'</td><td>'+(r.at?new Date(r.at).toLocaleDateString('fr-TN',{day:'numeric',month:'short'}):'')+'</td></tr>'}).join(''):'<tr><td colspan="6" class="empty">No replies yet. They appear here as guests answer.</td></tr>';
 }
 $('#m-add').onclick=function(){
-  if(!draft.id){toast('Save the invitation first');return}
+  if(!draft.id){toast('Save the invitation first, then add replies.',true);return}
   var name=$('#m-name').value.trim();if(!name){$('#m-name').focus();return}
   var att=$('#m-att').value==='yes';
-  api('/api/invitations/'+encodeURIComponent(draft.id)+'/rsvps',{method:'POST',body:{name:name,attending:att,guests:att?Math.max(1,+$('#m-guests').value||1):0,message:$('#m-note').value.trim()}}).then(function(){$('#m-name').value='';$('#m-note').value='';toast('Reply added');loadRsvps()}).catch(function(e){toast(e.message)});
+  api('/api/invitations/'+encodeURIComponent(draft.id)+'/rsvps',{method:'POST',body:{name:name,attending:att,guests:att?Math.max(1,+$('#m-guests').value||1):0,message:$('#m-note').value.trim()}}).then(function(){$('#m-name').value='';$('#m-note').value='';toast('Reply added');loadRsvps()}).catch(fail);
 };
 $('#btn-csv').onclick=function(){
   var list=mine();if(!list.length){toast('No replies to download yet');return}
@@ -246,17 +267,26 @@ function renderDeliver(){
 $('#btn-copymsg').onclick=function(){copy($('#msgbox').textContent,this)};
 $('#btn-copylink').onclick=function(){var g=guestLink();if(g)copy(g,this);else toast('No link yet')};
 /* ---------- orders & RIB payments ---------- */
-var orders=[],oFilter='verify',oSel=null,proofUrl=null;
+var orders=[],oFilter='verify',oSel=null,proofUrl=null,oState='loading',oBusy=false,oSeq=0;
 var OST={awaiting_payment:['Awaiting transfer','info'],proof_sent:['Proof to verify','warn'],paid:['Paid · client','good'],rejected:['Proof rejected','bad'],cancelled:['Cancelled','bad']};
 var OFILTERS=[['verify','To verify'],['awaiting','Awaiting'],['paid','Paid'],['all','All']];
-function loadLeads(){api('/api/orders').then(function(r){orders=r.items;renderOrders();if(oSel){var o=orders.find(function(x){return x.code===oSel});if(o)openOrder(o.code,true)}}).catch(function(){})}
+function loadLeads(){var seq=++oSeq;if(!orders.length){oState='loading';renderOrders()}
+  return api('/api/orders').then(function(r){if(seq!==oSeq)return;orders=r.items;oState='ok';renderOrders();if(oSel){var o=orders.find(function(x){return x.code===oSel});if(o)openOrder(o.code,true)}}).catch(function(e){if(seq!==oSeq)return;if(!orders.length){oState='error';renderOrders()}else if(tab==='orders')fail(e)})}
 function oMatch(o){return oFilter==='all'||(oFilter==='verify'&&o.status==='proof_sent')||(oFilter==='awaiting'&&(o.status==='awaiting_payment'||o.status==='rejected'))||(oFilter==='paid'&&o.status==='paid')}
+function receiptAt(o){for(var i=(o.history||[]).length-1;i>=0;i--)if(o.history[i].status==='proof_sent')return o.history[i].at;return o.createdAt||0}
+function oSort(a,b){return oFilter==='verify'?receiptAt(b)-receiptAt(a):(b.createdAt||0)-(a.createdAt||0)}
+function dshort(t){return new Date(t).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})}
+function tshort(t){return new Date(t).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})}
 function renderOrders(){
-  var n=orders.filter(function(o){return o.status==='proof_sent'}).length,bd=$('#o-badge');bd.hidden=!n;bd.textContent=n;
+  var n=orders.filter(function(o){return o.status==='proof_sent'}).length,bd=$('#o-badge');bd.hidden=!n;bd.textContent=n;bd.setAttribute('aria-label',n+' receipts to verify');
+  var vb=$('#o-verify');vb.className='verify'+(oState==='ok'?(n?' todo':' done'):'');
+  vb.innerHTML=oState==='loading'?'<span class="status">Loading orders…</span>':oState==='error'?'':n?'<b>'+n+'</b><span>'+(n===1?'receipt to verify':'receipts to verify')+'</span>'+(oFilter!=='verify'?'<button class="btn sm" type="button" id="o-showverify">Show '+(n===1?'it':'them')+'</button>':'<small>Newest first. Check the bank account, then confirm.</small>'):'<span>No receipts waiting. You are up to date.</span>';
+  var sv=$('#o-showverify');if(sv)sv.onclick=function(){oFilter='verify';renderOrders()};
   $('#o-filters').innerHTML=OFILTERS.map(function(f){var c=orders.filter(function(o){var k=oFilter;oFilter=f[0];var r=oMatch(o);oFilter=k;return r}).length;return '<button class="chip" type="button" data-of="'+f[0]+'" aria-pressed="'+(oFilter===f[0])+'">'+f[1]+' · '+c+'</button>'}).join('');
   $$('[data-of]').forEach(function(b){b.onclick=function(){oFilter=b.dataset.of;renderOrders()}});
-  var list=orders.filter(oMatch);
-  $('#o-rows').innerHTML=list.length?list.map(function(o){var st=OST[o.status]||[o.status,''];return '<tr class="'+(oSel===o.code?'sel':'')+'"><td>'+new Date(o.createdAt).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})+'</td><td><b>'+esc(o.code)+'</b></td><td>'+esc(o.names)+'<br><span class="status">'+esc([o.date,o.city].filter(Boolean).join(' · '))+'</span></td><td>'+esc(o.plan)+'</td><td class="num">'+o.deposit+' DT</td><td><span class="pill '+st[1]+'">'+st[0]+'</span></td><td><button class="btn sm" type="button" data-od="'+esc(o.code)+'">Review</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">Nothing here. Orders from the website appear in this list.</td></tr>';
+  var list=orders.filter(oMatch).sort(oSort);
+  $('#o-rows').innerHTML=oState==='loading'?'<tr><td colspan="7" class="empty">Loading orders…</td></tr>':oState==='error'?'<tr><td colspan="7" class="empty">Could not load the orders. Check your connection. <button class="btn sm" type="button" id="o-retry">Try again</button></td></tr>':list.length?list.map(function(o){var st=OST[o.status]||[o.status,''];return '<tr class="'+(oSel===o.code?'sel':'')+'"><td>'+dshort(o.createdAt)+(o.status==='proof_sent'?'<br><span class="status">Receipt '+esc(tshort(receiptAt(o)))+'</span>':'')+'</td><td><b>'+esc(o.code)+'</b></td><td>'+esc(o.names)+'<br><span class="status">'+esc([o.date,o.city].filter(Boolean).join(' · '))+'</span></td><td>'+esc(o.plan)+'</td><td class="num">'+o.deposit+' DT</td><td><span class="pill '+st[1]+'">'+st[0]+'</span></td><td><button class="btn sm" type="button" data-od="'+esc(o.code)+'">Review</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">'+(oFilter==='verify'?'No receipts to verify right now.':oFilter==='all'?'No orders yet. Orders from the website appear here.':'Nothing in this list.')+'</td></tr>';
+  var rt=$('#o-retry');if(rt)rt.onclick=loadLeads;
   $$('[data-od]').forEach(function(b){b.onclick=function(){openOrder(b.dataset.od)}});
 }
 function clientLink(o){return ORIGIN+'/commande/'+o.code+'?t='+o.token}
@@ -277,32 +307,45 @@ function openOrder(code,keep){
   if(!keep)showProof(o,o.proofs.length-1);
 }
 function showProof(o,i){var box=$('#od-proof');if(i<0){box.innerHTML='<p class="hint">No proof uploaded yet.</p>';return}
-  box.innerHTML='<p class="hint">Loading…</p>';
+  box.innerHTML='<p class="hint">Loading the receipt…</p>';
   fetch('/api/orders/'+o.code+'/proof?i='+i,{credentials:'same-origin'}).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){if(proofUrl)URL.revokeObjectURL(proofUrl);proofUrl=URL.createObjectURL(b);
-    box.innerHTML=/pdf/.test(b.type)?'<a class="btn" target="_blank" rel="noopener" href="'+proofUrl+'">Open PDF receipt</a>':'<a href="'+proofUrl+'" target="_blank" rel="noopener"><img alt="Transfer receipt" src="'+proofUrl+'"></a>'}).catch(function(){box.innerHTML='<p class="hint">Could not load the proof.</p>'})}
-function oAction(action,extra){if(!oSel)return;var b=Object.assign({action:action},extra||{});return api('/api/orders/'+oSel+'/status',{method:'POST',body:b}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;openOrder(o.code,true);renderOrders();toast(action==='confirm'?'Payment confirmed. Client space is open.':'Order updated')}).catch(function(e){toast(e.message)})}
-$('#od-confirm').onclick=function(){var v=+$('#od-amount').value;if(!(v>0)){$('#od-amount').focus();return}oAction('confirm',{amountReceived:v})};
+    box.innerHTML=/pdf/.test(b.type)?'<a class="btn" target="_blank" rel="noopener" href="'+proofUrl+'">Open PDF receipt</a>':'<a href="'+proofUrl+'" target="_blank" rel="noopener"><img alt="Transfer receipt" src="'+proofUrl+'"></a>'}).catch(function(){box.innerHTML='<p class="hint">Could not load the receipt. Press Refresh and try again.</p>'})}
+var OBTN=['#od-confirm','#od-reject','#od-cancel','#od-reopen'],OLABEL={};
+function oLock(on,action){OBTN.forEach(function(id){var b=$(id);if(!(id in OLABEL))OLABEL[id]=b.textContent;b.disabled=on;b.setAttribute('aria-busy',on&&id==='#od-'+action?'true':'false')});
+  if(on&&action==='confirm')$('#od-confirm').textContent='Confirming…';else $('#od-confirm').textContent=OLABEL['#od-confirm']}
+function oAction(action,extra){if(!oSel||oBusy)return;var code=oSel,cur=orders.find(function(x){return x.code===code});
+  if(action==='confirm'&&cur&&cur.status==='paid'){toast('This payment is already confirmed.');return}
+  oBusy=true;oSeq++;oLock(true,action);var b=Object.assign({action:action},extra||{});
+  return api('/api/orders/'+code+'/status',{method:'POST',body:b}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;oSeq++;if(oSel===o.code)openOrder(o.code,true);renderOrders();toast(action==='confirm'?'Payment confirmed. Client space is open.':action==='reject'?'Marked as not valid. The client can send a new receipt.':action==='cancel'?'Order cancelled.':'Order reopened.')}).catch(fail).then(function(){oBusy=false;oLock(false)})}
+$('#od-confirm').onclick=function(){var v=+$('#od-amount').value;if(!(v>0)){toast('Enter the amount you received.',true);$('#od-amount').focus();return}oAction('confirm',{amountReceived:v})};
 $('#od-reject').onclick=function(){oAction('reject',{note:$('#od-reason').value.trim()})};
 $('#od-cancel').onclick=function(){oAction('cancel',{note:$('#od-reason').value.trim()})};
 $('#od-reopen').onclick=function(){oAction('reopen')};
 $('#od-close').onclick=function(){oSel=null;$('#o-detail').hidden=true;renderOrders()};
-$('#od-note-save').onclick=function(){api('/api/orders/'+oSel,{method:'PATCH',body:{adminNote:$('#od-note').value}}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;toast('Note saved')})};
+$('#od-note-save').onclick=function(){var b=this;if(b.disabled)return;b.disabled=true;api('/api/orders/'+oSel,{method:'PATCH',body:{adminNote:$('#od-note').value}}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;toast('Note saved')}).catch(fail).then(function(){b.disabled=false})};
 $('#od-copy').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(o)copy(clientLink(o),this)};
 $('#od-invite').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(!o)return;
   var go=function(inv){var i=invites.findIndex(function(x){return x.id===inv.id});if(i<0)invites.unshift(inv);load(inv);$('#tab-design').click();toast('Invitation opened in Design')};
-  if(o.inviteId){api('/api/invitations/'+o.inviteId).then(go).catch(function(e){toast(e.message)});return}
-  api('/api/orders/'+o.code+'/invitation',{method:'POST'}).then(function(r){var i=orders.findIndex(function(x){return x.code===r.order.code});orders[i]=r.order;go(r.invitation)}).catch(function(e){toast(e.message)})};
-$('#o-refresh').onclick=loadLeads;
+  if(o.inviteId){api('/api/invitations/'+o.inviteId).then(go).catch(fail);return}
+  api('/api/orders/'+o.code+'/invitation',{method:'POST'}).then(function(r){var i=orders.findIndex(function(x){return x.code===r.order.code});orders[i]=r.order;go(r.invitation)}).catch(fail)};
+$('#o-refresh').onclick=function(){var b=this;b.disabled=true;b.textContent='Refreshing…';loadLeads().then(function(){b.disabled=false;b.textContent='Refresh'})};
 /* ---------- settings ---------- */
-function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME&&ME.canva?(cs&&cs.connected?'Connected to Canva'+(cs.lastRun?' · last sync '+new Date(cs.lastRun).toLocaleString('fr-TN')+(cs.count!=null?' · '+cs.count+' templates':''):'')+(cs.lastError?' · last error: '+cs.lastError:''):'Canva is configured. Press Connect Canva once.'):'Add CANVA_CLIENT_ID, CANVA_CLIENT_SECRET and CANVA_FOLDER_ID in Netlify environment variables to enable Canva.';$('#s-bank').textContent=ME&&ME.bankReady?'Bank details are set. Clients see them on their payment page.':'Add BANK_NAME, BANK_HOLDER, BANK_RIB and BANK_IBAN in Netlify environment variables so clients see your RIB.';var ig=[['Team alerts on Telegram',ME&&ME.alerts&&ME.alerts.telegram,'New orders and payment receipts arrive on your phone. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.'],['Team alerts by email',ME&&ME.alerts&&ME.alerts.email,'Same alerts by email through Resend. Set RESEND_API_KEY and ALERT_EMAIL.'],['PostHog analytics',ME&&ME.posthog,'Visits, orders, invitations opened and RSVPs. Set POSTHOG_KEY.'],['Wording with Claude',ME&&ME.wording,'Drafts invitation text in FR, AR and EN. Set ANTHROPIC_API_KEY.'],['Canva templates',ME&&ME.canva,'Designer templates appear on the site. Set CANVA_CLIENT_ID, CANVA_CLIENT_SECRET, CANVA_FOLDER_ID.']];
-  $('#s-integ').innerHTML=ig.map(function(x){return '<li><span class="pill '+(x[1]?'ok':'off')+'">'+(x[1]?'On':'Off')+'</span><b>'+x[0]+'</b><small>'+(x[1]?'Connected.':x[2])+'</small></li>'}).join('');
-  $('#s-connect').hidden=!(ME&&ME.canva);$('#s-sync').hidden=!(ME&&ME.canva)}
-$('#s-sync').onclick=function(){var b=this;b.disabled=true;$('#s-sync-status').textContent='Syncing…';api('/api/canva/sync',{method:'POST'}).then(function(r){$('#s-sync-status').textContent=r.note;setTimeout(loadCanva,60000)}).catch(function(e){$('#s-sync-status').textContent=e.message}).then(function(){b.disabled=false})};
+function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME&&ME.canva?(cs&&cs.connected?'Connected to Canva'+(cs.lastRun?' · last sync '+new Date(cs.lastRun).toLocaleString('fr-TN')+(cs.count!=null?' · '+cs.count+' templates':''):'')+(cs.lastError?' · last error: '+cs.lastError:''):'Canva is configured. Press Connect Canva once.'):'Add CANVA_CLIENT_ID, CANVA_CLIENT_SECRET and CANVA_FOLDER_ID in Netlify environment variables to enable Canva.';$('#s-bank').textContent=ME&&ME.bankReady?'Bank details are set. Clients see them on their payment page.':'Add BANK_NAME, BANK_HOLDER, BANK_RIB and BANK_IBAN in Netlify environment variables so clients see your RIB.';var ig=[
+    ['Team alerts on Telegram',ME&&ME.alerts&&ME.alerts.telegram,'New orders and payment receipts arrive on your phone.',['TELEGRAM_BOT_TOKEN','TELEGRAM_CHAT_ID']],
+    ['Team alerts by email',ME&&ME.alerts&&ME.alerts.email,'The same alerts arrive by email (Resend).',['RESEND_API_KEY','ALERT_EMAIL']],
+    ['PostHog analytics',ME&&ME.posthog,'Visits, orders, invitations opened and replies are counted.',['POSTHOG_KEY']],
+    ['Wording with Claude',ME&&ME.wording,'The "Write it with Claude" button drafts the texts in French, Arabic and English.',['ANTHROPIC_API_KEY']],
+    ['Canva templates',ME&&ME.canva,'Designer templates appear on the website and in Design.',['CANVA_CLIENT_ID','CANVA_CLIENT_SECRET','CANVA_FOLDER_ID']]];
+  var on=ig.filter(function(x){return x[1]}).length;
+  $('#s-integ-sum').textContent=ME?on+' of '+ig.length+' are on.':'';
+  $('#s-integ').innerHTML=ig.map(function(x){return '<li><span class="pill '+(x[1]?'ok':'off')+'">'+(x[1]?'On':'Off')+'</span><b>'+x[0]+'</b><small>'+x[2]+(x[1]?'':' To turn it on, set '+x[3].map(function(v){return '<code>'+v+'</code>'}).join(' and ')+' in Netlify → Environment variables.')+'</small></li>'}).join('');
+  $('#s-canva-actions').hidden=!(ME&&ME.canva)}
+$('#s-sync').onclick=function(){var b=this;b.disabled=true;$('#s-sync-status').textContent='Syncing…';api('/api/canva/sync',{method:'POST'}).then(function(r){$('#s-sync-status').textContent=r.note;setTimeout(loadCanva,60000)}).catch(function(e){$('#s-sync-status').textContent=e.message||'Could not sync. Try again.'}).then(function(){b.disabled=false})};
 $('#s-logout').onclick=function(){api('/api/logout',{method:'POST'}).then(function(){location.reload()})};
 
 /* ---------- login ---------- */
 function showLogin(){$('#login').hidden=false;$('#studio').hidden=true;setTimeout(function(){$('#l-pass').focus()},50)}
-$('#l-form').onsubmit=function(e){e.preventDefault();var err=$('#l-err');err.hidden=true;api('/api/login',{method:'POST',body:{password:$('#l-pass').value}}).then(function(){$('#login').hidden=true;$('#studio').hidden=false;start()}).catch(function(x){err.textContent=x.message;err.hidden=false})};
+$('#l-form').onsubmit=function(e){e.preventDefault();var err=$('#l-err');err.hidden=true;var lb=$('#l-form button[type=submit]');if(lb.disabled)return;lb.disabled=true;lb.textContent='Signing in…';api('/api/login',{method:'POST',body:{password:$('#l-pass').value}}).then(function(){$('#l-pass').value='';$('#login').hidden=true;$('#studio').hidden=false;start()}).catch(function(x){err.textContent=x.message;err.hidden=false;$('#l-pass').select()}).then(function(){lb.disabled=false;lb.textContent='Sign in'})};
 
 /* ---------- boot ---------- */
 $$('#brand-logo,#l-logo').forEach(function(i){i.src=ReefqInvite.LOGO});$('#brand-logo-d').src=ReefqInvite.LOGO_DARK;
