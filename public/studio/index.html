@@ -18,7 +18,7 @@
     <img id="l-logo" alt="Reefq رِفق">
     <h1>Studio</h1>
     <label class="f"><span>Password</span><input type="password" id="l-pass" autocomplete="current-password" required></label>
-    <p class="err" id="l-err" hidden></p>
+    <p class="err" id="l-err" role="alert" hidden></p>
     <button class="btn primary" type="submit">Sign in</button>
   </form>
 </div>
@@ -145,7 +145,7 @@
     </form>
 
     <aside class="previewcol" aria-label="Live preview">
-      <div class="phone"><div class="screen" id="screen"></div></div>
+      <div class="phonebox" id="phonebox"><div class="phone"><div class="screen" id="screen"></div></div></div>
       <div class="pv-tools">
         <button class="btn sm" type="button" id="pv-cover">Show envelope</button>
         <button class="btn sm" type="button" id="pv-open">Show inside</button>
@@ -212,6 +212,7 @@
   </section>
   <section id="p-orders" class="panel" hidden>
     <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:24px;margin:0;flex:1">Orders &amp; payments</h2><div class="chips" id="o-filters" style="flex:0 1 auto"></div><button class="btn sm" type="button" id="o-refresh">Refresh</button></div>
+    <div id="o-verify" class="verify" role="status" aria-live="polite"></div>
     <div class="tablewrap"><table><thead><tr><th>Received</th><th>Code</th><th>Couple</th><th>Offer</th><th style="text-align:right">Deposit</th><th>Status</th><th></th></tr></thead><tbody id="o-rows"></tbody></table></div>
     <div class="card od" id="o-detail" hidden>
       <div class="od-head"><h2 id="od-title"></h2><span class="pill" id="od-status"></span><button class="btn sm ghost" type="button" id="od-close" style="margin-inline-start:auto">Close</button></div>
@@ -245,7 +246,7 @@
     <div class="card">
       <h2>Canva templates</h2>
       <p class="hint" id="s-canva"></p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
+      <div id="s-canva-actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
     </div>
     <div class="card">
       <h2>Bank transfer (RIB)</h2>
@@ -253,6 +254,7 @@
     </div>
     <div class="card">
       <h2>Integrations</h2>
+      <p class="hint" id="s-integ-sum"></p>
       <ul class="integ" id="s-integ"></ul>
     </div>
     <div class="card">
