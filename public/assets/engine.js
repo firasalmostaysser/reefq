@@ -197,7 +197,7 @@ function render(root,inv,opts){
     var n=namesOf(inv,L),msg=(inv.message&&inv.message[L])||t('msg');
     var langBar='<div class="rq-lang" role="group" aria-label="Language">'+['fr','ar','en'].map(function(x){return '<button type="button" data-lang="'+x+'" aria-pressed="'+(x===L)+'">'+(x==='ar'?'عربي':x.toUpperCase())+'</button>'}).join('')+'</div>';
     var badge=opts.preview?'<div class="rq-badge">'+(opts.badge||'Preview')+'</div>':'';
-    var amp=L==='ar'?'و':'&amp;';var nameH='<h1 class="rq-names rq-foil">'+esc(n[0])+' <span class="amp">'+amp+'</span> '+esc(n[1])+'</h1>';
+    var amp=L==='ar'?'و':'&amp;';var nameH='<h1 class="rq-names rq-foil"><span class="n">'+esc(n[0])+'</span> <span class="amp">'+amp+'</span> <span class="n">'+esc(n[1])+'</span></h1>';
     var html=badge+langBar+'<div class="rq-scroll">';
     if(!st.open){
       var eo=envOpts(inv,th),cv=inv.canva||null;
@@ -213,10 +213,11 @@ function render(root,inv,opts){
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div><p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
-        (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+'</div>';
+        (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
+        (guest&&guest.seats?'<div class="rq-seats"><span class="rq-caps">'+esc(t('seatsFor'))+'</span><b>'+maxSeats()+'</b></div>':'')+'</div>';
       if(on('countdown'))html+='<div class="rq-sheet"><h2 class="rq-h2 rq-foil">'+esc(t('count'))+'</h2><div class="rq-count" aria-live="off"><div><b data-c="d">00</b><span>'+esc(t('d'))+'</span></div><div><b data-c="h">00</b><span>'+esc(t('h'))+'</span></div><div><b data-c="m">00</b><span>'+esc(t('m'))+'</span></div><div><b data-c="s">00</b><span>'+esc(t('s'))+'</span></div></div></div>';
       var story=inv.story&&(inv.story[L]||inv.story.fr||inv.story.en||inv.story.ar)||'';
       if(on('story')&&story)html+='<div class="rq-sheet rq-story"><h2 class="rq-h2 rq-foil">'+esc(t('story'))+'</h2>'+String(story).split(/\n+/).filter(function(x){return x.trim()}).map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>';
@@ -236,14 +237,14 @@ function render(root,inv,opts){
       } else {
         var mx=maxSeats();
         html+='<form class="rq-form" novalidate><div><label class="l" for="rq-name">'+esc(t('name'))+'</label><input type="text" id="rq-name" autocomplete="name" value="'+esc(guest&&guest.name||'')+'"></div>'+
-         '<div><span class="l" style="display:block;font:600 12px/1.4 Figtree,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">'+esc(t('att'))+'</span><div class="rq-att"><label><input type="radio" name="rq-att" id="rq-att-yes" value="yes"> '+esc(t('yes'))+'</label><label><input type="radio" name="rq-att" id="rq-att-no" value="no"> '+esc(t('no'))+'</label></div></div>'+
-         (mx>1?'<div class="rq-gwrap"><span class="l" style="display:block;font:600 12px/1.4 Figtree,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">'+esc(t('guests'))+'</span><div class="rq-step"><button type="button" data-g="-1" aria-label="−">−</button><output id="rq-guests">'+st.guests+'</output><button type="button" data-g="1" aria-label="+">+</button></div></div>':'')+
+         '<div><span class="l">'+esc(t('att'))+'</span><div class="rq-att"><label><input type="radio" name="rq-att" id="rq-att-yes" value="yes"> '+esc(t('yes'))+'</label><label><input type="radio" name="rq-att" id="rq-att-no" value="no"> '+esc(t('no'))+'</label></div></div>'+
+         (mx>1?'<div class="rq-gwrap"><span class="l">'+esc(t('guests'))+'</span><div class="rq-step"><button type="button" data-g="-1" aria-label="−">−</button><output id="rq-guests">'+st.guests+'</output><button type="button" data-g="1" aria-label="+">+</button></div></div>':'')+
          '<div><label class="l" for="rq-diet">'+esc(t('diet'))+'</label><input type="text" id="rq-diet"></div>'+
          '<div><label class="l" for="rq-msg">'+esc(t('note'))+'</label><textarea id="rq-msg"></textarea></div>'+
          '<p class="rq-err" hidden></p><button class="rq-send" type="submit">'+esc(t('send'))+'</button>'+(opts.preview?'<p class="rq-note">'+esc(t('preview'))+'</p>':'')+'</form>';
       }
       html+='</div>';}
-      html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span><img alt="Reefq رِفق" src="'+LOGO+'"></div></section>';
+      html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span><img alt="Reefq رِفق" src="'+(th==='layl'?LOGO_DARK:LOGO)+'"></div></section>';
     }
     html+='</div>';
     root.innerHTML=html;
