@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -17,7 +17,7 @@
 <header class="nav">
   <a class="logo" href="#top" aria-label="Reefq"><img class="lg-l" id="lg1" alt="Reefq رِفق"><img class="lg-d" id="lg2" alt="Reefq رِفق"></a>
   <nav class="links"><a href="#how" data-i="nav_how">Comment ça marche</a><a href="#offers" data-i="nav_offers">Offres</a><a href="#faq" data-i="nav_faq">Questions</a></nav>
-  <div class="navr"><button type="button" class="lang" id="lang" aria-label="Langue">عربي</button><a class="btn primary sm" href="#order" data-i="cta_short">Commander</a></div>
+  <div class="navr"><div class="lsw" id="lsw" role="group" aria-label="Langue"><a href="?lang=fr" data-l="fr" lang="fr" hreflang="fr" aria-current="true">FR</a><a href="?lang=ar" data-l="ar" lang="ar" hreflang="ar">عربي</a><a href="?lang=en" data-l="en" lang="en" hreflang="en">EN</a></div><a class="btn primary sm" href="#order" data-i="cta_short">Commander</a></div>
 </header>
 
 <main id="top">
@@ -31,8 +31,10 @@
     </div>
     <div class="hero-demo">
       <div class="phone"><div class="screen" id="demo"></div></div>
-      <div class="demo-bar"><button type="button" class="demo-replay" id="demo-replay" data-i="demo_replay">Rejouer</button><a class="demo-full" id="demo-full" href="/i/demo" target="_blank" rel="noopener" data-i="demo_full">Voir en plein écran</a></div>
-      <div class="themes" id="themes" role="group" aria-label="Thèmes"></div>
+      <div class="demo-ctl">
+        <div class="themes" id="themes" role="group" aria-label="Thèmes"></div>
+        <div class="demo-bar"><button type="button" class="demo-replay" id="demo-replay"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.4h2.4"/></svg><span data-i="demo_replay">Rejouer</span></button><a class="demo-full" id="demo-full" href="/i/demo" target="_blank" rel="noopener"><span data-i="demo_full">Voir en plein écran</span><svg class="flip" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3H3v10h10v-3M9 3h4v4M13 3 7.5 8.5"/></svg></a></div>
+      </div>
     </div>
   </section>
 
@@ -65,9 +67,9 @@
     <h2 data-i="off_t">Nos offres</h2>
     <p class="sub" data-i="off_s">Paiement unique. Pas d'abonnement. Invités illimités.</p>
     <div class="plans">
-      <article class="plan"><h3>Essentiel</h3><p class="price"><b>149</b> DT</p><ul><li data-i="e1">1 thème, couleurs d'enveloppe et de sceau</li><li data-i="e2">FR · AR · EN</li><li data-i="e3">Programme, cartes, compte à rebours</li><li data-i="e4">Tableau des réponses</li><li data-i="e5">Un lien à partager</li><li data-i="e6">Livrée en 48 h</li></ul><a class="btn ghost" href="#order" data-plan="Essentiel" data-i="choose">Choisir</a></article>
-      <article class="plan best"><span class="tag" data-i="best">Le plus choisi</span><h3>Signature</h3><p class="price"><b>249</b> DT</p><ul><li data-i="g1">Tout l'Essentiel</li><li data-i="g2">Un lien personnel par invité, à son nom</li><li data-i="g3">Envoi WhatsApp prêt en un clic</li><li data-i="g4">Votre histoire en trois langues</li><li data-i="g5">Monogramme de sceau personnalisé</li><li data-i="g6">Liste d'invités et export traiteur</li><li data-i="g7">2 séries de retouches</li></ul><a class="btn primary" href="#order" data-plan="Signature" data-i="choose">Choisir</a></article>
-      <article class="plan"><h3>Prestige</h3><p class="price"><small data-i="from">dès</small> <b>349</b> DT</p><ul><li data-i="r1">Tout Signature</li><li data-i="r2">Thème sur mesure, dessin de votre lieu</li><li data-i="r3">Cartes imprimées avec QR (sur devis)</li><li data-i="r4">Nous envoyons et relançons vos invités</li></ul><a class="btn ghost" href="#order" data-plan="Prestige" data-i="choose">Choisir</a></article>
+      <article class="plan"><h3>Essentiel</h3><p class="price"><bdi><b>149</b> DT</bdi></p><ul><li data-i="e1">1 thème, couleurs d'enveloppe et de sceau</li><li data-i="e2">FR · AR · EN</li><li data-i="e3">Programme, cartes, compte à rebours</li><li data-i="e4">Tableau des réponses</li><li data-i="e5">Un lien à partager</li><li data-i="e6">Livrée en 48 h</li></ul><a class="btn ghost" href="#order" data-plan="Essentiel" data-i="choose">Choisir</a></article>
+      <article class="plan best"><span class="tag" data-i="best">Le plus choisi</span><h3>Signature</h3><p class="price"><bdi><b>249</b> DT</bdi></p><ul><li data-i="g1">Tout l'Essentiel</li><li data-i="g2">Un lien personnel par invité, à son nom</li><li data-i="g3">Envoi WhatsApp prêt en un clic</li><li data-i="g4">Votre histoire en trois langues</li><li data-i="g5">Monogramme de sceau personnalisé</li><li data-i="g6">Liste d'invités et export traiteur</li><li data-i="g7">2 séries de retouches</li></ul><a class="btn primary" href="#order" data-plan="Signature" data-i="choose">Choisir</a></article>
+      <article class="plan"><h3>Prestige</h3><p class="price"><small data-i="from">dès</small> <bdi><b>349</b> DT</bdi></p><ul><li data-i="r1">Tout Signature</li><li data-i="r2">Thème sur mesure, dessin de votre lieu</li><li data-i="r3">Cartes imprimées avec QR (sur devis)</li><li data-i="r4">Nous envoyons et relançons vos invités</li></ul><a class="btn ghost" href="#order" data-plan="Prestige" data-i="choose">Choisir</a></article>
     </div>
     <p class="addons" data-i="addons">Options : 2ᵉ événement (henné, fiançailles, contrat) +49 DT · Express 24 h +30 DT</p>
   </section>
@@ -89,7 +91,7 @@
         <label class="f"><span data-i="o_names">Vos prénoms</span><input id="o-names" placeholder="Yasmine & Karim" required></label>
         <label class="f"><span data-i="o_date">Date du mariage</span><input id="o-date" type="date"></label>
         <label class="f"><span data-i="o_city">Ville</span><input id="o-city" placeholder="Tunis"></label>
-        <label class="f"><span data-i="o_phone">Votre WhatsApp</span><input id="o-phone" type="tel" placeholder="+216 …" autocomplete="tel" required></label>
+        <label class="f"><span data-i="o_phone">Votre WhatsApp</span><input id="o-phone" type="tel" dir="ltr" inputmode="tel" placeholder="+216 …" autocomplete="tel" required></label>
         <label class="f"><span data-i="o_guests">Nombre d'invités (environ)</span><input id="o-guests" type="number" min="1" placeholder="250"></label>
         <label class="f"><span data-i="o_plan">Offre</span><select id="o-plan"><option>Essentiel</option><option selected>Signature</option><option>Prestige</option></select></label>
         <label class="f" id="o-model-wrap" hidden><span data-i="o_model">Modèle</span><select id="o-model"></select></label>
@@ -112,6 +114,7 @@
 
 <script src="/assets/analytics.js"></script>
 <script src="/assets/engine.js"></script>
+<script src="/assets/landing-i18n.js"></script>
 <script src="/assets/landing.js"></script>
 </body>
 </html>
