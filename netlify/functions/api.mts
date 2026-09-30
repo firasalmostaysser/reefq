@@ -73,6 +73,22 @@ async function route(req: Request, context: Context): Promise<Response> {
       return json({ ok: true });
     }
   }
+  /* Archived invitations only leave the studio's main list: their public link and RSVPs keep working. */
+  if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/archive$/)) && m === 'POST') {
+    const inv: any = await invitations().get(mm[1], { type: 'json' });
+    if (!inv) return err(404, 'Not found');
+    const b = await readJSON(req, 1000);
+    if (b.archived === false) { delete inv.archived; delete inv.archivedAt; } else { inv.archived = true; inv.archivedAt = Date.now(); }
+    await invitations().setJSON(inv.id, inv);
+    return json(inv);
+  }
+  /* A copy starts as a draft: same design and texts, no guest list, not linked to an order. */
+  if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/duplicate$/)) && m === 'POST') {
+    const src: any = await invitations().get(mm[1], { type: 'json' });
+    if (!src) return err(404, 'Not found');
+    const { id: _id, createdAt, updatedAt, archived, archivedAt, orderCode, guests, ...copy } = src;
+    return json(await saveInvitation(slug((src.a?.name || '') + '-' + (src.b?.name || '')) + '-' + id(4), { ...copy, guests: [] }));
+  }
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/rsvps$/))) {
     if (m === 'GET') return json({ items: await rsvpList(mm[1]) });
     if (m === 'POST') return json(await insertRsvp(mm[1], { ...(await readJSON(req, 10_000)), source: 'manual' }));

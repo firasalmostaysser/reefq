@@ -32,7 +32,7 @@ function copy(text,btn){
 function sel(btn){var el=btn&&btn.parentElement&&btn.parentElement.querySelector('code,.msgbox')||$('#msgbox');var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Press Ctrl+C to copy')}
 
 var ME=null,invites=[],rsvps=[],leads=[];
-var draft=clone(SAMPLE),dirty=false,handle=null,pvOpen=false,tab='design',msgLang='fr',delArm=0;
+var draft=clone(SAMPLE),dirty=false,handle=null,pvOpen=false,tab='list',msgLang='fr';
 
 /* ---------- preview ---------- */
 var pvTimer=null,pvSize='';
@@ -141,7 +141,7 @@ function renderChips(){
   var col={};THEME_INFO.forEach(function(t){col[t.id]=t.fg});
   var html='';
   if(!draft.id)html+='<button class="chip" type="button" aria-pressed="true"><span class="dot" style="background:'+col[draft.theme]+'"></span>'+esc(draft.sample?'Example: '+names(draft):(names(draft)==='? & ?'?'New couple':names(draft)))+'</button>';
-  html+=invites.map(function(i){return '<button class="chip" type="button" data-inv="'+esc(i.id)+'" aria-pressed="'+(draft.id===i.id)+'"><span class="dot" style="background:'+(col[i.theme]||'#999')+'"></span>'+esc(names(i))+'</button>'}).join('');
+  html+=invites.filter(function(i){return!i.archived||i.id===draft.id}).map(function(i){return '<button class="chip" type="button" data-inv="'+esc(i.id)+'" aria-pressed="'+(draft.id===i.id)+'"><span class="dot" style="background:'+(col[i.theme]||'#999')+'"></span>'+esc(names(i))+'</button>'}).join('');
   $('#chips').innerHTML=html||'<span class="status">No saved invitations yet</span>';
   $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f)load(f)}});
   $('#btn-del').hidden=!draft.id;$('#btn-dup').hidden=!draft.id;
@@ -159,12 +159,7 @@ function doSave(quiet){
 }
 $('#btn-save').onclick=function(){doSave()};
 $('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];c.a.name=c.a.name;draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
-$('#btn-del').onclick=function(){
-  if(!draft.id)return;
-  if(Date.now()-delArm>4000){delArm=Date.now();$('#btn-del').textContent='Confirm delete';setTimeout(function(){$('#btn-del').textContent='Delete'},4000);return}
-  var id=draft.id;api('/api/invitations/'+encodeURIComponent(id),{method:'DELETE'}).then(function(){toast('Invitation deleted');invites=invites.filter(function(x){return x.id!==id});draft=clone(SAMPLE);fillForm();renderChips();preview(true);refreshSide()}).catch(fail);
-  $('#btn-del').textContent='Delete';delArm=0;
-};
+$('#btn-del').onclick=function(){if(draft.id)confirmDelete(draft)};
 
 /* ---------- dialog (confirmations, quick preview) ---------- */
 /* ask({title,body,ok,danger,typeToConfirm}) → Promise<boolean>. body is trusted HTML built here. */
@@ -206,9 +201,90 @@ $('#w-use').onclick=function(){
 };
 
 /* ---------- tabs ---------- */
-$$('[data-tab]').forEach(function(b){b.onclick=function(){tab=b.dataset.tab;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x===b)});$('#p-design').hidden=tab!=='design';$('#p-guests').hidden=tab!=='guests';$('#p-deliver').hidden=tab!=='deliver';$('#p-orders').hidden=tab!=='orders';$('#p-settings').hidden=tab!=='settings';$('#pv-fab').hidden=tab!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(tab==='design')refit()}});
+var PANELS=['list','design','guests','deliver','orders','settings'];
+function showTab(t){if(t!==tab)scrollTo(0,0);tab=t;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(t==='design')refit()}
+$$('[data-tab]').forEach(function(b){b.onclick=function(){showTab(b.dataset.tab)}});
 
-function refreshSide(){if(tab==='guests'){renderGuests();renderGuestList()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings')renderSettings()}
+function refreshSide(){if(tab==='list'){renderList();loadCounts()}if(tab==='guests'){renderGuests();renderGuestList()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings')renderSettings()}
+
+/* ---------- invitations list ---------- */
+var lFilter='active',lState='loading',rCount={},rCountAt=0;
+function themeOf(id){return THEME_INFO.filter(function(t){return t.id===id})[0]||THEME_INFO[0]}
+/* Live: the couple or guests may already have the link (linked to a paid order, a guest link sent, or a reply received). */
+function invStatus(i){if(i.archived)return['Archived','arch'];var c=rCount[i.id];if(i.orderCode||(c&&c.n)||(i.guests||[]).some(function(g){return g.sent}))return['Live','good'];return['Draft','wait']}
+function fold(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()}
+function fmtD(d){var t=new Date(d+'T12:00');return isNaN(t)?d:t.toLocaleDateString('fr-TN',{day:'numeric',month:'short',year:'numeric'})}
+function rcText(c){return c?c.n+(c.n===1?' reply':' replies')+(c.n?' · '+c.coming+' coming':''):'Counting replies…'}
+/* reply counts, four invitations at a time; each card is patched in place so focus is never lost */
+function loadCounts(force){
+  if(!force&&Date.now()-rCountAt<60000)return;rCountAt=Date.now();
+  var q=invites.map(function(i){return i.id});
+  var run=function(){var id=q.shift();if(!id)return;
+    api('/api/invitations/'+encodeURIComponent(id)+'/rsvps').then(function(r){var yes=r.items.filter(function(x){return x.attending});rCount[id]={n:r.items.length,coming:yes.reduce(function(s,x){return s+(+x.guests||1)},0)};patchCard(id)}).catch(function(){}).then(run)};
+  for(var k=0;k<4;k++)run();
+}
+function patchCard(id){var el=$('[data-card="'+id+'"]'),i=invites.find(function(x){return x.id===id});if(!el||!i)return;
+  $('[data-rc]',el).textContent=rcText(rCount[id]);var st=invStatus(i),p=$('[data-st]',el);p.textContent=st[0];p.className='pill '+st[1]}
+function cardHtml(i){
+  var t=themeOf(i.theme),st=invStatus(i),n=names(i),id=esc(i.id);
+  return '<article class="icard'+(draft.id===i.id?' cur':'')+'" data-card="'+id+'">'+
+    '<div class="ic-sw" style="background:'+t.bg+';color:'+t.fg+'" aria-hidden="true"><span>'+esc(i.a&&i.a.name||'?')+' <i>&amp;</i> '+esc(i.b&&i.b.name||'?')+'</span></div>'+
+    '<div class="ic-body"><div class="ic-top"><h3>'+esc(n)+'</h3><span class="pill '+st[1]+'" data-st>'+st[0]+'</span></div>'+
+    '<p class="ic-meta">'+(i.date?esc(fmtD(i.date)):'No date yet')+(i.city?' · '+esc(i.city):'')+'</p>'+
+    '<p class="ic-meta"><span class="ic-dot" style="background:'+t.fg+'"></span>'+esc(t.name)+' · <span data-rc>'+rcText(rCount[i.id])+'</span></p>'+
+    '<div class="ic-act"><button class="btn sm primary" type="button" data-la="edit">Edit</button><button class="btn sm" type="button" data-la="preview">Preview</button><a class="btn sm" href="/i/'+id+'" target="_blank" rel="noopener" aria-label="Open the live page of '+esc(n)+' in a new tab">Open ↗</a></div>'+
+    '<div class="ic-act ic-more"><button class="btn sm ghost" type="button" data-la="dup">Duplicate</button><button class="btn sm ghost" type="button" data-la="arch">'+(i.archived?'Unarchive':'Archive')+'</button><button class="btn sm ghost ic-del" type="button" data-la="del">Delete</button></div>'+
+    '</div></article>';
+}
+function renderList(){
+  var qRaw=$('#l-q').value.trim(),q=fold(qRaw),sort=$('#l-sort').value;
+  var act=invites.filter(function(i){return!i.archived}),arc=invites.filter(function(i){return i.archived});
+  $('#l-filters').innerHTML=[['active','Active',act.length],['archived','Archived',arc.length]].map(function(f){return '<button class="chip" type="button" data-lf="'+f[0]+'" aria-pressed="'+(lFilter===f[0])+'">'+f[1]+' · '+f[2]+'</button>'}).join('');
+  $$('[data-lf]').forEach(function(b){b.onclick=function(){lFilter=b.dataset.lf;renderList()}});
+  var box=$('#l-cards');
+  if(lState!=='ok'){box.innerHTML=lState==='loading'?'<p class="empty">Loading invitations…</p>':'<p class="empty">Could not load the invitations. <button class="btn sm" type="button" id="l-retry">Try again</button></p>';var rt=$('#l-retry');if(rt)rt.onclick=loadInvites;return}
+  var list=(lFilter==='archived'?arc:act).filter(function(i){return !q||fold([i.a&&i.a.name,i.b&&i.b.name,i.a&&i.a.ar,i.b&&i.b.ar,i.city,i.orderCode].join(' ')).indexOf(q)>=0});
+  var dk=function(i){return i.date||''};
+  list.sort(sort==='edited'?function(a,b){return(b.updatedAt||0)-(a.updatedAt||0)}:function(a,b){if(!dk(a)!==!dk(b))return dk(a)?-1:1;return sort==='soon'?dk(a).localeCompare(dk(b)):dk(b).localeCompare(dk(a))});
+  if(!list.length){box.innerHTML='<p class="empty">'+(q?'No invitation matches “'+esc(qRaw)+'”.':lFilter==='archived'?'No archived invitations. Archive one to hide it here while its link keeps working.':'No invitations yet. Press “+ New couple” to start one.')+'</p>';return}
+  box.innerHTML=list.map(cardHtml).join('');
+  $$('[data-la]',box).forEach(function(b){b.onclick=function(){var id=b.closest('[data-card]').dataset.card,i=invites.find(function(x){return x.id===id});if(i)listAction(b.dataset.la,i,b)}});
+}
+function replaceInv(inv){var k=invites.findIndex(function(x){return x.id===inv.id});if(k>=0)invites[k]=inv;else invites.unshift(inv)}
+function listAction(a,i,btn){
+  if(a==='edit'){(dirty&&draft.id!==i.id&&!draft.sample?ask({title:'Leave unsaved changes?',body:'<p>'+esc(draft.id?names(draft):'The new invitation')+' has changes that are not saved yet.</p>',ok:'Discard and open'}):Promise.resolve(true)).then(function(go){if(go){load(i);showTab('design')}});return}
+  if(a==='preview'){quickView(i);return}
+  if(a==='del'){confirmDelete(i);return}
+  btn.disabled=true;
+  if(a==='dup')api('/api/invitations/'+encodeURIComponent(i.id)+'/duplicate',{method:'POST'}).then(function(c){invites.unshift(c);rCount[c.id]={n:0,coming:0};lFilter='active';$('#l-sort').value='edited';renderList();renderChips();toast('Copy created. The guest list is not copied.');var el=$('[data-card="'+c.id+'"]');if(el){el.classList.add('flash');el.scrollIntoView({block:'nearest'})}}).catch(fail).then(function(){btn.disabled=false});
+  if(a==='arch'){var on=!i.archived;api('/api/invitations/'+encodeURIComponent(i.id)+'/archive',{method:'POST',body:{archived:on}}).then(function(inv){replaceInv(inv);if(draft.id===inv.id){if(on){draft.archived=true;draft.archivedAt=inv.archivedAt}else{delete draft.archived;delete draft.archivedAt}}renderList();renderChips();toast(on?'Archived. Its link and replies keep working.':'Back in the active list.')}).catch(function(e){btn.disabled=false;fail(e)})}
+}
+function confirmDelete(inv){
+  var n=names(inv),c=rCount[inv.id];
+  return ask({title:'Delete this invitation?',danger:true,ok:'Delete for good',typeToConfirm:n,
+    body:'<p>This deletes <b>'+esc(n)+'</b> and <b>'+(c&&c.n?'its '+c.n+(c.n===1?' guest reply':' guest replies'):'any guest replies')+'</b>. Guests who open the link will no longer find it'+(inv.orderCode?', and it disappears from the client space of order '+esc(inv.orderCode):'')+'. This cannot be undone.</p><p class="hint">To hide it and keep the link working, archive it instead.</p>'}).then(function(ok){
+    if(!ok)return;
+    return api('/api/invitations/'+encodeURIComponent(inv.id),{method:'DELETE'}).then(function(){
+      toast('Invitation and replies deleted');invites=invites.filter(function(x){return x.id!==inv.id});delete rCount[inv.id];
+      if(draft.id===inv.id){draft=clone(SAMPLE);dirty=false;rsvps=[];fillForm();preview(true);status('Example couple. Press "+ New couple" or edit and save.','')}
+      renderChips();renderList();refreshSide()}).catch(fail)});
+}
+/* quick in-studio preview, the same phone as in Design */
+var qvHandle=null;
+function quickView(i){var d=$('#qv');$('#qv-title').textContent=names(i);$('#qv-open').href='/i/'+encodeURIComponent(i.id);d.showModal();
+  var W=Math.floor(Math.min(360,innerWidth-48)),H=W*2,k=Math.min(1,Math.max(.3,(innerHeight-130)/H)),ph=$('#qv-box .phone'),box=$('#qv-box');
+  ph.style.width=W+'px';ph.style.height=H+'px';ph.style.transform=k<1?'scale('+k+')':'';box.style.width=Math.round(W*k)+'px';box.style.height=Math.round(H*k)+'px';
+  if(qvHandle)qvHandle.destroy();var el=document.createElement('div'),sc=$('#qv-screen');sc.innerHTML='';sc.appendChild(el);
+  qvHandle=ReefqInvite.render(el,clone(i),{preview:true,badge:'Preview',onRsvp:function(){return Promise.resolve({})}});
+  $('#qv-close').focus();
+}
+$('#qv-close').onclick=function(){$('#qv').close()};
+$('#qv').addEventListener('click',function(e){if(e.target===this)this.close()});
+$('#qv').addEventListener('close',function(){if(qvHandle){qvHandle.destroy();qvHandle=null}$('#qv-screen').innerHTML=''});
+$('#l-q').oninput=renderList;$('#l-sort').onchange=renderList;
+$('#l-new').onclick=function(){$('#btn-new').click();showTab('design');$('#k-a-name').focus()};
+function loadInvites(){lState='loading';renderList();return api('/api/invitations').then(function(r){invites=r.items;lState='ok';renderChips();renderList();loadCounts(true)}).catch(function(e){if(e.status!==401){lState='error';renderList()}})}
+
 
 /* ---------- guests ---------- */
 function mine(){return rsvps.filter(function(r){return draft.id&&r.inviteId===draft.id}).sort(function(a,b){return(b.at||0)-(a.at||0)})}
@@ -379,10 +455,10 @@ $('#l-form').onsubmit=function(e){e.preventDefault();var err=$('#l-err');err.hid
 
 /* ---------- boot ---------- */
 $$('#brand-logo,#l-logo').forEach(function(i){i.src=ReefqInvite.LOGO});$('#brand-logo-d').src=ReefqInvite.LOGO_DARK;
-fillForm();renderChips();preview(true);status('Example couple. Press "+ New couple" or edit and save.','');
+$('#pv-fab').hidden=true;renderList();fillForm();renderChips();preview(true);status('Example couple. Press "+ New couple" or edit and save.','');
 function start(){
   api('/api/me').then(function(me){ME=me;renderSettings();
-    loadLeads();return api('/api/invitations')}).then(function(r){invites=r.items;renderChips()}).catch(function(){});
+    loadLeads();return loadInvites()}).catch(function(){});
   loadCanva();
 }
 start();
