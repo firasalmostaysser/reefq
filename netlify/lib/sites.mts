@@ -34,6 +34,8 @@ export async function snapshotSite(iid: string, canvaUrl: string) {
   if (!r.ok) throw new HttpError(502, `The site answered ${r.status}. Check that it is published and the address is right.`);
   const html = await r.text();
   if (!/<html[\s>]/i.test(html)) throw new HttpError(502, 'That address does not return a web page.');
+  const why = unsupportedSite(html);
+  if (why) throw new HttpError(422, why);
   const m = html.match(/<base\s[^>]*href=["']([^"']*)["']/i);
   const base = new URL(m ? m[1] : './', r.url || url).toString();
   const ver = Date.now().toString(36);
@@ -45,6 +47,14 @@ export async function snapshotSite(iid: string, canvaUrl: string) {
   const warnings: string[] = [];
   if (!/rsvp/i.test(html)) warnings.push('No RSVP link found in the design. Ask the designer to link the RSVP button to #rsvp. Guests can still reply from the Reefq bar.');
   return { ver, base, warnings };
+}
+
+/* Canva "Code" designs (made with Canva AI code) load their content and texts from canvacode.com at every visit, through a
+   short-lived token: they cannot be copied, and their RSVP button sits in a frame we cannot reach. Only regular website designs. */
+export function unsupportedSite(html: string): string | null {
+  if (/_assets\/remote\/embed\/codelet\/|canvacode\.com\/codelet\//i.test(html))
+    return 'This is a Canva "Code" design: its texts load from Canva at every visit and cannot be copied. Build the invitation as a regular Canva website design instead.';
+  return null;
 }
 
 /* A file of the designer's site: relative, inside the site's folder, same host. Anything else (//other.host, .., encoded dots) is refused. */

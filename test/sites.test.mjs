@@ -1,6 +1,10 @@
 // Offline check of custom designs served from our address: node --experimental-strip-types test/sites.test.mjs
 import assert from 'node:assert';
-const { rewritePage, allowedSiteUrl, personalOnly, upstreamUrl } = await import('../netlify/lib/sites.mts');
+const { rewritePage, allowedSiteUrl, personalOnly, upstreamUrl, unsupportedSite } = await import('../netlify/lib/sites.mts');
+
+// Canva "Code" designs are refused (content loaded from canvacode.com at every visit); regular website designs pass
+assert.match(unsupportedSite('<html><body><iframe src="_assets/remote/embed/codelet/cm2f48q0py6v22s0/index.html"></iframe></body></html>'), /Code/);
+assert.equal(unsupportedSite('<html><head><base href="/olfa/"></head><body><script src="_assets/app.js"></script></body></html>'), null);
 
 globalThis.Netlify = { context: { deploy: { context: 'production' } }, env: { get: k => k === 'CANVA_SITE_HOSTS' ? 'invite.reefq.com' : '' } };
 assert.ok(allowedSiteUrl('https://studio.my.canva.site/olfa-ahmed'));
