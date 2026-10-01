@@ -9,19 +9,19 @@ var DEMO={id:'demo',theme:'reefq',eventType:'wedding',lang:'fr',a:{name:'Yasmine
   message:{fr:'',ar:'',en:''},rsvpBy:'2027-05-20',maxGuests:4};
 /* Words the page builds in script (French first); the page copy itself comes from landing-i18n.js. */
 var UI={
-  fr:{title:'Reefq · Invitations digitales',guest:'Famille Ben Salah',badge:'Démo',missing:'Indiquez vos prénoms et votre numéro WhatsApp.',failed:'Commande non envoyée : ',try_:'Essayer',themes:'Thèmes',lang:'Langue',
+  fr:{title:'Reefq · Invitations digitales',guest:'Famille Ben Salah',badge:'Démo',missing:'Indiquez vos prénoms et votre numéro WhatsApp.',failed:'Commande non envoyée : ',try_:'Essayer',live:'Voir en direct',sur:'Sur mesure',cards:'Cartes',close:'Fermer',themes:'Thèmes',lang:'Langue',
     ph:{'o-names':'Yasmine & Karim','o-city':'Tunis'},demo:{}},
-  ar:{title:'رِفق · دعوات أعراس رقمية',guest:'عائلة بن صالح',badge:'دعوة تجريبية',missing:'أدخلوا اسميكما ورقم الواتساب.',failed:'تعذّر إرسال الطلب: ',try_:'جرّبوه',themes:'التصاميم',lang:'اللغة',
+  ar:{title:'رِفق · دعوات أعراس رقمية',guest:'عائلة بن صالح',badge:'دعوة تجريبية',missing:'أدخلوا اسميكما ورقم الواتساب.',failed:'تعذّر إرسال الطلب: ',try_:'جرّبوه',live:'شاهدوه مباشرة',sur:'حسب الطلب',cards:'بطاقات',close:'إغلاق',themes:'التصاميم',lang:'اللغة',
     ph:{'o-names':'ياسمين وكريم','o-city':'تونس'},
     demo:{venue:'دار المرسى',city:'المرسى، تونس',dress:'لباس سهرة بألوان فاتحة',places:['بيت العائلة، سوسة','بلدية المرسى','دار المرسى، المرسى']}},
-  en:{title:'Reefq · Digital invitations',guest:'Ben Salah family',badge:'Demo',missing:'Please enter your first names and your WhatsApp number.',failed:'Order not sent: ',try_:'Try it',themes:'Themes',lang:'Language',
+  en:{title:'Reefq · Digital invitations',guest:'Ben Salah family',badge:'Demo',missing:'Please enter your first names and your WhatsApp number.',failed:'Order not sent: ',try_:'Try it',live:'See it live',sur:'Made to measure',cards:'Cards',close:'Close',themes:'Themes',lang:'Language',
     ph:{'o-names':'Yasmine & Karim','o-city':'Tunis'},
     demo:{city:'La Marsa, Tunis',dress:'Evening wear, light tones',places:['Family home, Sousse','La Marsa town hall','Dar El Marsa, La Marsa']}}
 };
 var LANGS=['fr','ar','en'],I18N=window.REEFQ_I18N||{};
 function ui(k){return (UI[lang]||UI.fr)[k]}
 var THEMES=ReefqInvite.THEME_LIST.map(function(t){return [t.id,t.name,t.fg]});
-var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[];
+var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[],SITES=[];
 function demoData(){var d=JSON.parse(JSON.stringify(DEMO)),o=ui('demo');d.theme=cur;d.lang=lang;if(demoCanva)d.canva=demoCanva;
   ['venue','city','dress'].forEach(function(k){if(o[k])d[k]=o[k]});if(o.places)d.events.forEach(function(e,i){e.place=o.places[i]});return d}
 /* The invitation lives in a fixed 390x844 frame scaled to the phone's screen, so its layout is the one a real phone shows. */
@@ -114,7 +114,7 @@ function setLang(l){lang=l;var root=document.documentElement;root.lang=l;root.di
   Object.keys(UI[l].ph).forEach(function(id){$('#'+id).placeholder=UI[l].ph[id]});
   document.title=ui('title');$('#themes').setAttribute('aria-label',ui('themes'));$('#lsw').setAttribute('aria-label',ui('lang'));
   $$('#lsw a').forEach(function(a){if(a.dataset.l===l)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current')});
-  if(MODELS.length)renderModels();demo()}
+  if(MODELS.length)renderModels();renderSites();demo()}
 $$('#lsw a').forEach(function(a){a.onclick=function(e){e.preventDefault();var l=a.dataset.l;if(l===lang)return;save(l);
   try{var u=new URL(location.href);if(u.searchParams.has('lang')){u.searchParams.set('lang',l);history.replaceState(null,'',u)}}catch(x){}
   setLang(l);if(window.rqTrack)window.rqTrack('language_changed',{lang:l})}});
@@ -123,23 +123,56 @@ $('#of').onsubmit=function(e){e.preventDefault();
   var names=$('#o-names').value.trim(),phone=$('#o-phone').value.trim(),err=$('#o-err'),btn=$('#of button[type=submit]');
   if(!names||!phone){err.textContent=ui('missing');err.hidden=false;(names?$('#o-phone'):$('#o-names')).focus();return}err.hidden=true;
   btn.disabled=true;
-  fetch('/api/public/orders',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({names:names,date:$('#o-date').value,city:$('#o-city').value,guests:$('#o-guests').value,plan:$('#o-plan').value,theme:$('#o-theme').value,model:$('#o-model').value,note:$('#o-note').value,phone:phone,lang:lang,website:$('#o-web').value})})
+  fetch('/api/public/orders',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({names:names,date:$('#o-date').value,city:$('#o-city').value,guests:$('#o-guests').value,plan:$('#o-plan').value,theme:$('#o-theme').value,model:modelName(),site:siteSlug(),note:$('#o-note').value,phone:phone,lang:lang,website:$('#o-web').value})})
    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Erreur');return j})})
-   .then(function(o){if(window.rqTrack)window.rqTrack('order_created',{plan:$('#o-plan').value,theme:$('#o-theme').value,lang:lang,has_model:!!$('#o-model').value},true);if(o.url)setTimeout(function(){location.href=o.url},150)})
+   .then(function(o){if(window.rqTrack)window.rqTrack('order_created',{plan:$('#o-plan').value,theme:$('#o-theme').value,lang:lang,has_model:!!$('#o-model').value,site:siteSlug()||null},true);if(o.url)setTimeout(function(){location.href=o.url},150)})
    .catch(function(x){err.textContent=ui('failed')+x.message;err.hidden=false;btn.disabled=false});
 };
 function themeId(name){var n=String(name||'').toLowerCase().replace(/[^a-z]/g,'');var m=THEMES.filter(function(t){return t[0]===n||t[1].toLowerCase().replace(/[^a-z]/g,'')===n})[0];return m?m[0]:null}
+/* the order form's model list: card designs, then website templates (value site:<slug>) */
+function renderModelSelect(){
+  $('#o-model-wrap').hidden=!(MODELS.length||SITES.length);
+  var sel=$('#o-model').value,opt=function(v,t){return '<option value="'+esc(v)+'">'+esc(t)+'</option>'};
+  var cards=MODELS.map(function(m){return opt(m.title,m.title)}).join(''),sites=SITES.map(function(t){return opt('site:'+t.slug,t.name)}).join('');
+  $('#o-model').innerHTML='<option value="">—</option>'+(cards&&sites?'<optgroup label="'+esc(ui('cards'))+'">'+cards+'</optgroup><optgroup label="'+esc(ui('sur'))+'">'+sites+'</optgroup>':cards+sites);
+  $('#o-model').value=sel;if($('#o-model').selectedIndex<0)$('#o-model').value='';
+}
+function siteSlug(){var v=$('#o-model').value;return v.indexOf('site:')===0?v.slice(5):''}
+function modelName(){var o=$('#o-model').selectedOptions[0];return siteSlug()&&o?o.textContent:$('#o-model').value}
 function renderModels(){
-  if(!MODELS.length){$('#models').hidden=true;$('#o-model-wrap').hidden=true;return}
-  $('#models').hidden=false;$('#o-model-wrap').hidden=false;
-  var sel=$('#o-model').value;
-  $('#o-model').innerHTML='<option value="">—</option>'+MODELS.map(function(m){return '<option>'+esc(m.title)+'</option>'}).join('');$('#o-model').value=sel;
+  renderModelSelect();
+  if(!MODELS.length){$('#models').hidden=true;return}
+  $('#models').hidden=false;
   var choose=lang==='fr'?FR.choose:(I18N[lang]||{}).choose||FR.choose;
   $('#models-grid').innerHTML=MODELS.map(function(m,i){return '<article class="model"><div class="art">'+(m.video?'<video src="'+esc(m.video)+'" poster="'+esc(m.image)+'" muted loop playsinline autoplay></video>':'<img loading="lazy" alt="'+esc(m.title)+'" src="'+esc(m.image)+'">')+'</div><div class="meta">'+(m.theme?'<span class="th">'+esc(m.theme)+'</span>':'')+'<h3>'+esc(m.title)+'</h3>'+(m.tags&&m.tags.length?'<span class="tags">'+esc(m.tags.join(' · '))+'</span>':'')+
     '<div class="acts"><button type="button" class="btn ghost" data-try="'+i+'">'+esc(ui('try_'))+'</button><a class="btn primary" href="#order" data-pick="'+i+'">'+esc(choose)+'</a></div></div></article>'}).join('');
   document.querySelectorAll('[data-try]').forEach(function(b){b.onclick=function(){var m=MODELS[+b.dataset.try];demoCanva={id:m.id,title:m.title,image:m.image,video:m.video};var t=themeId(m.theme);if(t){cur=t;themes()}demo();document.querySelector('.lhero').scrollIntoView({behavior:'smooth'})}});
   document.querySelectorAll('[data-pick]').forEach(function(a){a.addEventListener('click',function(){var m=MODELS[+a.dataset.pick];$('#o-model').value=m.title;var t=themeId(m.theme);if(t)$('#o-theme').value=t})});
 }
+/* website templates: live preview in a phone frame on wide screens, the full page on phones */
+function renderSites(){
+  renderModelSelect();
+  if(!SITES.length){$('#modeles').hidden=true;return}
+  $('#modeles').hidden=false;
+  var choose=lang==='fr'?FR.choose:(I18N[lang]||{}).choose||FR.choose,lq=lang!=='fr'?'?lang='+lang:'';
+  $('#sites-grid').innerHTML=SITES.map(function(t,i){return '<article class="model"><a class="art'+(t.image?'':' paper')+'" href="/modeles/'+esc(t.slug)+lq+'" data-live="'+i+'">'+(t.image?'<img loading="lazy" alt="'+esc(t.name)+'" src="'+esc(t.image)+'">':esc(t.name))+'</a><div class="meta">'+(t.theme?'<span class="th">'+esc(t.theme)+'</span>':'')+'<h3>'+esc(t.name)+'</h3>'+(t.tags&&t.tags.length?'<span class="tags">'+esc(t.tags.join(' · '))+'</span>':'')+
+    '<div class="acts"><a class="btn ghost" href="/modeles/'+esc(t.slug)+lq+'" data-live="'+i+'">'+esc(ui('live'))+'</a><a class="btn primary" href="#order" data-pick-site="'+i+'">'+esc(choose)+'</a></div></div></article>'}).join('');
+  $$('[data-live]').forEach(function(a){a.addEventListener('click',function(e){if(!wide())return;e.preventDefault();live(SITES[+a.dataset.live])})});
+  $$('[data-pick-site]').forEach(function(a){a.addEventListener('click',function(){pickSite(SITES[+a.dataset.pickSite])})});
+}
+function wide(){return !!(window.matchMedia&&matchMedia('(min-width:760px)').matches&&window.HTMLDialogElement)}
+var pvSite=null;
+function live(t){var d=$('#site-pv');pvSite=t;$('#site-pv-frame').src='/modeles/'+encodeURIComponent(t.slug)+(lang!=='fr'?'?lang='+lang:'');
+  $('#site-pv-pick').textContent=lang==='fr'?FR.choose:(I18N[lang]||{}).choose||FR.choose;$('#site-pv-close').textContent=ui('close');d.showModal();
+  if(window.rqTrack)window.rqTrack('template_previewed',{template:t.slug,lang:lang})}
+function closeLive(){var d=$('#site-pv');if(d.open)d.close();$('#site-pv-frame').src='about:blank'}
+$('#site-pv-close').onclick=closeLive;
+$('#site-pv').addEventListener('click',function(e){if(e.target===this)closeLive()});
+$('#site-pv-pick').addEventListener('click',function(){if(pvSite)pickSite(pvSite);closeLive()});
+function pickSite(t){renderModelSelect();$('#o-model').value='site:'+t.slug}
+function loadSites(){fetch('/api/public/site-templates').then(function(r){return r.ok?r.json():{items:[]}}).then(function(c){SITES=c.items||[];renderSites();
+  var want=new URLSearchParams(location.search).get('modele'),t=SITES.filter(function(x){return x.slug===want})[0];
+  if(t&&!loadSites.done){loadSites.done=true;pickSite(t);var o=$('#order');if(o)o.scrollIntoView()}}).catch(function(){})}
 function loadModels(){fetch('/templates.json').then(function(r){return r.ok?r.json():{items:[]}}).then(function(c){MODELS=(c.items||[]).filter(function(m){return m.image});renderModels()}).catch(function(){})}
 fetch('/api/config').then(function(r){return r.json()}).then(function(c){REEFQ_WA=String(c.whatsapp||'').replace(/[^0-9]/g,'')}).catch(function(){});
 $('#o-theme').innerHTML=THEMES.map(function(t){return '<option value="'+t[0]+'">'+t[1]+'</option>'}).join('');
@@ -151,5 +184,5 @@ dm.addEventListener('pointerdown',function(e){if(e.isTrusted&&e.pointerType!=='t
 $('#demo-replay').onclick=function(){tour.replay()};
 if('IntersectionObserver' in window)new IntersectionObserver(function(es){tour.show(es[0].isIntersecting)},{threshold:.45}).observe(dm);else tour.show(true);
 document.addEventListener('visibilitychange',function(){tour.show(!document.hidden&&dm.getBoundingClientRect().top<innerHeight)});
-themes();setLang(pickLang());loadModels();setInterval(loadModels,5*60*1000);
+themes();setLang(pickLang());loadModels();loadSites();setInterval(function(){loadModels();loadSites()},5*60*1000);
 })();

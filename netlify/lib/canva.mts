@@ -3,9 +3,12 @@
  * The designer saves templates in one Canva folder (CANVA_FOLDER_ID). Every 15 minutes new or edited
  * designs are exported (PNG, plus MP4 when the title contains [anim]) into the "files" blob store and
  * listed at /templates.json.  Title convention: "<Theme> · <Name> | tag1, tag2 [anim]"  ·  [draft] hides a design.
+ * Website templates live in a second folder (CANVA_TEMPLATES_FOLDER_ID): each design becomes a template record (name, tags,
+ * thumbnail); the studio adds its published address and copies the site, shown at /modeles/<slug>.
  */
-import { state, files } from './stores.mts';
-import { b64url, env as E } from './util.mts';
+import { state, files, siteTemplates, listJSON } from './stores.mts';
+import { b64url, slug as slugify, env as E } from './util.mts';
+import { deleteSite } from './sites.mts';
 const API = 'https://api.canva.com/rest/v1';
 const AUTH = 'https://www.canva.com/api/oauth/authorize';
 const SCOPES = 'design:meta:read design:content:read folder:read';
@@ -19,15 +22,17 @@ function mkEnv(): any {
       put: (key: string, v: string, o?: any) => st.setJSON('canva/' + key, { v, exp: o && o.expirationTtl ? Date.now() + o.expirationTtl * 1000 : 0 }),
       delete: (key: string) => st.delete('canva/' + key) };
     if (k === 'MEDIA') return { put: (key: string, body: any) => fl.set(key, body), delete: (key: string) => fl.delete(key) };
+    if (k === 'TEMPLATES') { const t = siteTemplates(); return { list: () => listJSON(t), put: (id: string, v: any) => t.setJSON(id, v), delete: (id: string) => t.delete(id) }; }
+    if (k === 'DROP_SITE') return (owner: string) => deleteSite(owner);
     return E(k);
   } });
 }
 export async function authStartResponse(url: URL) { return authStart(mkEnv(), url); }
 export async function authCallbackResponse(url: URL) { return authCallback(mkEnv(), url); }
-export async function syncNow(opts?: any) { const env = mkEnv(); if (!env.CANVA_FOLDER_ID) return { error: 'Set CANVA_FOLDER_ID first.' }; return sync(env, opts || {}); }
+export async function syncNow(opts?: any) { const env = mkEnv(); if (!env.CANVA_FOLDER_ID && !env.CANVA_TEMPLATES_FOLDER_ID) return { error: 'Set CANVA_FOLDER_ID or CANVA_TEMPLATES_FOLDER_ID first.' }; return sync(env, opts || {}); }
 /* A run that fails as a whole (not connected, Canva down) keeps the last counts and lists the error. */
 export async function recordSyncError(e: any) { const env = mkEnv(); await putJSON(env, 'status', { ...(await getJSON(env, 'status', {})), lastRun: Date.now(), lastError: String(e?.message || e) }); }
-/* For tests: the same sync with a stand-in env (STATE, MEDIA, CANVA_FOLDER_ID). */
+/* For tests: the same sync with a stand-in env (STATE, MEDIA, TEMPLATES, DROP_SITE, CANVA_FOLDER_ID, CANVA_TEMPLATES_FOLDER_ID). */
 export const syncWith = (env: any, opts: any = {}) => sync(env, opts);
 export async function canvaStatus() { const env = mkEnv(); return { connected: !!(await env.STATE.get('refresh_token')), ...(await getJSON(env, 'status', {})) }; }
 export async function catalog() { const c = await getJSON(mkEnv(), 'catalog', { items: [] }); return { updatedAt: c.updatedAt || null, items: c.items.map(({ imageKey, videoKey, editUrl, ...rest }: any) => rest) }; }
@@ -89,6 +94,11 @@ async function canva(env, path, init = {}) {
 /* ---------------- Sync ---------------- */
 async function sync(env, { force = false } = {}) {
   const started = Date.now();
+  const sites = env.CANVA_TEMPLATES_FOLDER_ID ? await syncSiteTemplates(env, force) : null;
+  if (!env.CANVA_FOLDER_ID) {
+    await putJSON(env, 'status', { ...(await getJSON(env, 'status', {})), lastRun: Date.now(), tookMs: Date.now() - started, lastError: null, sites });
+    return { sites };
+  }
   const catalog = await getJSON(env, 'catalog', { items: [] });
   const byId = Object.fromEntries(catalog.items.map(i => [i.id, i]));
   const designs = await listFolderDesigns(env, env.CANVA_FOLDER_ID);
@@ -124,8 +134,46 @@ async function sync(env, { force = false } = {}) {
   }
   next.sort((a, b) => b.updatedAt - a.updatedAt);
   await putJSON(env, 'catalog', { updatedAt: Date.now(), items: next });
-  await putJSON(env, 'status', { lastRun: Date.now(), tookMs: Date.now() - started, count: next.length, lastError: null, ...report });
-  return { count: next.length, ...report };
+  await putJSON(env, 'status', { lastRun: Date.now(), tookMs: Date.now() - started, count: next.length, lastError: null, ...report, sites });
+  return { count: next.length, ...report, sites };
+}
+
+/* Website templates: one record per design of the templates folder. Name, tags and picture follow Canva; the published address,
+   the saved copy and "hidden" are set in the studio and kept. Records added by hand in the studio (source "manual") are left alone. */
+async function syncSiteTemplates(env, force) {
+  const rep = { count: 0, updated: [], removed: [], failed: [] };
+  const designs = await listFolderDesigns(env, env.CANVA_TEMPLATES_FOLDER_ID);
+  const all = await env.TEMPLATES.list(), byId = Object.fromEntries(all.map(r => [r.id, r]));
+  const taken = new Set(all.map(r => r.slug));
+  for (const d of designs) {
+    const meta = parseTitle(d.title || ''), prev = byId[d.id];
+    const rec = prev ? { ...prev } : { id: d.id, source: 'canva', slug: uniqueSlug(meta.name, taken), status: 'waiting', siteUrl: '', createdAt: Date.now() };
+    Object.assign(rec, { name: meta.name, theme: meta.theme, tags: meta.tags, draft: meta.draft, editUrl: d.urls && d.urls.edit_url });
+    if (!prev || force || prev.designUpdatedAt !== d.updated_at || !prev.imageKey) {
+      try {
+        const key = await exportImage(env, d, `templates/site-${d.id}-${d.updated_at}`);
+        if (prev && prev.imageKey && prev.imageKey !== key) await env.MEDIA.delete(prev.imageKey);
+        Object.assign(rec, { imageKey: key, image: publicMedia(env, key), designUpdatedAt: d.updated_at });
+        rep.updated.push(meta.name);
+      } catch (e: any) { rep.failed.push({ title: meta.name, error: String(e?.message || e).slice(0, 200) }); }
+    }
+    rec.updatedAt = Date.now();
+    await env.TEMPLATES.put(rec.id, rec);
+    rep.count++;
+  }
+  const live = new Set(designs.map(d => d.id));
+  for (const old of all) if (old.source === 'canva' && !live.has(old.id)) {
+    if (old.imageKey) await env.MEDIA.delete(old.imageKey);
+    await env.DROP_SITE('tpl--' + old.slug);
+    await env.TEMPLATES.delete(old.id);
+    rep.removed.push(old.name);
+  }
+  return rep;
+}
+export function uniqueSlug(name, taken) {
+  const base = slugify(name || 'modele'); let s = base, n = 2;
+  while (taken.has(s)) s = base + '-' + n++;
+  taken.add(s); return s;
 }
 async function listFolderDesigns(env, folderId) {
   const out = []; let cont = null;

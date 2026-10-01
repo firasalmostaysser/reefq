@@ -1,8 +1,8 @@
 import type { Context, Config } from '@netlify/functions';
 import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError } from '../lib/util.mts';
-import { invitations, rsvps, orders, files, opens, listJSON, rateLimit } from '../lib/stores.mts';
+import { invitations, rsvps, orders, files, opens, siteTemplates, listJSON, rateLimit } from '../lib/stores.mts';
 import { isStudio, login, logout } from '../lib/auth.mts';
-import { canvaStatus } from '../lib/canva.mts';
+import { canvaStatus, uniqueSlug } from '../lib/canva.mts';
 import { allowedSiteUrl, cleanSiteUrl, snapshotSite, deleteSite, personalOnly } from '../lib/sites.mts';
 import { THEME_IDS } from '../lib/themes.mts';
 import { notify, later, siteUrl, alertsConfigured } from '../lib/notify.mts';
@@ -36,6 +36,13 @@ async function route(req: Request, context: Context): Promise<Response> {
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})\/rsvp$/)) && m === 'POST') return publicRsvp(req, context, mm[1]);
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})\/open$/)) && m === 'POST') return recordOpen(req, context, mm[1]);
 
+  /* website templates shown on the landing page: only published, visible ones, and never how they are made */
+  if (p === '/api/public/site-templates' && m === 'GET') {
+    const items = (await listJSON(siteTemplates())).filter(t => t.status === 'published' && !t.hidden && !t.draft)
+      .sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || String(a.name).localeCompare(b.name))
+      .map(t => ({ slug: t.slug, name: t.name, theme: t.theme || '', tags: t.tags || [], image: t.cover || t.image || null }));
+    return json({ items }, 200, { 'cache-control': 'public, max-age=60' });
+  }
   if (p === '/api/public/orders' && m === 'POST') return createOrder(req, context);
   if ((mm = p.match(/^\/api\/public\/orders\/(RQ-[A-Z0-9]{5})$/))) {
     const o = await clientOrder(mm[1], url.searchParams.get('t'));
@@ -156,10 +163,57 @@ async function route(req: Request, context: Context): Promise<Response> {
     const [a, bn] = String(o.names || '').split(/\s*(?:&|et|\+|و)\s*/i);
     const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'ar' ? 'ar' : 'fr',
       a: { name: (a || o.names || '').trim(), ar: '' }, b: { name: (bn || '').trim() || '—', ar: '' }, date: o.date || '', time: '20:00', city: o.city || '',
-      venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code };
+      venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code,
+      ...(o.site ? { designSource: 'canva', siteTemplate: o.site } : {}) };
     const saved = await saveInvitation(slug(o.names) + '-' + id(4), inv);
     o.inviteId = saved.id; await saveOrder(o);
     return json({ order: o, invitation: saved });
+  }
+
+  /* ---- website templates (studio) ---- */
+  if (p === '/api/site-templates' && m === 'GET') return json({ items: (await listJSON(siteTemplates())).sort((a, b) => String(a.name).localeCompare(b.name)) });
+  if (p === '/api/site-templates' && m === 'POST') {
+    const b = await readJSON(req, 5000), name = clampStr(b.name, 80).trim();
+    if (!name) return err(400, 'Give the template a name.');
+    const all = await listJSON(siteTemplates());
+    const t: any = { id: 'm-' + id(8), source: 'manual', name, slug: uniqueSlug(name, new Set(all.map(x => x.slug))), tags: tagList(b.tags), status: 'waiting', siteUrl: '', createdAt: Date.now(), updatedAt: Date.now() };
+    if (b.siteUrl) t.siteUrl = checkSiteUrl(b.siteUrl);
+    await siteTemplates().setJSON(t.id, t);
+    return json(t);
+  }
+  if ((mm = p.match(/^\/api\/site-templates\/([A-Za-z0-9_-]{3,64})(\/publish)?$/))) {
+    const t: any = await siteTemplates().get(mm[1], { type: 'json' });
+    if (!t) return err(404, 'Template not found');
+    const owner = 'tpl--' + t.slug;
+    if (mm[2] && m === 'POST') {
+      if (!t.siteUrl) return err(400, 'Paste the published site address first.');
+      const { ver, base, warnings } = await snapshotSite(owner, t.siteUrl);
+      Object.assign(t, { status: 'published', canvaVer: ver, canvaBase: base, publishedAt: Date.now(), updatedAt: Date.now() });
+      await siteTemplates().setJSON(t.id, t);
+      await deleteSite(owner, ver).catch(() => null);
+      return json({ template: t, warnings });
+    }
+    if (!mm[2] && m === 'PATCH') {
+      const b = await readJSON(req, 5000);
+      if ('siteUrl' in b) {
+        const u = b.siteUrl ? checkSiteUrl(b.siteUrl) : '';
+        if (u !== t.siteUrl) { t.siteUrl = u; t.status = 'waiting'; delete t.canvaVer; delete t.canvaBase; delete t.publishedAt; await deleteSite(owner).catch(() => null); }
+      }
+      if ('hidden' in b) t.hidden = !!b.hidden;
+      /* a picture uploaded in the studio (POST /api/upload) wins over the Canva thumbnail, and the sync never replaces it */
+      if ('cover' in b) { if (!b.cover) delete t.cover; else if (/^\/media\/uploads\/[A-Za-z0-9._-]+$/.test(String(b.cover))) t.cover = b.cover; else return err(400, 'Upload the picture first.'); }
+      if ('order' in b) t.order = Number.isFinite(+b.order) ? +b.order : undefined;
+      if (t.source === 'manual') { if (b.name) t.name = clampStr(b.name, 80).trim() || t.name; if ('tags' in b) t.tags = tagList(b.tags); }
+      t.updatedAt = Date.now();
+      await siteTemplates().setJSON(t.id, t);
+      return json(t);
+    }
+    if (!mm[2] && m === 'DELETE') {
+      if (t.source !== 'manual') return err(409, 'This template comes from the Canva folder: hide it here, or remove it from the folder.');
+      await deleteSite(owner).catch(() => null);
+      await siteTemplates().delete(t.id);
+      return json({ ok: true });
+    }
   }
 
   if (p === '/api/upload' && m === 'POST') return upload(req);
@@ -168,6 +222,13 @@ async function route(req: Request, context: Context): Promise<Response> {
     return json({ started: r.status === 202, note: 'Sync started. New templates appear within a few minutes.' });
   }
   return err(404, 'Unknown endpoint');
+}
+
+const tagList = (v: unknown) => (Array.isArray(v) ? v : String(v || '').split(',')).map(x => clampStr(x, 30).trim().toLowerCase()).filter(Boolean).slice(0, 8);
+function checkSiteUrl(raw: unknown) {
+  const u = String(raw || '').trim();
+  if (!allowedSiteUrl(u)) throw new HttpError(400, 'Paste the published site address (https://….my.canva.site/…).');
+  return cleanSiteUrl(u);
 }
 
 /* ---------------- invitations & RSVPs ---------------- */
@@ -269,8 +330,9 @@ async function createOrder(req: Request, context: Context) {
     createdAt: now, updatedAt: now, proofs: [], inviteId: null, adminNote: '',
     history: [{ at: now, status: 'awaiting_payment', note: 'Commande reçue', by: 'client' }] };
   for (const k of ['names', 'date', 'city', 'guests', 'theme', 'model', 'note', 'phone', 'lang']) o[k] = clampStr(b[k], 600);
+  if (/^[a-z0-9-]{1,60}$/.test(String(b.site || ''))) o.site = b.site;
   await orders().setJSON(code, o);
-  later(context, notify(`Nouvelle commande ${code}`, [`${o.names} · ${o.plan} ${price} DT (acompte ${o.deposit} DT)`, `Date : ${o.date || '—'} · ${o.city || '—'} · ${o.guests || '?'} invités`, `Thème : ${o.theme || '—'}${o.model ? ' · modèle ' + o.model : ''}`, `WhatsApp : ${o.phone}`, o.note ? `Note : ${o.note}` : '', `${siteUrl()}/studio/`].filter(Boolean).join('\n')));
+  later(context, notify(`Nouvelle commande ${code}`, [`${o.names} · ${o.plan} ${price} DT (acompte ${o.deposit} DT)`, `Date : ${o.date || '—'} · ${o.city || '—'} · ${o.guests || '?'} invités`, o.site ? `Modèle sur mesure : ${o.model || o.site} · ${siteUrl()}/modeles/${o.site}` : `Thème : ${o.theme || '—'}${o.model ? ' · modèle ' + o.model : ''}`, `WhatsApp : ${o.phone}`, o.note ? `Note : ${o.note}` : '', `${siteUrl()}/studio/`].filter(Boolean).join('\n')));
   return json({ code, token, url: `/commande/${code}?t=${token}` });
 }
 

@@ -88,12 +88,13 @@ export async function deleteSite(iid: string, keepVer?: string) {
 }
 
 /* The saved page as guests receive it: our address for every file, our title and link preview, no designer branding, no audio, and the Reefq bar. */
-export async function sitePage(inv: any, head: { title: string; og: string }): Promise<string | null> {
+/* inv: anything with id, canvaVer, canvaBase (an invitation, or a template with id tpl--<slug>). bar: attributes for site-bar.js. */
+export async function sitePage(inv: any, head: { title: string; og: string }, bar?: string): Promise<string | null> {
   if (!inv.canvaVer) return null;
   const html = await files().get(`sites/${inv.id}/${inv.canvaVer}/index.html`, { type: 'text' });
-  return html ? rewritePage(html, inv, head) : null;
+  return html ? rewritePage(html, inv, head, bar) : null;
 }
-export function rewritePage(html: string, inv: any, head: { title: string; og: string }): string {
+export function rewritePage(html: string, inv: any, head: { title: string; og: string }, bar = `data-invite="${escHtml(inv.id)}"`): string {
   const mine = `/site/${inv.id}/${inv.canvaVer}/`;
   let out = html
     .replace(/<base\s[^>]*>/gi, '')
@@ -106,7 +107,7 @@ export function rewritePage(html: string, inv: any, head: { title: string; og: s
   const top = `<base href="${mine}"><title>${escHtml(head.title)}</title>${head.og}<link rel="icon" href="/assets/favicon.png">` +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&family=Pinyon+Script&display=swap">' +
     `<style>${css}</style>`;
-  const bottom = `<script src="/assets/analytics.js"></script><script src="/assets/engine.js"></script><script src="/assets/site-bar.js" data-invite="${escHtml(inv.id)}"></script>`;
+  const bottom = `<script src="/assets/analytics.js"></script><script src="/assets/engine.js"></script><script src="/assets/site-bar.js" ${bar}></script>`;
   out = /<head[^>]*>/i.test(out) ? out.replace(/<head([^>]*)>/i, `<head$1>${top}`) : top + out;
   out = /<\/body>/i.test(out) ? out.replace(/<\/body>/i, `${bottom}</body>`) : out + bottom;
   return out;

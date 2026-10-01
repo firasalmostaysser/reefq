@@ -161,3 +161,12 @@ html[lang=ar] .btn.sm{font-size:15px}
 .sub,.addons,details p,.f span{text-align:start}
 html[dir=rtl] #o-phone{text-align:end}
 html[dir=rtl] #o-phone::placeholder{text-align:end}
+
+/* website templates: card art without a picture, and the live preview in a phone frame (desktop) */
+.model .art.paper{text-decoration:none;display:grid;place-items:center;padding:18px;text-align:center;background:linear-gradient(160deg,var(--soft),var(--surface));font:500 26px/1.2 var(--display);color:var(--fg)}
+.site-pv{border:0;padding:18px;background:transparent;max-height:100vh;overflow:visible}
+.site-pv::backdrop{background:rgb(10 14 14/.62)}
+.site-pv-phone{width:min(390px,92vw);height:min(780px,82vh);border:10px solid #151515;border-radius:38px;overflow:hidden;background:#fff;box-shadow:0 30px 70px -20px rgb(0 0 0/.6)}
+.site-pv-phone iframe{width:100%;height:100%;border:0;display:block}
+.site-pv-acts{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.site-pv-acts .btn.ghost{background:var(--surface)}

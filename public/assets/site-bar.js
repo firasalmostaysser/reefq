@@ -1,10 +1,12 @@
 /* Reefq bar on custom designs served at /i/<id>?g=<guest id>: greets the guest, records the open, and opens the reply card.
    Any link in the design whose address contains "rsvp" (for example #rsvp) opens the same card. Lives in a shadow root so the
-   design's styles and ours never mix. Media in the design is kept silent. */
+   design's styles and ours never mix. Media in the design is kept silent.
+   On website templates (/modeles/<slug>, data-template) the bar names the template and leads to the order form; the RSVP
+   button opens a sample reply card. */
 (function(){
 'use strict';
-var me=document.currentScript,iid=me&&me.getAttribute('data-invite');
-if(!iid||!window.ReefqInvite)return;
+var me=document.currentScript,iid=me&&me.getAttribute('data-invite'),tpl=me&&me.getAttribute('data-template');
+if(!(iid||tpl)||!window.ReefqInvite)return;
 var q=new URLSearchParams(location.search),gid=q.get('g')||'',preview=q.get('preview')==='1';
 
 /* silence: no audio element survives, videos play muted */
@@ -60,16 +62,34 @@ function send(r){
     .catch(function(e){if(e&&e.userFacing)throw e;if(w)return{whatsapp:w};throw 0});
 }
 
+/* bar colours from the invitation's theme: its dark ink as background, else the Reefq teal */
+function paint(themeId,L){
+  var th=ReefqInvite.THEME_LIST.filter(function(t){return t.id===themeId})[0]||ReefqInvite.THEME_LIST[0];
+  var dark=function(c){var v=parseInt(String(c).slice(1),16);return((v>>16&255)*299+(v>>8&255)*587+(v&255)*114)/1000<140};
+  bar.style.setProperty('--b',dark(th.fg)?th.fg:'#1f2a2a');bar.style.setProperty('--f',dark(th.fg)?th.bg:'#f6f3ea');
+  bar.dir=L==='ar'?'rtl':'ltr';dim.dir=bar.dir;
+}
+
+if(tpl){
+  var L=q.get('lang');try{L=L||localStorage.getItem('rq-lang')}catch(e){}
+  L=L==='ar'||L==='en'?L:'fr';
+  var W={fr:['Modèle','Choisir ce modèle','Famille Ben Salah'],ar:['تصميم','اختيار هذا التصميم','عائلة بن صالح'],en:['Design','Choose this design','Ben Salah family']}[L];
+  inv={id:'demo',lang:L,theme:'reefq',maxGuests:4,a:{name:'Yasmine'},b:{name:'Karim'}};guest={id:'demo',name:W[2],seats:2};preview=true;
+  paint('reefq',L);
+  root.querySelector('.hi').textContent=W[0]+' · '+(me.getAttribute('data-name')||'');
+  var go=root.querySelector('.go');go.textContent=W[1];
+  go.onclick=function(){var u='/?modele='+encodeURIComponent(tpl)+(L!=='fr'?'&lang='+L:'')+'#order';try{window.top.location.href=u}catch(e){location.href=u}};
+  bar.hidden=false;hash();
+  if(window.rqTrack)window.rqTrack('template_previewed',{template:tpl,lang:L});
+  return;
+}
+
 fetch('/api/public/invitations/'+encodeURIComponent(iid)+(gid?'?g='+encodeURIComponent(gid):''))
   .then(function(r){if(!r.ok)throw 0;return r.json()})
   .then(function(d){
     inv=d.invitation;guest=d.guest;
     var L=inv.lang==='ar'||inv.lang==='en'?inv.lang:'fr',T=ReefqInvite.T[L],n=ReefqInvite.namesOf(inv,L);
-    var th=ReefqInvite.THEME_LIST.filter(function(t){return t.id===inv.theme})[0]||ReefqInvite.THEME_LIST[0];
-    var dark=function(c){var v=parseInt(String(c).slice(1),16);return((v>>16&255)*299+(v>>8&255)*587+(v&255)*114)/1000<140};
-    var b=dark(th.fg)?th.fg:'#1f2a2a',f=dark(th.fg)?th.bg:'#f6f3ea';
-    bar.style.setProperty('--b',b);bar.style.setProperty('--f',f);
-    bar.dir=L==='ar'?'rtl':'ltr';dim.dir=bar.dir;
+    paint(inv.theme,L);
     root.querySelector('.hi').textContent=guest&&guest.name?T.dear+' '+guest.name:(n[0]&&n[1]?n[0]+(L==='ar'?' و':' & ')+n[1]:'');
     root.querySelector('.go').textContent=T.confirm;
     bar.hidden=false;hash();

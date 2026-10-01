@@ -301,3 +301,11 @@ a.btn:focus-visible,button:focus-visible,.toggles input:focus-visible{outline:2p
 .gq-code svg{display:block;width:56px;height:56px;border-radius:4px}
 .gq-name{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}.gq-name small{display:block;font-weight:400;color:var(--muted);font-size:12px}
 .gq-btns{display:flex;gap:6px}
+
+/* website templates (Settings) */
+.st-list{display:flex;flex-direction:column;gap:10px}
+.st-row{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:12px}
+.st-row img,.st-row .st-ph{width:64px;height:80px;object-fit:cover;border-radius:8px;background:var(--soft,#eef2f1)}
+.st-row h3{margin:0;font-size:15px}
+.st-row .st-url{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.st-row .st-url input{flex:1 1 240px;min-width:0}

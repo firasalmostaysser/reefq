@@ -4,11 +4,12 @@ Digital wedding invitations that open like a real envelope. One site holds every
 
 | URL | What it is | Who uses it |
 | --- | --- | --- |
-| `/` | Landing page: live envelope demo, 10 themes, Canva templates gallery, packages, order form | Couples |
+| `/` | Landing page: live envelope demo, 10 themes, card designs, made-to-measure website templates, packages, order form (`?modele=<slug>` preselects a template) | Couples |
 | `/commande/<code>?t=<token>` | Client space: pay the deposit by bank transfer, upload the receipt, then follow the invitation and guest replies | Couples |
 | `/studio/` | Reefq Studio: invitations, guest lists, RSVPs, orders and payment checks, settings | Reefq team (password) |
 | `/i/<id>` | A couple's invitation. `?g=<guest id>` greets a family by name and reserves their seats | Guests |
-| `/site/<id>/<ver>/*` | Files of a custom design, served from our copy | The page above |
+| `/modeles/<slug>` | Live preview of a website template, with "Choisir ce modèle" | Couples |
+| `/site/<id>/<ver>/*` | Files of a custom design or template, served from our copy | The pages above |
 | `/i/demo` | Demo invitation | Anyone |
 | `/api/*` | Studio and public API | The pages above |
 | `/templates.json`, `/media/*` | Canva templates and uploaded photos | The pages above |
@@ -35,7 +36,8 @@ netlify/
     api.mts               /api/*: invitations, RSVPs, orders, receipts, uploads, wording
     media.mts             /media/* and /templates.json
     invite-page.mts       /i/<id> with link-preview tags (or our copy of a custom design)
-    site.mts              /site/*: files of custom designs
+    site.mts              /site/*: files of custom designs and website templates
+    modeles.mts           /modeles/<slug>: website template previews
     canva-auth.mts        /auth/canva/start and /callback
     canva-sync-background.mts, canva-cron.mts   Canva sync every 15 min
   lib/                    auth, stores (Blobs), canva, sites (custom designs), notify (Telegram/email), wording, themes
@@ -74,6 +76,7 @@ The site is a Netlify project. Connect the GitHub repo in Netlify (Project confi
 | `RESEND_API_KEY`, `ALERT_EMAIL`, `ALERT_FROM` | No | Same alerts by email |
 | `ANTHROPIC_API_KEY` | No | "Write it with Claude" in the studio |
 | `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET`, `CANVA_FOLDER_ID` | No | Designer templates from Canva |
+| `CANVA_TEMPLATES_FOLDER_ID` | No | Canva folder of website templates ("Reefq Templates"), synced with the folder above |
 | `CANVA_SITE_HOSTS` | No | Extra hosts allowed for custom designs, comma separated (for example `invite.reefq.com`). `*.canva.site` is always allowed |
 | `SITE_URL` | No | Public URL if different from Netlify's (for example `https://reefq.com`) |
 
@@ -111,6 +114,13 @@ An invitation's design is either a Reefq theme or a custom design (**Design → 
 2. Paste that address in the studio and press **Mark published**. Reefq saves a copy of the page (`files` store, `sites/<id>/<ver>/`); its other files are copied the first time they are requested, which the studio preview does right away.
 3. Guests open the usual `/i/<id>?g=<guest id>`. They get our copy, on our address, with our title and link preview, the designer branding footer hidden, audio removed, and the Reefq bar ("Cher·e <guest>", "Confirmer ma présence"). Canva sites refuse to be framed (`X-Frame-Options: SAMEORIGIN`), which is why the page is copied rather than embedded.
 4. After edits in Canva, press **Refresh copy**. Changing the address puts the invitation back to "waiting for the designer".
+
+### Website templates (the "Modèles sur mesure" gallery)
+
+1. The designer duplicates a client site, replaces private details with sample ones, publishes it, and saves the design in the Canva folder set in `CANVA_TEMPLATES_FOLDER_ID`. The sync turns each design into a template (name, tags, Canva thumbnail; same title rules as above, `[draft]` keeps it off the website).
+2. **Studio → Settings → Website templates**: paste the published address and press **Mark published**. A template can also be added there by hand (name + address), without the Canva folder. **Upload picture** replaces the Canva thumbnail on the card; **Hide** takes it off the website.
+3. The landing page lists published templates. **Voir en direct** opens `/modeles/<slug>` (in a phone frame on wide screens), served from our copy like a couple's design, with a bar to choose it; its RSVP button shows a sample reply card.
+4. The order keeps the chosen template (`site`). **Create invitation from this order** starts a custom design that names the template, for the designer to duplicate and personalise.
 
 Replies: a personal link always answers with the name on the guest list. With **Replies only from personal links** (on by default for custom designs), the shared link and QR code can open the invitation but not reply. Opens are recorded per guest in the `opens` store and shown in **Guests & RSVPs**.
 

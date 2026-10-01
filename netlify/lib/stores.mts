@@ -13,6 +13,7 @@ export function store(name: string) {
 export const invitations = () => store('invitations');   // key: invitation id → JSON
 export const rsvps = () => store('rsvps');               // key: <invitationId>/<time>-<id> → JSON
 export const orders = () => store('orders');             // key: order code → JSON
+export const siteTemplates = () => store('site-templates'); // key: template id (Canva design id, or m-… when added by hand) → JSON
 export const opens = () => store('opens');               // key: <invitationId>/<guestId|anon> → { first, last, count }
 export const files = () => store('files');               // uploads/…, proofs/…, templates/…, sites/…
 export const state = () => store('state');               // rate limits, Canva tokens, catalog

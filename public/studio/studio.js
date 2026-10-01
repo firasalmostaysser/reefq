@@ -139,6 +139,7 @@ function renderSource(){
   $('#c-state').className='status'+(pub?' ok':'');
   $('#c-pub').textContent=pub?'Refresh copy':'Mark published';$('#c-pub').disabled=!url;
   $('#c-open').hidden=!url;if(url)$('#c-open').href=url;
+  var ct=$('#c-tpl');ct.hidden=!draft.siteTemplate;if(draft.siteTemplate)ct.innerHTML='The couple chose the template <a target="_blank" rel="noopener" href="/modeles/'+esc(draft.siteTemplate)+'">'+esc(draft.siteTemplate)+' ↗</a>. The designer duplicates it in Canva and personalises it.';
 }
 $$('[data-src]').forEach(function(b){b.onclick=function(){draft.designSource=b.dataset.src;touch();renderSource();preview(true)}});
 $('#k-curl').addEventListener('input',renderSource);
@@ -199,7 +200,7 @@ function doSave(quiet){
    .catch(function(e){status(e.status===413?'This invitation is too large to save. Shorten the texts and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;btn.textContent='Save invitation';return v});
 }
 $('#btn-save').onclick=function(){doSave()};
-$('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];delete c.archived;delete c.archivedAt;delete c.orderCode;['canvaUrl','canvaDesignId','canvaStatus','canvaVer','canvaBase','canvaPublishedAt'].forEach(function(k){delete c[k]});draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
+$('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];delete c.archived;delete c.archivedAt;delete c.orderCode;['canvaUrl','canvaDesignId','canvaStatus','canvaVer','canvaBase','canvaPublishedAt','siteTemplate'].forEach(function(k){delete c[k]});draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
 $('#btn-del').onclick=function(){if(draft.id)confirmDelete(draft)};
 
 /* ---------- dialog (confirmations, quick preview) ---------- */
@@ -246,7 +247,7 @@ var PANELS=['list','design','guests','deliver','orders','settings'];
 function showTab(t){if(t!==tab)scrollTo(0,0);tab=t;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(t==='design')refit()}
 $$('[data-tab]').forEach(function(b){b.onclick=function(){showTab(b.dataset.tab)}});
 
-function refreshSide(){if(tab==='list'){renderList();if(lState==='ok')api('/api/invitations').then(function(r){invites=r.items;renderChips();renderList();loadCounts()}).catch(function(){})}if(tab==='guests'){renderGuests();renderGuestList();loadOpens()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings')renderSettings()}
+function refreshSide(){if(tab==='list'){renderList();if(lState==='ok')api('/api/invitations').then(function(r){invites=r.items;renderChips();renderList();loadCounts()}).catch(function(){})}if(tab==='guests'){renderGuests();renderGuestList();loadOpens()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings'){renderSettings();loadSiteTpls()}}
 
 /* ---------- invitations list ---------- */
 var lFilter='active',lState='loading',rCount={},cBusy=0;
@@ -509,7 +510,7 @@ function openOrder(code,keep){
   var d=$('#o-detail');d.hidden=false;if(!keep)d.scrollIntoView({behavior:'smooth',block:'start'});
   var st=OST[o.status]||[o.status,''];$('#od-title').textContent=o.code+' · '+o.names;$('#od-status').textContent=st[0];$('#od-status').className='pill '+st[1];
   var wa=String(o.phone||'').replace(/[^0-9]/g,'');if(wa.length===8)wa='216'+wa;
-  var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],['Deposit',o.deposit+' DT'],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],['Canva model',o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
+  var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],['Deposit',o.deposit+' DT'],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],[o.site?'Website template':'Canva model',o.site?(o.model||o.site)+' · /modeles/'+o.site:o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
   $('#od-info').innerHTML=info.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'<dt>History</dt><dd>'+o.history.map(function(h){return esc(new Date(h.at).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+(OST[h.status]||[h.status])[0]+(h.note?' · '+h.note:''))}).join('<br>')+'</dd>';
   $('#od-note').value=o.adminNote||'';$('#od-amount').value=o.paid||o.deposit;$('#od-reason').value='';
   var closed=o.status==='paid'||o.status==='cancelled';$('#od-confirm').hidden=o.status==='paid'||o.status==='cancelled';$('#od-reject').hidden=closed;$('#od-cancel').hidden=o.status==='cancelled';$('#od-reopen').hidden=!closed;
@@ -544,7 +545,7 @@ $('#od-invite').onclick=function(){var o=orders.find(function(x){return x.code==
   api('/api/orders/'+o.code+'/invitation',{method:'POST'}).then(function(r){var i=orders.findIndex(function(x){return x.code===r.order.code});orders[i]=r.order;go(r.invitation)}).catch(fail)};
 $('#o-refresh').onclick=function(){var b=this;b.disabled=true;b.textContent='Refreshing…';loadLeads().then(function(){b.disabled=false;b.textContent='Refresh'})};
 /* ---------- settings ---------- */
-function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME&&ME.canva?(cs&&cs.connected?'Connected to Canva'+(cs.lastRun?' · last sync '+new Date(cs.lastRun).toLocaleString('fr-TN')+(cs.count!=null?' · '+cs.count+' templates':'')+(cs.failed&&cs.failed.length?' · '+cs.failed.length+' could not be read: '+cs.failed.map(function(f){return f.title}).join(', '):''):'')+(cs.lastError?' · last error: '+cs.lastError:''):'Canva is configured. Press Connect Canva once.'):'Add CANVA_CLIENT_ID, CANVA_CLIENT_SECRET and CANVA_FOLDER_ID in Netlify environment variables to enable Canva.';$('#s-bank').textContent=ME&&ME.bankReady?'Bank details are set. Clients see them on their payment page.':'Add BANK_NAME, BANK_HOLDER, BANK_RIB and BANK_IBAN in Netlify environment variables so clients see your RIB.';var ig=[
+function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME&&ME.canva?(cs&&cs.connected?'Connected to Canva'+(cs.lastRun?' · last sync '+new Date(cs.lastRun).toLocaleString('fr-TN')+(cs.count!=null?' · '+cs.count+' templates':'')+(cs.failed&&cs.failed.length?' · '+cs.failed.length+' could not be read: '+cs.failed.map(function(f){return f.title}).join(', '):'')+(cs.sites?' · '+cs.sites.count+' website templates'+(cs.sites.failed&&cs.sites.failed.length?' ('+cs.sites.failed.length+' could not be read)':''):''):'')+(cs.lastError?' · last error: '+cs.lastError:''):'Canva is configured. Press Connect Canva once.'):'Add CANVA_CLIENT_ID, CANVA_CLIENT_SECRET and CANVA_FOLDER_ID in Netlify environment variables to enable Canva.';$('#s-bank').textContent=ME&&ME.bankReady?'Bank details are set. Clients see them on their payment page.':'Add BANK_NAME, BANK_HOLDER, BANK_RIB and BANK_IBAN in Netlify environment variables so clients see your RIB.';var ig=[
     ['Team alerts on Telegram',ME&&ME.alerts&&ME.alerts.telegram,'New orders and payment receipts arrive on your phone.',['TELEGRAM_BOT_TOKEN','TELEGRAM_CHAT_ID']],
     ['Team alerts by email',ME&&ME.alerts&&ME.alerts.email,'The same alerts arrive by email (Resend).',['RESEND_API_KEY','ALERT_EMAIL']],
     ['PostHog analytics',ME&&ME.posthog,'Visits, orders, invitations opened and replies are counted.',['POSTHOG_KEY']],
@@ -553,6 +554,34 @@ function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME
   $('#s-integ-sum').textContent=ME?on+' of '+ig.length+' are on.':'';
   $('#s-integ').innerHTML=ig.map(function(x){return '<li><span class="pill '+(x[1]?'ok':'off')+'">'+(x[1]?'On':'Off')+'</span><b>'+x[0]+'</b><small>'+x[2]+(x[1]?'':' To turn it on, set '+x[3].map(function(v){return '<code>'+v+'</code>'}).join(' and ')+' in Netlify → Environment variables.')+'</small></li>'}).join('');
   $('#s-canva-actions').hidden=!(ME&&ME.canva)}
+/* ---------- website templates (Settings) ---------- */
+var STPL=[];
+function loadSiteTpls(){return api('/api/site-templates').then(function(r){STPL=r.items;renderSiteTpls()}).catch(function(){})}
+function renderSiteTpls(){
+  var box=$('#st-list');
+  if(!STPL.length){box.innerHTML='<p class="hint" style="margin:0">No website templates yet. Set CANVA_TEMPLATES_FOLDER_ID and sync, or add one below.</p>';return}
+  box.innerHTML=STPL.map(function(t,i){var pub=t.status==='published';
+    var pic=t.cover||t.image;
+    return '<div class="st-row" data-st="'+i+'">'+(pic?'<img alt="" src="'+esc(pic)+'">':'<span class="st-ph"></span>')+'<div><h3>'+esc(t.name)+' <span class="pill '+(pub&&!t.hidden&&!t.draft?'good':'wait')+'">'+(t.draft?'Draft in Canva':t.hidden?'Hidden':pub?'On the website':'Waiting for the address')+'</span></h3>'+
+      '<p class="status" style="margin:2px 0 0">/modeles/'+esc(t.slug)+(t.tags&&t.tags.length?' · '+esc(t.tags.join(', ')):'')+(t.source==='manual'?' · added by hand':'')+'</p>'+
+      '<div class="st-url"><input aria-label="Published site address" data-st-url value="'+esc(t.siteUrl||'')+'" placeholder="https://….my.canva.site/…"><button class="btn sm primary" type="button" data-st-pub>'+(pub?'Refresh copy':'Mark published')+'</button>'+
+      (pub?'<a class="btn sm" target="_blank" rel="noopener" href="/modeles/'+esc(t.slug)+'">Preview ↗</a>':'')+(t.editUrl?'<a class="btn sm" target="_blank" rel="noopener noreferrer" href="'+esc(t.editUrl)+'">Edit in Canva ↗</a>':'')+
+      '<label class="btn sm" style="cursor:pointer">'+(t.cover?'Change picture':'Upload picture')+'<input type="file" accept="image/jpeg,image/png,image/webp" data-st-pic hidden></label>'+
+      '<button class="btn sm ghost" type="button" data-st-hide>'+(t.hidden?'Show on website':'Hide')+'</button>'+(t.source==='manual'?'<button class="btn sm ghost" type="button" data-st-del>Delete</button>':'')+'</div></div></div>'}).join('');
+  $$('[data-st]',box).forEach(function(row){
+    var t=STPL[+row.dataset.st],url=$('[data-st-url]',row);
+    $('[data-st-pub]',row).onclick=function(){var b=this;b.disabled=true;
+      var u=url.value.trim(),save=u!==(t.siteUrl||'')?api('/api/site-templates/'+encodeURIComponent(t.id),{method:'PATCH',body:{siteUrl:u}}):Promise.resolve(t);
+      save.then(function(){return api('/api/site-templates/'+encodeURIComponent(t.id)+'/publish',{method:'POST',body:{}})})
+        .then(function(r){toast((r.warnings||[]).length?r.warnings[0]:'Published. The template is on the website.',!!(r.warnings||[]).length);return loadSiteTpls()}).catch(fail).then(function(){b.disabled=false})};
+    $('[data-st-pic]',row).onchange=function(){var f=this.files[0];if(!f)return;if(f.size>3e6){toast('Picture too large (3 MB maximum).',true);return}
+      api('/api/upload',{method:'POST',raw:true,body:f,type:f.type}).then(function(u){return api('/api/site-templates/'+encodeURIComponent(t.id),{method:'PATCH',body:{cover:u.url}})}).then(function(){toast('Picture saved');return loadSiteTpls()}).catch(fail)};
+    $('[data-st-hide]',row).onclick=function(){api('/api/site-templates/'+encodeURIComponent(t.id),{method:'PATCH',body:{hidden:!t.hidden}}).then(loadSiteTpls).catch(fail)};
+    var del=$('[data-st-del]',row);if(del)del.onclick=function(){ask({title:'Delete this template?',body:'<p>'+esc(t.name)+' leaves the website. Couples who already chose it keep their order.</p>',ok:'Delete',danger:true}).then(function(go){if(go)api('/api/site-templates/'+encodeURIComponent(t.id),{method:'DELETE'}).then(loadSiteTpls).catch(fail)})};
+  });
+}
+$('#st-add-btn').onclick=function(){var n=$('#st-name').value.trim(),u=$('#st-url').value.trim();if(!n){$('#st-name').focus();return}
+  api('/api/site-templates',{method:'POST',body:{name:n,siteUrl:u}}).then(function(){$('#st-name').value='';$('#st-url').value='';toast(u?'Template added. Press Mark published.':'Template added. Paste its address when it is published.');return loadSiteTpls()}).catch(fail)};
 $('#s-sync').onclick=function(){var b=this;b.disabled=true;$('#s-sync-status').textContent='Syncing…';api('/api/canva/sync',{method:'POST'}).then(function(r){$('#s-sync-status').textContent=r.note;setTimeout(loadCanva,60000)}).catch(function(e){$('#s-sync-status').textContent=e.message||'Could not sync. Try again.'}).then(function(){b.disabled=false})};
 $('#s-logout').onclick=function(){api('/api/logout',{method:'POST'}).then(function(){location.reload()})};
 

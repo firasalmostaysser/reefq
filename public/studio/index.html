@@ -122,6 +122,7 @@
           </div>
           <p class="status" id="c-state" style="margin:10px 0"></p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" type="button" id="c-pub">Mark published</button><a class="btn" id="c-open" target="_blank" rel="noopener noreferrer">Open Canva site ↗</a></div>
+          <p class="hint" id="c-tpl" hidden></p>
           <p class="hint" style="margin:12px 0 0">For the designer: link the design's RSVP button to <code>#rsvp</code>. After later edits in Canva, press <b>Refresh copy</b> so guests see them.</p>
         </div>
         <div class="themes" id="themes" data-theme-only></div>
@@ -276,6 +277,16 @@
       <h2>Canva templates</h2>
       <p class="hint" id="s-canva"></p>
       <div id="s-canva-actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
+    </div>
+    <div class="card">
+      <h2>Website templates</h2>
+      <p class="hint">Sample invitation sites shown on the landing page under "Modèles sur mesure". Designs in the Canva templates folder appear here after a sync; you can also add one by its address. For each: paste the published address, then <b>Mark published</b>.</p>
+      <div id="st-list" class="st-list"></div>
+      <form class="grid" id="st-add" onsubmit="return false" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto;align-items:end;margin-top:12px">
+        <label class="f"><span>Name</span><input id="st-name" placeholder="Olivier doré"></label>
+        <label class="f"><span>Published site address</span><input id="st-url" inputmode="url" placeholder="https://….my.canva.site/…"></label>
+        <button class="btn" type="button" id="st-add-btn">Add template</button>
+      </form>
     </div>
     <div class="card">
       <h2>Bank transfer (RIB)</h2>

@@ -2,7 +2,8 @@
 // Covers: order on the landing page → client space → bank-transfer proof → studio verification →
 // invitation created (wording from templates) → Deliver QR codes → client space unlocked (guest QR) →
 // guest opens personal link and replies → reply visible → archive keeps the link working →
-// custom design: Canva-like site copied and served at /i/<id> with the Reefq bar, personal-link replies, opens.
+// custom design: Canva-like site copied and served at /i/<id> with the Reefq bar, personal-link replies, opens →
+// website template: published in the studio, shown and previewed on the landing page, chosen in an order.
 // Usage: BASE=http://localhost:8888 PASSWORD=change-me node test/smoke.mjs
 import { chromium } from 'playwright';
 import assert from 'node:assert';
@@ -147,6 +148,56 @@ await anon.click('#design-rsvp'); await anon.waitForSelector('#reefq-bar .rq-per
 const op = await s.evaluate(async id => (await (await fetch('/api/invitations/' + id + '/opens')).json()).items, cid);
 assert.ok(op.some(o => o.guestId === cgid && o.count >= 1));
 await s.click('#tab-guests'); await s.waitForFunction(() => / 1 opened /.test(document.querySelector('#g-sum').textContent), null, { timeout: 10000 });
+// 13. Website template: added in the studio by its address, published, shown on the landing page and previewed live
+FILES['/tpl'] = ['text/html', '<!doctype html><html><head><meta charset="utf-8"><base href="/tpl/"><title>Tpl title</title></head><body><h1 id="tpl-design">Modèle</h1><img id="tpl-art" src="_assets/arch.svg" alt=""><a id="tpl-rsvp" href="https://example.com/rsvp">RSVP</a><div class="footer-container"><a href="https://www.canva.com">Canva</a></div></body></html>'];
+FILES['/tpl/_assets/arch.svg'] = FILES['/olfa/_assets/arch.svg'];
+const tplName = 'Olivier ' + Math.random().toString(36).slice(2, 6);
+await s.click('#tab-settings'); await s.fill('#st-name', tplName); await s.fill('#st-url', `http://localhost:${SITE_PORT}/tpl`); await s.click('#st-add-btn');
+await s.waitForFunction(n => [...document.querySelectorAll('.st-row h3')].some(h => h.textContent.includes(n)), tplName);
+const row = s.locator('.st-row', { hasText: tplName });
+await row.locator('[data-st-pub]').click();
+await s.waitForFunction(n => [...document.querySelectorAll('.st-row')].some(r => r.textContent.includes(n) && /On the website/.test(r.textContent)), tplName, { timeout: 20000 });
+const tpl = (await s.evaluate(async () => (await (await fetch('/api/site-templates')).json()).items)).find(t => t.name === tplName);
+// a picture uploaded in the studio becomes the card picture
+await row.locator('[data-st-pic]').setInputFiles({ name: 'cover.png', mimeType: 'image/png', buffer: Buffer.from('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082', 'hex') });
+await s.waitForFunction(n => [...document.querySelectorAll('.st-row')].some(r => r.textContent.includes(n) && /Change picture/.test(r.textContent)), tplName);
+const pubTpl = await (await s.request.get(`${BASE}/api/public/site-templates`)).text();
+assert.match(JSON.parse(pubTpl).items.find(t => t.name === tplName).image, /^\/media\/uploads\//);
+assert.ok(pubTpl.includes(tpl.slug) && !/canva|localhost:8899|siteUrl/i.test(pubTpl), 'public template list never names the design tool');
+
+// the landing page shows it; on a wide screen "See it live" opens a phone-frame preview, "Choose" fills the order form
+const L = await page(1300, 900);
+await L.goto(BASE + '/'); await L.waitForSelector('#modeles:not([hidden])');
+const card = L.locator('#sites-grid .model', { hasText: tplName });
+await card.locator('.acts [data-live]').click(); await L.waitForSelector('#site-pv[open]');
+const fr = L.frameLocator('#site-pv-frame');
+await fr.locator('#tpl-design').waitFor();
+await L.waitForFunction(() => /Modèle · /.test(document.querySelector('#site-pv-frame').contentDocument?.querySelector('#reefq-bar')?.shadowRoot?.querySelector('.hi')?.textContent || ''));
+await L.click('#site-pv-pick'); await L.waitForFunction(() => !document.querySelector('#site-pv').open);
+assert.equal(await L.inputValue('#o-model'), 'site:' + tpl.slug);
+
+// on a phone the full page opens: our address only, designer branding gone, the RSVP button shows a sample card, "Choose" goes to the order form
+const P = await page(390, 844), pHosts = new Set();
+P.on('request', r => pHosts.add(new URL(r.url()).host));
+await P.goto(`${BASE}/modeles/${tpl.slug}`); await P.waitForSelector('#tpl-design');
+await P.waitForFunction(() => document.querySelector('#tpl-art').complete && document.querySelector('#tpl-art').naturalWidth > 0);
+assert.ok(![...pHosts].some(h => h.endsWith(':' + SITE_PORT)));
+assert.match(await P.title(), new RegExp(tplName));
+assert.equal(await P.$eval('.footer-container', el => getComputedStyle(el).display), 'none');
+await P.click('#tpl-rsvp'); await P.waitForSelector('#reefq-bar .rq-who'); await P.waitForSelector('#reefq-bar .rq-note');
+await P.click('#reefq-bar .x');
+await P.click('#reefq-bar .go'); await P.waitForURL(new RegExp('/\\?modele=' + tpl.slug));
+await P.waitForFunction(slug => document.querySelector('#o-model').value === 'site:' + slug, tpl.slug);
+
+// the couple orders with it: the order remembers the template, and its invitation starts as a custom design
+await P.fill('#o-names', 'Hiba & Omar'); await P.fill('#o-phone', '55 444 333'); await P.click('#of button[type=submit]');
+await P.waitForURL(/\/commande\/RQ-/);
+const tcode = P.url().match(/RQ-[A-Z0-9]{5}/)[0];
+const tord = await s.evaluate(async c => (await (await fetch('/api/orders/' + c)).json()), tcode);
+assert.equal(tord.site, tpl.slug); assert.equal(tord.model, tplName);
+const tinv2 = await s.evaluate(async c => (await (await fetch('/api/orders/' + c + '/invitation', { method: 'POST' })).json()).invitation, tcode);
+assert.equal(tinv2.designSource, 'canva'); assert.equal(tinv2.siteTemplate, tpl.slug); assert.equal(tinv2.canvaStatus, 'waiting_designer');
+
 site.closeAllConnections?.(); await new Promise(r => site.close(r));
 const g3 = await page(390, 844); await g3.goto(`${BASE}/i/${cid}?g=${cgid}`);
 await g3.waitForSelector('#late'); await g3.waitForFunction(() => document.querySelector('#late').complete && document.querySelector('#late').naturalWidth > 0);
