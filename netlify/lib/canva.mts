@@ -25,6 +25,10 @@ function mkEnv(): any {
 export async function authStartResponse(url: URL) { return authStart(mkEnv(), url); }
 export async function authCallbackResponse(url: URL) { return authCallback(mkEnv(), url); }
 export async function syncNow(opts?: any) { const env = mkEnv(); if (!env.CANVA_FOLDER_ID) return { error: 'Set CANVA_FOLDER_ID first.' }; return sync(env, opts || {}); }
+/* A run that fails as a whole (not connected, Canva down) keeps the last counts and lists the error. */
+export async function recordSyncError(e: any) { const env = mkEnv(); await putJSON(env, 'status', { ...(await getJSON(env, 'status', {})), lastRun: Date.now(), lastError: String(e?.message || e) }); }
+/* For tests: the same sync with a stand-in env (STATE, MEDIA, CANVA_FOLDER_ID). */
+export const syncWith = (env: any, opts: any = {}) => sync(env, opts);
 export async function canvaStatus() { const env = mkEnv(); return { connected: !!(await env.STATE.get('refresh_token')), ...(await getJSON(env, 'status', {})) }; }
 export async function catalog() { const c = await getJSON(mkEnv(), 'catalog', { items: [] }); return { updatedAt: c.updatedAt || null, items: c.items.map(({ imageKey, videoKey, editUrl, ...rest }: any) => rest) }; }
 
@@ -88,7 +92,7 @@ async function sync(env, { force = false } = {}) {
   const catalog = await getJSON(env, 'catalog', { items: [] });
   const byId = Object.fromEntries(catalog.items.map(i => [i.id, i]));
   const designs = await listFolderDesigns(env, env.CANVA_FOLDER_ID);
-  const next = [], report = { exported: [], unchanged: 0, skipped: [], removed: [], pending: [] };
+  const next = [], report = { exported: [], unchanged: 0, skipped: [], removed: [], pending: [], failed: [] };
   const maxExports = +(env.MAX_EXPORTS_PER_RUN || 8); let done = 0;
   for (const d of designs) {
     const meta = parseTitle(d.title || '');
@@ -97,16 +101,21 @@ async function sync(env, { force = false } = {}) {
     if (prev && !force && prev.updatedAt === d.updated_at) { next.push({ ...prev, ...meta, title: meta.name, editUrl: d.urls && d.urls.edit_url }); report.unchanged++; continue; }
     if (done >= maxExports) { if (prev) next.push(prev); report.pending.push(meta.name); continue; }
     done++;
-    const v = d.updated_at;
-    const pngKey = `templates/${d.id}-${v}.png`;
-    await exportTo(env, d.id, { type: 'png', width: 1080, pages: [1] }, pngKey, 'image/png');
-    let videoKey = null;
-    if (meta.anim) { videoKey = `templates/${d.id}-${v}.mp4`; await exportTo(env, d.id, { type: 'mp4', quality: 'vertical_1080p', pages: [1] }, videoKey, 'video/mp4').catch(() => { videoKey = null; }); }
-    if (prev) { for (const k of [prev.imageKey, prev.videoKey]) if (k && k !== pngKey && k !== videoKey) await env.MEDIA.delete(k); }
-    next.push({ id: d.id, title: meta.name, theme: meta.theme, tags: meta.tags, anim: meta.anim, updatedAt: d.updated_at,
-      imageKey: pngKey, image: publicMedia(env, pngKey), videoKey, video: videoKey ? publicMedia(env, videoKey) : null,
-      pageCount: d.page_count || 1, editUrl: d.urls && d.urls.edit_url });
-    report.exported.push(meta.name);
+    // one design failing never stops the others: it keeps its previous picture and is listed in the report
+    try {
+      const v = d.updated_at;
+      const imageKey = await exportImage(env, d, `templates/${d.id}-${v}`);
+      let videoKey = null;
+      if (meta.anim) { videoKey = `templates/${d.id}-${v}.mp4`; await exportTo(env, d.id, { type: 'mp4', quality: 'vertical_1080p', pages: [1] }, videoKey, 'video/mp4').catch(() => { videoKey = null; }); }
+      if (prev) { for (const k of [prev.imageKey, prev.videoKey]) if (k && k !== imageKey && k !== videoKey) await env.MEDIA.delete(k); }
+      next.push({ id: d.id, title: meta.name, theme: meta.theme, tags: meta.tags, anim: meta.anim, updatedAt: d.updated_at,
+        imageKey, image: publicMedia(env, imageKey), videoKey, video: videoKey ? publicMedia(env, videoKey) : null,
+        pageCount: d.page_count || 1, editUrl: d.urls && d.urls.edit_url });
+      report.exported.push(meta.name);
+    } catch (e: any) {
+      if (prev) next.push(prev);
+      report.failed.push({ title: meta.name, error: String(e?.message || e).slice(0, 200) });
+    }
   }
   const live = new Set(designs.map(d => d.id));
   for (const old of catalog.items) if (!live.has(old.id)) {
@@ -127,6 +136,21 @@ async function listFolderDesigns(env, folderId) {
     cont = r.continuation || null;
   } while (cont);
   return out;
+}
+/* Page 1 as PNG. Website designs only export as PDF, so they (and any design whose export fails) use the design's thumbnail.
+   Thumbnail links expire after a few minutes: the file is copied into our store, never linked. */
+async function exportImage(env, d, base) {
+  try { await exportTo(env, d.id, { type: 'png', width: 1080, pages: [1] }, base + '.png', 'image/png'); return base + '.png'; }
+  catch (e) {
+    const url = d.thumbnail && d.thumbnail.url;
+    if (!url) throw e;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Thumbnail download failed ' + r.status);
+    const type = (r.headers.get('content-type') || 'image/jpeg').split(';')[0];
+    const key = base + (type === 'image/png' ? '.png' : '.jpg');
+    await env.MEDIA.put(key, new Blob([await r.arrayBuffer()], { type }));
+    return key;
+  }
 }
 async function exportTo(env, designId, format, key, contentType) {
   const job = await canva(env, '/exports', { method: 'POST', body: JSON.stringify({ design_id: designId, format }) });

@@ -15,13 +15,18 @@ function show(inv,guest,demo){
     if(demo)return new Promise(function(res){setTimeout(function(){res({})},500)});
     var w=ReefqInvite.waLink(inv,r);
     return fetch('/api/public/invitations/'+encodeURIComponent(inv.id)+'/rsvp',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(r)})
-      .then(function(x){if(!x.ok)throw 0;if(window.rqTrack)window.rqTrack('rsvp_sent',{attending:!!r.attending,seats:r.attending?(+r.guests||1):0,theme:inv.theme});return{}})
-      .catch(function(){if(w)return{whatsapp:w};throw 0});
+      .then(function(x){if(x.status===422)return x.json().then(function(j){var e=new Error(j.error||'');e.userFacing=true;throw e});if(!x.ok)throw 0;if(window.rqTrack)window.rqTrack('rsvp_sent',{attending:!!r.attending,seats:r.attending?(+r.guests||1):0,theme:inv.theme});return{}})
+      .catch(function(e){if(e&&e.userFacing)throw e;if(w)return{whatsapp:w};throw 0});
   }});
 }
 if(m[1]==='demo'){show(DEMO,q.get('to')?{id:'demo',name:q.get('to'),seats:+q.get('n')||2}:null,true);return}
 fetch('/api/public/invitations/'+m[1]+(q.get('g')?'?g='+encodeURIComponent(q.get('g')):''))
   .then(function(r){if(r.status===404||r.status===410)throw 404;if(!r.ok)throw 1;return r.json()})
-  .then(function(d){show(d.invitation,d.guest,false)})
+  .then(function(d){
+    // a custom design is served by the server once published; until then guests see this line
+    if(d.invitation.custom){msg('Cette invitation sera bientôt disponible.');return}
+    show(d.invitation,d.guest,false);
+    fetch('/api/public/invitations/'+encodeURIComponent(m[1])+'/open',{method:'POST',keepalive:true,headers:{'content-type':'application/json'},body:JSON.stringify({guestId:q.get('g')||''})}).catch(function(){});
+  })
   .catch(function(e){msg(e===404?'Cette invitation est introuvable. Demandez un nouveau lien aux mariés.':'L\'invitation n\'a pas pu se charger. Actualisez la page.')});
 })();

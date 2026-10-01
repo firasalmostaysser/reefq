@@ -82,14 +82,14 @@
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset data-theme-only>
         <legend>Celebrations</legend>
         <p class="hint">Henna, contract, ceremony, dinner… Labels translate automatically for each guest.</p>
         <div class="events" id="events"></div>
         <div style="margin-top:10px"><button class="btn sm" type="button" id="ev-add">+ Add celebration</button></div>
       </fieldset>
 
-      <fieldset>
+      <fieldset data-theme-only>
         <legend>Wording</legend>
         <p class="hint">Start from a ready-made text, then adjust it freely. The line sits just above the couple's names.</p>
         <div class="write-row">
@@ -114,14 +114,24 @@
 
       <fieldset>
         <legend>Look &amp; feel</legend>
-        <div class="themes" id="themes"></div>
+        <div class="langtabs" role="group" aria-label="Design source" style="margin-bottom:14px"><button class="chip" type="button" data-src="theme">Reefq theme</button><button class="chip" type="button" data-src="canva">Custom design (Canva)</button></div>
+        <div id="src-canva" hidden>
+          <p class="hint">The designer builds the invitation as a Canva website and publishes it. Guests open it at this invitation's own link, with the Reefq bar to reply. The Canva address is never shown to them.</p>
+          <div class="grid">
+            <label class="f full"><span>Published Canva site address</span><input id="k-curl" data-k="canvaUrl" inputmode="url" placeholder="https://….my.canva.site/…"></label>
+          </div>
+          <p class="status" id="c-state" style="margin:10px 0"></p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" type="button" id="c-pub">Mark published</button><a class="btn" id="c-open" target="_blank" rel="noopener noreferrer">Open Canva site ↗</a></div>
+          <p class="hint" style="margin:12px 0 0">For the designer: link the design's RSVP button to <code>#rsvp</code>. After later edits in Canva, press <b>Refresh copy</b> so guests see them.</p>
+        </div>
+        <div class="themes" id="themes" data-theme-only></div>
         <div class="grid" style="margin-top:14px">
           <label class="f"><span>Opens in</span><select id="k-lang" data-k="lang"><option value="fr">Français</option><option value="ar">العربية</option><option value="en">English</option></select></label>
-          <div class="f full"><span>Canva template from your designer</span><select id="k-canva"><option value="">None: use the Reefq card</option></select><small class="hint" id="canva-note" style="margin:4px 0 0"></small></div>
+          <div class="f full" data-theme-only><span>Canva template from your designer</span><select id="k-canva"><option value="">None: use the Reefq card</option></select><small class="hint" id="canva-note" style="margin:4px 0 0"></small></div>
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset data-theme-only>
         <legend>Envelope</legend>
         <p class="hint">Real paper, lining and wax seal. Changes show on the envelope in the preview.</p>
         <div class="envopts">
@@ -136,7 +146,7 @@
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset data-theme-only>
         <legend>Sections</legend>
         <div class="toggles">
           <label><input type="checkbox" id="show-countdown" data-show="countdown"> Countdown</label>
@@ -152,6 +162,7 @@
           <label class="f"><span>Reply by</span><input type="date" id="k-rsvpby" data-k="rsvpBy"></label>
           <label class="f"><span>Seats per invitation</span><input type="number" min="1" max="12" id="k-max" data-k="maxGuests"></label>
           <label class="f"><span>Couple's WhatsApp (replies fallback)</span><input id="k-wa" data-k="whatsapp" placeholder="+216 …"></label>
+          <div class="toggles full" style="grid-column:1/-1"><label><input type="checkbox" id="k-personal"> Replies only from personal links (nobody can answer under another guest's name)</label></div>
 
         </div>
       </fieldset>

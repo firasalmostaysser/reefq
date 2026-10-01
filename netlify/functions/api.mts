@@ -1,8 +1,9 @@
 import type { Context, Config } from '@netlify/functions';
 import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError } from '../lib/util.mts';
-import { invitations, rsvps, orders, files, listJSON, rateLimit } from '../lib/stores.mts';
+import { invitations, rsvps, orders, files, opens, listJSON, rateLimit } from '../lib/stores.mts';
 import { isStudio, login, logout } from '../lib/auth.mts';
 import { canvaStatus } from '../lib/canva.mts';
+import { allowedSiteUrl, cleanSiteUrl, snapshotSite, deleteSite, personalOnly } from '../lib/sites.mts';
 import { THEME_IDS } from '../lib/themes.mts';
 import { notify, later, siteUrl, alertsConfigured } from '../lib/notify.mts';
 
@@ -33,6 +34,7 @@ async function route(req: Request, context: Context): Promise<Response> {
 
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})$/)) && m === 'GET') return publicInvitation(mm[1], url.searchParams.get('g'));
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})\/rsvp$/)) && m === 'POST') return publicRsvp(req, context, mm[1]);
+  if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})\/open$/)) && m === 'POST') return recordOpen(req, context, mm[1]);
 
   if (p === '/api/public/orders' && m === 'POST') return createOrder(req, context);
   if ((mm = p.match(/^\/api\/public\/orders\/(RQ-[A-Z0-9]{5})$/))) {
@@ -68,11 +70,24 @@ async function route(req: Request, context: Context): Promise<Response> {
     if (m === 'PUT') return json(await saveInvitation(iid, await readJSON(req, MAX_INVITE_BYTES)));
     if (m === 'DELETE') {
       await invitations().delete(iid);
-      const s = rsvps(), { blobs } = await s.list({ prefix: iid + '/' });
-      await Promise.all(blobs.map((b: any) => s.delete(b.key)));
+      for (const s of [rsvps(), opens()]) { const { blobs } = await s.list({ prefix: iid + '/' }); await Promise.all(blobs.map((b: any) => s.delete(b.key))); }
+      await deleteSite(iid);
       return json({ ok: true });
     }
   }
+  /* Custom design: save a copy of the designer's published site and serve it at /i/<id>. Also used to pick up later edits. */
+  if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/site$/)) && m === 'POST') {
+    const inv: any = await invitations().get(mm[1], { type: 'json' });
+    if (!inv) return err(404, 'Not found');
+    if (inv.designSource !== 'canva' || !inv.canvaUrl) return err(400, 'Choose "Custom design", paste the site address and save first.');
+    const { ver, base, warnings } = await snapshotSite(inv.id, inv.canvaUrl);
+    const old = inv.canvaVer;
+    Object.assign(inv, { canvaStatus: 'published', canvaVer: ver, canvaBase: base, canvaPublishedAt: Date.now(), updatedAt: Date.now() });
+    await invitations().setJSON(inv.id, inv);
+    if (old) await deleteSite(inv.id, ver).catch(() => null);
+    return json({ invitation: inv, warnings });
+  }
+  if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/opens$/)) && m === 'GET') return json({ items: await listJSON(opens(), mm[1] + '/') });
   /* Archived invitations only leave the studio's main list: their public link and RSVPs keep working. */
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/archive$/)) && m === 'POST') {
     const inv: any = await invitations().get(mm[1], { type: 'json' });
@@ -86,7 +101,7 @@ async function route(req: Request, context: Context): Promise<Response> {
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/duplicate$/)) && m === 'POST') {
     const src: any = await invitations().get(mm[1], { type: 'json' });
     if (!src) return err(404, 'Not found');
-    const { id: _id, createdAt, updatedAt, archived, archivedAt, orderCode, guests, ...copy } = src;
+    const { id: _id, createdAt, updatedAt, archived, archivedAt, orderCode, guests, canvaUrl, canvaDesignId, canvaStatus: _cs, canvaVer, canvaBase, canvaPublishedAt, ...copy } = src;
     return json(await saveInvitation(slug((src.a?.name || '') + '-' + (src.b?.name || '')) + '-' + id(4), { ...copy, guests: [] }));
   }
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/rsvps$/))) {
@@ -160,6 +175,19 @@ async function saveInvitation(iid: string, body: any) {
   delete body.id; delete body.sample;
   const prev: any = await invitations().get(iid, { type: 'json' });
   const doc = { ...body, id: iid, createdAt: prev?.createdAt || Date.now(), updatedAt: Date.now() };
+  /* Custom design: the address comes from the studio; publication state is set only by "Mark published" and resets when the address changes. */
+  if (doc.designSource !== 'canva') doc.designSource = 'theme';
+  doc.canvaUrl = doc.canvaUrl ? String(doc.canvaUrl).trim() : '';
+  if (doc.canvaUrl) {
+    if (!allowedSiteUrl(doc.canvaUrl)) throw new HttpError(400, 'Paste the published site address (https://….my.canva.site/…).');
+    doc.canvaUrl = cleanSiteUrl(doc.canvaUrl);
+  }
+  const keep = prev && prev.canvaUrl && prev.canvaUrl === doc.canvaUrl;
+  for (const k of ['canvaStatus', 'canvaVer', 'canvaBase', 'canvaPublishedAt']) { if (keep && prev[k] != null) doc[k] = prev[k]; else delete doc[k]; }
+  if (doc.designSource === 'canva' && !doc.canvaStatus) doc.canvaStatus = 'waiting_designer';
+  if (!doc.canvaUrl) delete doc.canvaUrl;
+  if (typeof doc.personalOnly !== 'boolean') delete doc.personalOnly;
+  if (prev?.canvaVer && !keep) await deleteSite(iid).catch(() => null);
   if (JSON.stringify(doc).length > MAX_INVITE_BYTES) throw new HttpError(413, 'Invitation too large. Use smaller photos.');
   await invitations().setJSON(iid, doc);
   return doc;
@@ -168,21 +196,38 @@ async function saveInvitation(iid: string, body: any) {
 async function publicInvitation(iid: string, gid: string | null) {
   const inv: any = await invitations().get(iid, { type: 'json' });
   if (!inv) return err(404, 'Invitation not found');
-  const guest = gid && Array.isArray(inv.guests) ? inv.guests.find((g: any) => g.id === gid) : null;
-  const { guests, orderCode, rsvpEndpoint, siteUrl, ...pub } = inv;
-  return json({ invitation: pub, guest: guest ? { id: guest.id, name: guest.name, seats: guest.seats } : null });
+  const guest = findGuest(inv, gid);
+  /* never reveal how a custom design is made: guests get the invitation texts, not the designer's address */
+  const { guests, orderCode, rsvpEndpoint, siteUrl, designSource, canvaUrl, canvaDesignId, canvaStatus: _cs, canvaVer, canvaBase, canvaPublishedAt, ...pub } = inv;
+  return json({ invitation: { ...pub, custom: designSource === 'canva', personalOnly: personalOnly(inv) }, guest: guest ? { id: guest.id, name: guest.name, seats: guest.seats } : null });
 }
+const findGuest = (inv: any, gid: unknown) => gid && Array.isArray(inv.guests) ? inv.guests.find((g: any) => g.id === gid) || null : null;
 
+/* A personal link answers with the name on the guest list, whatever was typed. With "personal links only", replies need one. */
 async function publicRsvp(req: Request, context: Context, iid: string) {
   if (!(await rateLimit(`rsvp/${iid}/${clientIp(req, context)}`, 20, 3600))) return err(429, 'Too many replies from this connection. Try again later.');
   const inv: any = await invitations().get(iid, { type: 'json' });
   if (!inv) return err(404, 'Invitation not found');
   const b = await readJSON(req, 10_000);
   if (b.website) return json({ ok: true });
+  const guest = findGuest(inv, b.guestId);
+  if (!guest && personalOnly(inv)) return err(403, 'Pour répondre, ouvrez le lien personnel que vous avez reçu.');
+  if (guest) b.name = guest.name; else b.guestId = null;
   if (!b.name || typeof b.attending !== 'boolean') return err(400, 'Name and answer are required.');
-  const guest = b.guestId && Array.isArray(inv.guests) ? inv.guests.find((g: any) => g.id === b.guestId) : null;
   const max = Math.max(1, guest ? +guest.seats || 1 : +inv.maxGuests || 1);
   return json(await insertRsvp(iid, { ...b, guests: Math.min(max, Math.max(0, +b.guests || 0)), source: 'guest' }));
+}
+
+/* Opens, per guest (or "anon" for the shared link), kept apart from the invitation so studio saves never overwrite them. */
+async function recordOpen(req: Request, context: Context, iid: string) {
+  if (!(await rateLimit(`open/${clientIp(req, context)}`, 120, 3600))) return json({ ok: true });
+  const inv: any = await invitations().get(iid, { type: 'json' });
+  if (!inv) return err(404, 'Invitation not found');
+  const b = await readJSON(req, 2000), guest = findGuest(inv, b.guestId);
+  const key = iid + '/' + (guest ? guest.id : 'anon'), s = opens(), now = Date.now();
+  const cur: any = await s.get(key, { type: 'json' });
+  await s.setJSON(key, { guestId: guest ? guest.id : null, first: cur?.first || now, last: now, count: (cur?.count || 0) + 1 });
+  return json({ ok: true });
 }
 
 async function insertRsvp(iid: string, b: any) {

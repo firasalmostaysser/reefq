@@ -1,11 +1,11 @@
 (function(){
 'use strict';
 var T={
- en:{k_engagement:'are getting engaged',k_henna:'invite you to their henna night',k_contract:'are tying the knot',dear:'Dear',seatsFor:'Seats reserved for you',married:'are getting married',tap:'Touch the seal to open',msg:'Together with their families, they joyfully invite you to celebrate their wedding',count:'Until we say yes',story:'Our story',just:'Just married',d:'Days',h:'Hours',m:'Minutes',s:'Seconds',program:'The celebrations',dress:'Dress code',rsvp:'Kindly reply',by:'Please reply by',name:'Your full name',att:'Will you join us?',yes:'Joyfully accepts',no:'Regretfully declines',guests:'Number of guests',diet:'Dietary needs',note:'A note for the couple',send:'Send my reply',thanks:'Thank you. Your reply has reached the couple.',wa:'Send it on WhatsApp',preview:'Preview only. Replies are not recorded.',map:'Open in Maps',err:'Your reply could not be sent. Please try again.',need:'Please enter your name and choose an answer.',at:'at',
+ en:{k_engagement:'are getting engaged',k_henna:'invite you to their henna night',k_contract:'are tying the knot',dear:'Dear',seatsFor:'Seats reserved for you',married:'are getting married',tap:'Touch the seal to open',msg:'Together with their families, they joyfully invite you to celebrate their wedding',count:'Until we say yes',story:'Our story',just:'Just married',d:'Days',h:'Hours',m:'Minutes',s:'Seconds',program:'The celebrations',dress:'Dress code',rsvp:'Kindly reply',by:'Please reply by',name:'Your full name',att:'Will you join us?',yes:'Joyfully accepts',no:'Regretfully declines',guests:'Number of guests',diet:'Dietary needs',note:'A note for the couple',send:'Send my reply',thanks:'Thank you. Your reply has reached the couple.',wa:'Send it on WhatsApp',preview:'Preview only. Replies are not recorded.',map:'Open in Maps',err:'Your reply could not be sent. Please try again.',need:'Please enter your name and choose an answer.',personal:'To reply, open the personal link you received.',confirm:'Reply',at:'at',
   ev:{henna:'Henna Night',contract:'Marriage Contract',ceremony:'Wedding Ceremony',dinner:'Wedding Dinner',outia:'Outia',brunch:'Farewell Brunch'}},
- fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',story:'Notre histoire',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',at:'à',
+ fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',story:'Notre histoire',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',personal:'Pour répondre, ouvrez le lien personnel que vous avez reçu.',confirm:'Confirmer ma présence',at:'à',
   ev:{henna:'Soirée du henné',contract:'Contrat de mariage',ceremony:'Cérémonie',dinner:'Dîner de fête',outia:'Outia',brunch:"Brunch d'au revoir"}},
- ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',at:'على الساعة',
+ ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',personal:'للرد، افتحوا الرابط الشخصي الذي وصلكم.',confirm:'تأكيد الحضور',at:'على الساعة',
   ev:{henna:'ليلة الحنّة',contract:'عقد القران',ceremony:'حفل الزفاف',dinner:'عشاء الزفاف',outia:'الوطية',brunch:'فطور الوداع'}}
 };
 /* Optional opening line at the top of the invitation (inv.opening: 'none' | 'bismillah' | 'verse'). Texts mirror wording-templates.js. */
@@ -197,6 +197,52 @@ function waLink(inv,r){
 }
 function mapsHref(q,link){if(link&&/^https?:\/\//.test(link))return link;return q?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q):''}
 
+/* The reply card, shared by the invitation and the bar on custom designs. c={t,inv,guest,st,opts,maxSeats}.
+   A personal link answers with the name on the guest list (shown, not typed); with personalOnly, the shared link cannot reply. */
+function rsvpHtml(c){
+  var t=c.t,inv=c.inv,guest=c.guest,st=c.st,L=st.lang;
+  var h='<div class="rq-sheet" id="rq-rsvp"><h2 class="rq-h2 rq-foil">'+esc(t('rsvp'))+'</h2>'+(inv.rsvpBy?'<p class="rq-caps rq-muted" style="margin:-6px 0 20px">'+esc(t('by'))+' '+esc(fmtDate(inv.rsvpBy,L,{day:'numeric',month:'long'}))+'</p>':'');
+  if(st.sent){
+    h+='<div class="rq-thanks"><p class="rq-msg" style="margin:0">'+esc(t('thanks'))+'</p>'+(st.sent.whatsapp?'<a class="rq-send" target="_blank" rel="noopener" href="'+esc(st.sent.whatsapp)+'">'+esc(t('wa'))+'</a>':'')+'</div>';
+  } else if(inv.personalOnly&&!guest&&!c.opts.preview){
+    h+='<p class="rq-msg rq-personal" style="margin:0">'+esc(t('personal'))+'</p>';
+  } else {
+    var mx=c.maxSeats();
+    h+='<form class="rq-form" novalidate><div>'+(guest&&guest.name?'<span class="l">'+esc(t('name'))+'</span><p class="rq-who" id="rq-who">'+esc(guest.name)+'</p>':'<label class="l" for="rq-name">'+esc(t('name'))+'</label><input type="text" id="rq-name" autocomplete="name">')+'</div>'+
+     '<div><span class="l">'+esc(t('att'))+'</span><div class="rq-att"><label><input type="radio" name="rq-att" id="rq-att-yes" value="yes"> '+esc(t('yes'))+'</label><label><input type="radio" name="rq-att" id="rq-att-no" value="no"> '+esc(t('no'))+'</label></div></div>'+
+     (mx>1?'<div class="rq-gwrap"><span class="l">'+esc(t('guests'))+'</span><div class="rq-step"><button type="button" data-g="-1" aria-label="−">−</button><output id="rq-guests">'+st.guests+'</output><button type="button" data-g="1" aria-label="+">+</button></div></div>':'')+
+     '<div><label class="l" for="rq-diet">'+esc(t('diet'))+'</label><input type="text" id="rq-diet"></div>'+
+     '<div><label class="l" for="rq-msg">'+esc(t('note'))+'</label><textarea id="rq-msg"></textarea></div>'+
+     '<p class="rq-err" hidden></p><button class="rq-send" type="submit">'+esc(t('send'))+'</button>'+(c.opts.preview?'<p class="rq-note">'+esc(t('preview'))+'</p>':'')+'</form>';
+  }
+  return h+'</div>';
+}
+function wireRsvp(root,c,draw){
+  var st=c.st,guest=c.guest,t=c.t;
+  root.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){var mx=c.maxSeats();st.guests=Math.min(mx,Math.max(1,st.guests+ +b.dataset.g));root.querySelector('#rq-guests').textContent=st.guests}});
+  var yes=root.querySelector('#rq-att-yes'),no=root.querySelector('#rq-att-no'),gw=root.querySelector('.rq-gwrap');
+  if(yes&&gw){var upd=function(){gw.hidden=!!(no&&no.checked)};yes.onchange=upd;no.onchange=upd}
+  var form=root.querySelector('.rq-form');
+  if(form)form.onsubmit=function(e){
+    e.preventDefault();
+    var err=form.querySelector('.rq-err'),btn=form.querySelector('.rq-send'),nm=form.querySelector('#rq-name');
+    var r={guestId:guest&&guest.id||'',name:guest&&guest.name?guest.name:(nm?nm.value.trim():''),attending:yes.checked,guests:yes.checked?st.guests:0,dietary:form.querySelector('#rq-diet').value.trim(),message:form.querySelector('#rq-msg').value.trim(),lang:st.lang};
+    if(!r.name||!(yes.checked||no.checked)){err.textContent=t('need');err.hidden=false;return}
+    err.hidden=true;btn.disabled=true;
+    Promise.resolve(c.opts.onRsvp?c.opts.onRsvp(r):{}).then(function(res){st.sent=res||{};draw();var el=root.querySelector('#rq-rsvp');if(el)el.scrollIntoView({block:'center'})}).catch(function(x){btn.disabled=false;err.textContent=(x&&x.message&&x.userFacing)?x.message:t('err');err.hidden=false});
+  };
+}
+/* The reply card on its own (custom designs): same look and rules as inside an invitation. */
+function renderRsvp(root,inv,opts){
+  opts=opts||{};
+  var st={lang:opts.lang||inv.lang||'fr',sent:null,guests:1},guest=opts.guest||null,th=THEMES[inv.theme]?inv.theme:'reefq';
+  function t(k){return (T[st.lang]||T.fr)[k]}
+  var maxSeats=function(){return Math.max(1,guest&&guest.seats?+guest.seats:(+inv.maxGuests||1))};if(guest&&guest.seats)st.guests=maxSeats();
+  var c={t:t,inv:inv,guest:guest,st:st,opts:opts,maxSeats:maxSeats};
+  function draw(){var L=T[st.lang]?st.lang:'fr';st.lang=L;root.className='rq-inv rq-solo';root.setAttribute('data-t',th);root.setAttribute('lang',L);root.setAttribute('dir',L==='ar'?'rtl':'ltr');root.innerHTML=rsvpHtml(c);wireRsvp(root,c,draw)}
+  draw();
+  return{destroy:function(){root.innerHTML=''},t:t};
+}
 function render(root,inv,opts){
   opts=opts||{};
   var st={lang:opts.lang||inv.lang||'fr',open:!!opts.startOpen,timer:null,sent:null,guests:1};
@@ -206,6 +252,7 @@ function render(root,inv,opts){
   function t(k){var D=T[st.lang]||T.fr;if(k==='married'&&inv.eventType&&inv.eventType!=='wedding'&&D['k_'+inv.eventType])return D['k_'+inv.eventType];return D[k]}
   var guest=opts.guest||null,show=inv.show||{};function on(k){return show[k]!==false}
   var maxSeats=function(){return Math.max(1,guest&&guest.seats?+guest.seats:(+inv.maxGuests||1))};if(guest&&guest.seats)st.guests=maxSeats();
+  var R={t:t,inv:inv,guest:guest,st:st,opts:opts,maxSeats:maxSeats};
   function draw(){
     clearInterval(st.timer);
     var L=T[st.lang]?st.lang:'fr';st.lang=L;
@@ -247,19 +294,7 @@ function render(root,inv,opts){
           (inv.dress||dcols.length?'<div class="rq-dress"><div class="rq-caps">'+esc(t('dress'))+'</div>'+(inv.dress?'<div>'+esc(inv.dress)+'</div>':'')+(dcols.length?'<div class="rq-swatches">'+dcols.map(function(c){return '<i style="background:'+esc(c)+'"></i>'}).join('')+'</div>':'')+'</div>':'')+
           (inv.note?'<p class="rq-muted" style="margin:14px 0 0;font-style:italic">'+esc(inv.note)+'</p>':'')+'</div>';
       }
-      if(on('rsvp')){html+='<div class="rq-sheet" id="rq-rsvp"><h2 class="rq-h2 rq-foil">'+esc(t('rsvp'))+'</h2>'+(inv.rsvpBy?'<p class="rq-caps rq-muted" style="margin:-6px 0 20px">'+esc(t('by'))+' '+esc(fmtDate(inv.rsvpBy,L,{day:'numeric',month:'long'}))+'</p>':'');
-      if(st.sent){
-        html+='<div class="rq-thanks"><p class="rq-msg" style="margin:0">'+esc(t('thanks'))+'</p>'+(st.sent.whatsapp?'<a class="rq-send" target="_blank" rel="noopener" href="'+esc(st.sent.whatsapp)+'">'+esc(t('wa'))+'</a>':'')+'</div>';
-      } else {
-        var mx=maxSeats();
-        html+='<form class="rq-form" novalidate><div><label class="l" for="rq-name">'+esc(t('name'))+'</label><input type="text" id="rq-name" autocomplete="name" value="'+esc(guest&&guest.name||'')+'"></div>'+
-         '<div><span class="l">'+esc(t('att'))+'</span><div class="rq-att"><label><input type="radio" name="rq-att" id="rq-att-yes" value="yes"> '+esc(t('yes'))+'</label><label><input type="radio" name="rq-att" id="rq-att-no" value="no"> '+esc(t('no'))+'</label></div></div>'+
-         (mx>1?'<div class="rq-gwrap"><span class="l">'+esc(t('guests'))+'</span><div class="rq-step"><button type="button" data-g="-1" aria-label="−">−</button><output id="rq-guests">'+st.guests+'</output><button type="button" data-g="1" aria-label="+">+</button></div></div>':'')+
-         '<div><label class="l" for="rq-diet">'+esc(t('diet'))+'</label><input type="text" id="rq-diet"></div>'+
-         '<div><label class="l" for="rq-msg">'+esc(t('note'))+'</label><textarea id="rq-msg"></textarea></div>'+
-         '<p class="rq-err" hidden></p><button class="rq-send" type="submit">'+esc(t('send'))+'</button>'+(opts.preview?'<p class="rq-note">'+esc(t('preview'))+'</p>':'')+'</form>';
-      }
-      html+='</div>';}
+      if(on('rsvp'))html+=rsvpHtml(R);
       html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span><img alt="Reefq رِفق" src="'+(th==='layl'?LOGO_DARK:LOGO)+'"></div></section>';
     }
     html+='</div>';
@@ -288,21 +323,10 @@ function render(root,inv,opts){
       sb.onclick=function(e){e.stopPropagation();go()};sc.querySelector('.rq3-env').onclick=go;
     }
     if(root.querySelector('[data-c]')){tick();st.timer=setInterval(tick,1000)}
-    root.querySelectorAll('[data-g]').forEach(function(b){b.onclick=function(){var mx=maxSeats();st.guests=Math.min(mx,Math.max(1,st.guests+ +b.dataset.g));root.querySelector('#rq-guests').textContent=st.guests}});
-    var yes=root.querySelector('#rq-att-yes'),no=root.querySelector('#rq-att-no'),gw=root.querySelector('.rq-gwrap');
-    if(yes&&gw){var upd=function(){gw.hidden=!!(no&&no.checked)};yes.onchange=upd;no.onchange=upd}
-    var form=root.querySelector('.rq-form');
-    if(form)form.onsubmit=function(e){
-      e.preventDefault();
-      var err=form.querySelector('.rq-err'),btn=form.querySelector('.rq-send');
-      var r={guestId:guest&&guest.id||'',name:form.querySelector('#rq-name').value.trim(),attending:yes.checked,guests:yes.checked?st.guests:0,dietary:form.querySelector('#rq-diet').value.trim(),message:form.querySelector('#rq-msg').value.trim(),lang:st.lang};
-      if(!r.name||!(yes.checked||no.checked)){err.textContent=t('need');err.hidden=false;return}
-      err.hidden=true;btn.disabled=true;
-      Promise.resolve(opts.onRsvp?opts.onRsvp(r):{}).then(function(res){st.sent=res||{};draw();var el=root.querySelector('#rq-rsvp');if(el)el.scrollIntoView({block:'center'})}).catch(function(x){btn.disabled=false;err.textContent=(x&&x.message&&x.userFacing)?x.message:t('err');err.hidden=false});
-    };
+    wireRsvp(root,R,draw);
   }
   draw();
   return{destroy:function(){clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
-window.ReefqInvite={THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
+window.ReefqInvite={THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,renderRsvp:renderRsvp,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();

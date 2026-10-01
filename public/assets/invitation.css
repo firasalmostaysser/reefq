@@ -108,6 +108,9 @@
 .rq-send[disabled]{opacity:.6;cursor:progress}
 .rq-note{font-size:13px;color:var(--muted);margin:4px 0 0;text-align:center;font-family:'Figtree',system-ui,sans-serif}
 .rq-thanks{padding:10px 0;display:flex;flex-direction:column;gap:12px;align-items:center}
+.rq-who{margin:0;font-size:19px;color:var(--ink);font-style:italic}
+.rq-inv[lang=ar] .rq-who{font-style:normal;font-size:20px}
+.rq-inv.rq-solo{height:auto;overflow:visible;container-type:inline-size;background:var(--paper);background-image:var(--tex);background-size:240px 240px;padding:18px 14px 22px;display:flex;justify-content:center}
 .rq-err{color:#b3443a;font-size:14px;text-align:center;margin:0;font-family:'Figtree',system-ui,sans-serif}
 .rq-foot{margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:6px;font:500 11px/1 'Figtree',system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .rq-inv[lang=ar] .rq-foot{letter-spacing:0;font:500 14px/1.2 var(--serif)}

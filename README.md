@@ -8,6 +8,7 @@ Digital wedding invitations that open like a real envelope. One site holds every
 | `/commande/<code>?t=<token>` | Client space: pay the deposit by bank transfer, upload the receipt, then follow the invitation and guest replies | Couples |
 | `/studio/` | Reefq Studio: invitations, guest lists, RSVPs, orders and payment checks, settings | Reefq team (password) |
 | `/i/<id>` | A couple's invitation. `?g=<guest id>` greets a family by name and reserves their seats | Guests |
+| `/site/<id>/<ver>/*` | Files of a custom design, served from our copy | The page above |
 | `/i/demo` | Demo invitation | Anyone |
 | `/api/*` | Studio and public API | The pages above |
 | `/templates.json`, `/media/*` | Canva templates and uploaded photos | The pages above |
@@ -26,16 +27,18 @@ public/                   static site
     engine.js             invitation engine: envelope, wax seal, themes, layouts, sections, RSVP
     invitation.css        invitation styles and the 10 themes
     analytics.js          PostHog, cookieless, loaded only when POSTHOG_KEY is set
-    invite.js, landing.js, site.css
+    invite.js, landing.js, site.css, commande.js, commande.css
+    site-bar.js           Reefq bar on custom designs: greeting, open tracking, reply card
     env/*.webp            pre-rendered envelope paper layers (tools/render_assets.py)
 netlify/
   functions/
     api.mts               /api/*: invitations, RSVPs, orders, receipts, uploads, wording
     media.mts             /media/* and /templates.json
-    invite-page.mts       /i/<id> with link-preview tags
+    invite-page.mts       /i/<id> with link-preview tags (or our copy of a custom design)
+    site.mts              /site/*: files of custom designs
     canva-auth.mts        /auth/canva/start and /callback
     canva-sync-background.mts, canva-cron.mts   Canva sync every 15 min
-  lib/                    auth, stores (Blobs), canva, notify (Telegram/email), wording, themes
+  lib/                    auth, stores (Blobs), canva, sites (custom designs), notify (Telegram/email), wording, themes
 test/                     unit tests, smoke.mjs (end to end), theme-shots.mjs (screenshots)
 tools/                    envelope textures, promo videos and posters
 ```
@@ -71,6 +74,7 @@ The site is a Netlify project. Connect the GitHub repo in Netlify (Project confi
 | `RESEND_API_KEY`, `ALERT_EMAIL`, `ALERT_FROM` | No | Same alerts by email |
 | `ANTHROPIC_API_KEY` | No | "Write it with Claude" in the studio |
 | `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET`, `CANVA_FOLDER_ID` | No | Designer templates from Canva |
+| `CANVA_SITE_HOSTS` | No | Extra hosts allowed for custom designs, comma separated (for example `invite.reefq.com`). `*.canva.site` is always allowed |
 | `SITE_URL` | No | Public URL if different from Netlify's (for example `https://reefq.com`) |
 
 The studio's **Settings → Integrations** card shows which of these are on.
@@ -97,7 +101,18 @@ The designer saves templates in one Canva folder; they appear on the landing pag
 2. Set `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET` and `CANVA_FOLDER_ID` (the id in the folder's URL).
 3. In the studio: **Settings → Connect Canva** once, then **Sync now**.
 
-Template names: `Theme · Name | tags`, for example `Sidi Bou Said · Arch photo | floral, blue`. Add `[anim]` to also export a video and `[draft]` to keep it hidden. Page 1 shows on the site; portrait 4:5 works best.
+Template names: `Theme · Name | tags`, for example `Sidi Bou Said · Arch photo | floral, blue`. Add `[anim]` to also export a video and `[draft]` to keep it hidden. Page 1 shows on the site; portrait 4:5 works best. Canva website designs only export as PDF, so the sync uses their thumbnail instead; a design that cannot be read is listed in Settings and never blocks the others.
+
+### Custom designs (a Canva website per couple)
+
+An invitation's design is either a Reefq theme or a custom design (**Design → Look & feel → Custom design**). Everything else (guest list, personal links, delivery, replies, tracking) is the same.
+
+1. The designer builds the invitation as a Canva website, links its RSVP button to `#rsvp` (any link containing "rsvp" works), and publishes it to any `*.my.canva.site` address.
+2. Paste that address in the studio and press **Mark published**. Reefq saves a copy of the page (`files` store, `sites/<id>/<ver>/`); its other files are copied the first time they are requested, which the studio preview does right away.
+3. Guests open the usual `/i/<id>?g=<guest id>`. They get our copy, on our address, with our title and link preview, the designer branding footer hidden, audio removed, and the Reefq bar ("Cher·e <guest>", "Confirmer ma présence"). Canva sites refuse to be framed (`X-Frame-Options: SAMEORIGIN`), which is why the page is copied rather than embedded.
+4. After edits in Canva, press **Refresh copy**. Changing the address puts the invitation back to "waiting for the designer".
+
+Replies: a personal link always answers with the name on the guest list. With **Replies only from personal links** (on by default for custom designs), the shared link and QR code can open the invitation but not reply. Opens are recorded per guest in the `opens` store and shown in **Guests & RSVPs**.
 
 ## Working on it
 
