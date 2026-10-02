@@ -19,3 +19,4 @@ When a request would break one of these, build the closest compliant alternative
 - Themes live in one list (`THEME_LIST` in engine.js) plus `netlify/lib/themes.mts`.
 - Never commit `.env`. Secrets and bank details live in Netlify environment variables only.
 - Run `npm test` and `npm run test:e2e` (with `npm run dev` running) before pushing.
+- Outside agents (Cursor etc.) follow `AGENTS.md`; their branches must pass `npm run guard`, which fails when a UI change touches functionality. Owner exceptions: `GUARD_ALLOW=path,path npm run guard`.

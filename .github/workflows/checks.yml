@@ -1,0 +1,23 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --omit=dev
+      - run: npm test
+      # UI branches and pull requests must not touch functionality (main itself is the owner's branch)
+      - name: guard
+        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
+        run: node tools/guard.mjs origin/${{ github.base_ref || 'main' }}

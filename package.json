@@ -7,7 +7,8 @@
     "test": "node --experimental-strip-types --no-warnings test/canva.test.mjs && node --experimental-strip-types --no-warnings test/notify.test.mjs && node --experimental-strip-types --no-warnings test/sites.test.mjs",
     "test:e2e": "node test/smoke.mjs",
     "promo": "python3 tools/promo/build_promo.py && node tools/promo/render_posters.cjs && node tools/promo/render_videos.cjs",
-    "assets": "python3 tools/render_assets.py"
+    "assets": "python3 tools/render_assets.py",
+    "guard": "node tools/guard.mjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.1",
