@@ -433,10 +433,10 @@ async function clientView(o: any) {
 }
 
 /* ---------------- the couple's own invitation (client space) ---------------- */
-const BRIEF_FIELDS = ['theme', 'lang', 'eventType', 'a', 'b', 'date', 'time', 'city', 'venue', 'maps', 'dress', 'rsvpBy', 'maxGuests', 'opening', 'message', 'story', 'hosts', 'closing', 'show', 'nameOrder'];
+const BRIEF_FIELDS = ['theme', 'lang', 'eventType', 'a', 'b', 'date', 'time', 'city', 'venue', 'maps', 'dress', 'rsvpBy', 'maxGuests', 'opening', 'openings', 'message', 'story', 'hosts', 'closing', 'show', 'nameOrder'];
 const SECTIONS = ['countdown', 'program', 'story', 'rsvp'];
 const pick = (o: any, keys: string[]) => Object.fromEntries(keys.filter(k => o[k] !== undefined).map(k => [k, o[k]]));
-const LANGS = ['fr', 'ar', 'en'], EVENT_TYPES = ['wedding', 'engagement', 'henna', 'contract'], OPENING_IDS = ['none', 'bismillah', 'verse'];
+const LANGS = ['fr', 'ar', 'en'], EVENT_TYPES = ['wedding', 'engagement', 'henna', 'contract'], OPENING_IDS = ['none', 'bismillah', 'khaliq', 'verse', 'dhariyat', 'naba', 'yasin', 'furqan', 'hamd', 'baraka'];
 const dateStr = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '';
 const tri = (v: any, n: number) => Object.fromEntries(LANGS.map(l => [l, clampStr(v && v[l], n).trim()]));
 
@@ -446,7 +446,7 @@ async function orderInvitation(o: any) {
   const [a, bn] = String(o.names || '').split(/\s*(?:&|et|\+|و)\s*/i);
   const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'en' ? 'en' : 'ar', /* most couples are Tunisian and want the Arabic invitation, even when ordering from the French page; the couple can change it */
     a: { name: (a || o.names || '').trim(), ar: '' }, b: { name: (bn || '').trim() || '—', ar: '' }, date: o.date || '', time: '20:00', city: o.city || '',
-    venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code,
+    venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, openings: ['bismillah'], photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code,
     ...(o.site ? { designSource: 'canva', siteTemplate: o.site } : {}) };
   const saved = await saveInvitation(slug(o.names) + '-' + id(4), inv, { locked: o.status !== 'paid' });
   o.inviteId = saved.id; await saveOrder(o);
@@ -470,7 +470,9 @@ async function clientBrief(req: Request, context: Context, o: any) {
   if (!o.site && THEME_IDS.includes(b.theme)) inv.theme = b.theme;
   if (LANGS.includes(b.lang)) inv.lang = b.lang;
   if (EVENT_TYPES.includes(b.eventType)) inv.eventType = b.eventType;
-  if (OPENING_IDS.includes(b.opening)) inv.opening = b.opening;
+  /* opening lines: several ids (ticked boxes); the engine shows them in its own fixed order */
+  if (Array.isArray(b.openings)) { inv.openings = OPENING_IDS.filter(id => id !== 'none' && b.openings.includes(id)); delete inv.opening; }
+  else if (OPENING_IDS.includes(b.opening)) inv.opening = b.opening;
   inv.a = name(b.a, inv.a); inv.b = name(b.b, inv.b);
   inv.date = dateStr(b.date) || inv.date; inv.rsvpBy = dateStr(b.rsvpBy);
   inv.time = /^\d{2}:\d{2}$/.test(String(b.time || '')) ? b.time : inv.time;

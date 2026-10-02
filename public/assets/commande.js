@@ -61,6 +61,8 @@ var B=null,G=[],dirty=false,briefOpen=null,pvReady=false,pvShown=false;
 function opts(list,cur){return list.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===cur?' selected':'')+'>'+esc(x.label)+'</option>'}).join('')}
 /* the ready-made text in use; an empty text under the parents' or families' names is the automatic continuation */
 function toneOf(ev,msg,hosts){if(!msg||!(msg.fr||msg.ar))return hosts?'hosts':'classic';var t=RW.TONES.filter(function(x){var g=RW.get(ev,x.id);return x.id!=='hosts'&&(msg.fr?g.fr===msg.fr:g.ar===msg.ar)})[0];return t?t.id:'custom'}
+/* each tone shows the start of its Arabic text, so the couple picks by what they will read */
+function toneLabel(ev,x){var a=RW.get(ev,x.id).ar;return x.label.fr+(a?' · ⁧'+a.split(' ').slice(0,5).join(' ')+'…⁩':'')}
 function closeOf(c){if(!c||!(c.ar||c.fr||c.en))return 'none';var k=RW.CLOSINGS.filter(function(x){return x.text&&(c.ar?x.text.ar===c.ar:x.text.fr===c.fr)})[0];return k?k.id:'custom'}
 /* who invites: labels follow the choice (parents or families), the mothers option only makes sense for parents */
 function hostsUi(){var mode=$('#b-hmode').value,fam=mode==='families';$('#b-hosts').hidden=mode==='none';$('#b-hmothers-wrap').hidden=mode!=='parents';
@@ -91,9 +93,11 @@ function renderBrief(o){
   var cl=closeOf(B.closing);B.closingCustom=cl==='custom'?B.closing:null;
   $('#b-close').innerHTML=opts(RW.CLOSINGS.map(function(x){return{id:x.id,label:x.text?'⁧'+x.text.ar+'⁩ · '+x.text.fr:'Aucune'}}).concat(cl==='custom'?[{id:'custom',label:'Phrase actuelle'}]:[]),cl);
   document.querySelectorAll('#b-form [data-show]').forEach(function(c){c.checked=!(B.show&&B.show[c.dataset.show]===false)});
-  $('#b-open').innerHTML=opts(RW.OPENINGS.map(function(x){return{id:x.id,label:x.label.fr}}),B.opening||'none');
+  /* openings: several boxes; a new invitation starts with the Basmala */
+  var ops=Array.isArray(B.openings)?B.openings:B.opening?(B.opening==='none'?[]:[B.opening]):['bismillah'];
+  $('#b-opens').innerHTML=RW.OPENINGS.map(function(x){return '<label class="chk"><input type="checkbox" data-open="'+x.id+'"'+(ops.indexOf(x.id)>=0?' checked':'')+'><span>'+esc(x.label.fr)+' <bdi lang="ar" dir="rtl" class="ar">'+esc(x.ar)+'</bdi></span></label>'}).join('');
   var tone=toneOf(ev,B.message,hasHosts);
-  $('#b-tone').innerHTML=opts(RW.TONES.map(function(x){return{id:x.id,label:x.label.fr}}).concat(tone==='custom'?[{id:'custom',label:'Texte personnalisé'}]:[]),tone);
+  $('#b-tone').innerHTML=opts(RW.TONES.map(function(x){return{id:x.id,label:toneLabel(ev,x)}}).concat(tone==='custom'?[{id:'custom',label:'Texte personnalisé'}]:[]),tone);
   var m=B.message&&(B.message.fr||B.message.ar)?B.message:RW.get(ev,tone);$('#b-msg-fr').value=m.fr||'';$('#b-msg-ar').value=m.ar||'';$('#b-msg-en').value=m.en||'';
   $('#b-story').value=(B.story&&(B.story[B.lang||'fr']||B.story.fr))||'';
   $('#b-theme-wrap').hidden=!!o.custom;$('#b-custom-note').hidden=!o.custom;
@@ -110,7 +114,7 @@ function setBriefOpen(on,o){o=o||O;briefOpen=on;$('#b-form').hidden=!on;$('#b-le
 $('#b-toggle').onclick=function(){setBriefOpen(true);$('#b-form').scrollIntoView({behavior:'smooth',block:'start'})};
 function collect(){
   var lang=$('#b-lang').value,story={};story[lang]=$('#b-story').value.trim();
-  return {theme:$('#b-theme').value,lang:lang,eventType:$('#b-event').value,opening:$('#b-open').value,
+  return {theme:$('#b-theme').value,lang:lang,eventType:$('#b-event').value,openings:[].slice.call(document.querySelectorAll('#b-opens [data-open]')).filter(function(c){return c.checked}).map(function(c){return c.dataset.open}),
     a:{name:$('#b-a').value.trim(),ar:$('#b-a-ar').value.trim()},b:{name:$('#b-b').value.trim(),ar:$('#b-b-ar').value.trim()},
     date:$('#b-date').value,time:$('#b-time').value,city:$('#b-city').value.trim(),venue:$('#b-venue').value.trim(),maps:$('#b-maps').value.trim(),
     dress:$('#b-dress').value.trim(),rsvpBy:$('#b-rsvpby').value,maxGuests:+$('#b-seats').value||2,
@@ -126,13 +130,14 @@ $('#b-form').addEventListener('change',function(e){
   if(e.target.id==='b-hmode'){hostsUi();var tn=$('#b-tone').value,on=e.target.value!=='none';
     if(on&&tn!=='custom'&&tn!=='hosts')$('#b-tone').value='hosts';else if(!on&&tn==='hosts')$('#b-tone').value='classic';
     if($('#b-tone').value!==tn)e={target:$('#b-tone')}}
+  if(e.target.id==='b-event')[].forEach.call($('#b-tone').options,function(op){var x=RW.TONES.filter(function(t){return t.id===op.value})[0];if(x)op.textContent=toneLabel(e.target.value,x)});
   if(e.target.id==='b-tone'||e.target.id==='b-event'){var t=$('#b-tone').value;if(t!=='custom'){var m=RW.get($('#b-event').value,t);$('#b-msg-fr').value=m.fr;$('#b-msg-ar').value=m.ar;$('#b-msg-en').value=m.en}}
   touchB()});
 /* preview: the same engine as the guests', in a phone-sized frame, refreshed as they type */
 var pvT=null;
 function preview(open){if(!pvShown)return;clearTimeout(pvT);pvT=setTimeout(function(){
   var d=collect(),f=$('#b-frame');if(!pvReady||!f.contentWindow)return;
-  var inv={id:'apercu',theme:O&&O.custom?'reefq':d.theme,lang:d.lang,eventType:d.eventType,opening:d.opening,a:d.a,b:d.b,date:d.date,time:d.time,city:d.city,venue:d.venue,maps:d.maps,dress:d.dress,rsvpBy:d.rsvpBy,maxGuests:d.maxGuests,message:d.message,story:d.story,hosts:d.hosts,closing:d.closing,nameOrder:d.nameOrder,show:d.show,events:[],photos:[]};
+  var inv={id:'apercu',theme:O&&O.custom?'reefq':d.theme,lang:d.lang,eventType:d.eventType,openings:d.openings,a:d.a,b:d.b,date:d.date,time:d.time,city:d.city,venue:d.venue,maps:d.maps,dress:d.dress,rsvpBy:d.rsvpBy,maxGuests:d.maxGuests,message:d.message,story:d.story,hosts:d.hosts,closing:d.closing,nameOrder:d.nameOrder,show:d.show,events:[],photos:[]};
   var g=G[0]?{id:'g',name:G[0].name,seats:G[0].seats}:null;
   f.contentWindow.postMessage({type:'rq-preview',inv:inv,guest:g,open:!!open},location.origin)},250)}
 addEventListener('message',function(e){if(e.origin===location.origin&&e.data&&e.data.type==='rq-preview-ready'){pvReady=true;preview()}});

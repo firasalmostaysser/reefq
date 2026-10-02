@@ -27,7 +27,7 @@ If `npm run guard` fails, undo the change it names. Do not edit the guard, the t
 - Anything in `netlify/` (API, orders, payments, guests, RSVP, Canva sync, invitation pages), except adding a new theme id to `netlify/lib/themes.mts`
 - `netlify.toml`, `package.json`, `package-lock.json`, `.env*`, `test/`, `tools/guard.mjs`, `.github/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`
 - Logic files: `public/assets/commande.js`, `invite.js`, `analytics.js`, `site-bar.js`, `wording-templates.js`, `vendor/`, `public/studio/studio.js`, `public/apercu.html` (client-space preview), `tools/seed.mjs`
-- In `engine.js`: `esc`, `rng`, `hash`, `pad`, `loc`, `fmtDate`, `namesOf`, `initials`, `waLink`, `mapsHref`, `rsvpHtml`, `wireRsvp`, `renderRsvp`, `envOpts`, `couple`, `pairText`, `hostsOf`, `hostsLines`, `hostsMsg` (name order and invitation grammar), and the keys of `window.ReefqInvite`. You may restyle the markup of `pairHtml` and `hostsHtml` but keep their text.
+- In `engine.js`: `esc`, `rng`, `hash`, `pad`, `loc`, `fmtDate`, `namesOf`, `initials`, `waLink`, `mapsHref`, `rsvpHtml`, `wireRsvp`, `renderRsvp`, `envOpts`, `couple`, `pairText`, `hostsOf`, `hostsLines`, `hostsMsg`, `openingsOf` (name order, invitation grammar, opening lines), and the keys of `window.ReefqInvite`. You may restyle the markup of `pairHtml` and `hostsHtml` but keep their text.
 - Existing theme ids (`reefq`, `zitouna`, `yasmine`, `layl`, `sidi`, `kairouan`, `oldmoney`, `sauge`, `bordeaux`, `sahara`): saved invitations use them. Restyle a theme freely, but never rename or remove its id. A new theme goes in both `THEME_LIST` (engine.js) and `THEME_IDS` (netlify/lib/themes.mts).
 
 ## Hooks: keep them exactly
@@ -54,6 +54,7 @@ Do not remove or rename buttons, forms and inputs; keep `type="submit"` buttons 
 ## Arabic and RTL (most couples are Tunisian and read the invitation in Arabic)
 
 - Every Arabic input, textarea and text block has `dir="rtl" lang="ar"`. Arabic inside a French or English sentence goes in `<bdi lang="ar" dir="rtl">…</bdi>`; inside an `<option>` (no HTML allowed) wrap it with U+2067 … U+2069.
+- Quran verses and opening lines live in `OPENING_LIST` (engine.js): never edit, shorten or re-diacritize them; restyle `.rq-openings`, `.rq-basmala`, `.rq-ayah` freely.
 - Never retype or "fix" Arabic wording in code: texts live in `wording-templates.js` and the grammar in the frozen engine functions above (verb agreement يتشرّف / تتشرّف, نجله / نجلهما / كريمتهما / ابنيهما, "و" attached to the second name). Report wording problems to the owner instead.
 - The groom's name comes first by default (`nameOrder`); `a` is the bride and `b` the groom in the data.
 - Check every screen you change in Arabic at 360 px wide: the invitation (language switch عربي) and the client space fields.

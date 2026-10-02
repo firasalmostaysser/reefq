@@ -247,6 +247,12 @@
 .rq-inv[data-t=layl] .rq-err{color:#f2a99c}
 
 /* ---- Opening line: basmala or verse, top of the first sheet, same in every language ---- */
+/* several openings (Basmala, verses, phrases) stack with one divider under the group */
+.rq-openings{margin:0 auto 18px}
+.rq-openings::after{content:"";display:block;width:36px;height:1px;margin:14px auto 0;background:var(--foil-solid);opacity:.55}
+.rq-openings .rq-opening{margin:0 auto 12px}
+.rq-openings .rq-opening:last-child{margin-bottom:0}
+.rq-openings .rq-opening::after{display:none}
 .rq-opening{margin:0 auto 18px;max-width:32ch}
 .rq-opening::after{content:"";display:block;width:36px;height:1px;margin:14px auto 0;background:var(--foil-solid);opacity:.55}
 .rq-basmala{margin:0;font-family:'Aref Ruqaa','Amiri',serif;font-size:23px;line-height:1.6;font-weight:400;color:var(--accent);letter-spacing:0}

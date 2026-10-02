@@ -68,7 +68,7 @@ assert.equal((await s.request.get(`${BASE}/api/public/invitations/${ord.inviteId
 await s.click('#od-invite'); await s.waitForFunction(() => document.querySelector('#k-a-name').value === 'Nour');
 assert.equal(await s.inputValue('#k-venue'), 'Dar Sfax');
 // wording comes from the ready-made texts (no AI): occasion + tone fill the three languages
-await s.selectOption('#w-tone', 'families'); await s.selectOption('#w-open', 'bismillah'); await s.click('#w-use');
+await s.selectOption('#w-tone', 'families'); await s.check('[data-wo="verse"]'); await s.click('#w-use');
 // the couple already chose a text in their client space, so the studio asks before replacing it
 await s.waitForSelector('#dlg[open]'); await s.click('#dlg-ok');
 await s.waitForFunction(() => document.querySelector('#k-msg-fr').value.length > 20 && document.querySelector('#k-msg-ar').value.length > 10);
@@ -88,7 +88,7 @@ await shot(c, '4-client-space');
 // 5. The guest opens their personal link and replies
 const inv = invUrl.split('/i/')[1];
 const saved = await s.evaluate(async id => (await (await fetch('/api/invitations/' + id)).json()), inv);
-assert.equal(saved.opening, 'bismillah');
+assert.deepEqual(saved.openings, ['bismillah', 'verse'], 'Basmala from the order, verse ticked in the studio');
 assert.equal(saved.guests.length, 3); assert.equal(saved.theme, 'zitouna');
 const gid = saved.guests.find(x => x.name === 'Famille Karray').id;
 const g = await page(390, 844);

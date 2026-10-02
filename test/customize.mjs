@@ -76,6 +76,19 @@ assert.equal(await s.isChecked('#k-hmothers'), false); assert.equal(await s.inpu
 await s.check('#k-hmothers'); await s.waitForFunction(() => document.querySelector('#status').textContent === 'Saved', null, { timeout: 8000 });
 assert.equal((await sapi(`/api/invitations/${iid}`)).body.hosts.mothers, true);
 
+step('openings: Basmala on by default, several ticked show in the fixed order; two families as عائلتا; Tunisian dialect tone');
+assert.deepEqual((await sapi(`/api/invitations/${iid}`)).body.openings, ['bismillah']);
+await c.reload(); await c.waitForSelector('#b-toggle:not([hidden])'); await c.click('#b-toggle');
+await c.check('[data-open="naba"]'); await c.check('[data-open="khaliq"]');
+await c.selectOption('#b-hmode', 'families'); await c.fill('#b-hg-ar', 'بن صالح'); await c.fill('#b-hb-ar', 'الطرابلسي'); await c.fill('#b-hg-fr', 'Ben Salah'); await c.fill('#b-hb-fr', 'Trabelsi');
+await csave(c);
+assert.deepEqual((await sapi(`/api/invitations/${iid}`)).body.openings, ['bismillah', 'khaliq', 'naba']);
+await g.reload(); await g.click('.rq3-seal'); await g.locator('.rq-openings').waitFor({ timeout: 8000 });
+const heroO = (await g.locator('.hero').innerText()).replace(/\s+/g, ' ');
+assert.match(heroO, /بسم الله الرحمن الرحيم باسم خالق الحبّ ﴿ وَخَلَقْنَاكُمْ أَزْوَاجًا ﴾ النبأ: ٨ تتشرّف عائلتا بن صالح والطرابلسي بدعوتكم لحضور حفل زفاف ابنيهما سامي ونور/);
+await c.click('#b-toggle'); await c.selectOption('#b-hmode', 'none'); await c.selectOption('#b-tone', 'dialect'); await csave(c);
+assert.equal((await sapi(`/api/invitations/${iid}`)).body.message.ar, 'بكلّ فرحة، يشرّفنا نستدعيوكم باش تحضرو معانا عرس');
+
 await sapi(`/api/orders/${code}`, { method: 'DELETE' }); await sapi(`/api/invitations/${iid}`, { method: 'DELETE' });
 assert.deepEqual(errs, []);
 console.log('Customisation passed:', code, iid);

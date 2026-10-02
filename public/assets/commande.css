@@ -78,3 +78,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .chk input{width:18px;height:18px;accent-color:var(--accent);flex:none}
 .chks{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin-top:12px}
 .chks .chk{min-height:32px}
+.opens{margin-top:12px}
+.opens-list{display:grid;gap:2px}
+.opens-list .chk{align-self:auto;min-height:36px}
+.opens-list .chk>span{display:flex;flex-direction:column;min-width:0}
+.opens-list .ar{display:block;font-family:Amiri,serif;color:var(--muted);font-size:15px;line-height:1.5;text-align:start}

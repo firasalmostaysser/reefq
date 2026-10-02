@@ -8,22 +8,38 @@ var T={
  ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'إلى',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',personal:'للرد، افتحوا الرابط الشخصي الذي وصلكم.',confirm:'تأكيد الحضور',at:'على الساعة',
   ev:{henna:'ليلة الحنّة',contract:'عقد القران',ceremony:'حفل الزفاف',dinner:'عشاء الزفاف',outia:'الوطية',brunch:'فطور الوداع'}}
 };
-/* Optional opening line at the top of the invitation (inv.opening: 'none' | 'bismillah' | 'verse'). Texts mirror wording-templates.js. */
-var OPENINGS={
-  bismillah:{ar:'بسم الله الرحمن الرحيم'},
-  verse:{text:{
-      ar:'﴿ وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ﴾',
-      fr:'Et parmi Ses signes, Il vous a créé des épouses issues de vous-mêmes, afin que vous trouviez auprès d\'elles la sérénité, et Il a mis entre vous affection et miséricorde.',
-      en:'And among His signs is that He created for you spouses from among yourselves, that you may find tranquillity in them, and He placed between you affection and mercy.'},
-    ref:{ar:'الروم: ٢١',fr:'Sourate Ar-Rûm, 21',en:'Surah Ar-Rum, 21'}}
-};
-function openingHtml(kind,L){
-  if(kind==='bismillah')return '<div class="rq-opening"><p class="rq-basmala" lang="ar" dir="rtl">'+esc(OPENINGS.bismillah.ar)+'</p></div>';
-  if(kind!=='verse')return '';
-  var v=OPENINGS.verse;
-  return '<figure class="rq-opening rq-verse"><blockquote><p class="rq-ayah" lang="ar" dir="rtl">'+esc(v.text.ar)+'</p>'+(L!=='ar'?'<p class="rq-ayah-tr">'+esc(v.text[L]||v.text.fr)+'</p>':'')+'</blockquote>'+
-    '<figcaption class="rq-ayah-ref"'+(L==='ar'?' lang="ar"':'')+'>'+esc(v.ref[L]||v.ref.fr)+'</figcaption></figure>';
-}
+/* Opening lines at the top of the invitation. Several can be chosen; they always show in this order (inv.openings = ids;
+   older invitations hold one id in inv.opening). Verses are quoted exactly with their reference; the meaning shows under the
+   Arabic when the invitation is read in French or English. The forms list the same ids and order (wording-templates.js). */
+var OPENING_LIST=[
+  {id:'bismillah',ar:'بسم الله الرحمن الرحيم'},
+  {id:'khaliq',ar:'باسم خالق الحبّ',fr:'Au nom du Créateur de l\'amour',en:'In the name of the Creator of love'},
+  {id:'verse',verse:true,ar:'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً',
+    fr:'Et parmi Ses signes, Il vous a créé des épouses issues de vous-mêmes, afin que vous trouviez auprès d\'elles la sérénité, et Il a mis entre vous affection et miséricorde.',
+    en:'And among His signs is that He created for you spouses from among yourselves, that you may find tranquillity in them, and He placed between you affection and mercy.',
+    ref:{ar:'الروم: ٢١',fr:'Sourate Ar-Rûm, 21',en:'Surah Ar-Rum, 21'}},
+  {id:'dhariyat',verse:true,ar:'وَمِن كُلِّ شَيْءٍ خَلَقْنَا زَوْجَيْنِ لَعَلَّكُمْ تَذَكَّرُونَ',
+    fr:'Et de toute chose Nous avons créé deux époux, afin que vous vous souveniez.',en:'And of all things We created pairs, that perhaps you will remember.',
+    ref:{ar:'الذاريات: ٤٩',fr:'Sourate Adh-Dhâriyât, 49',en:'Surah Adh-Dhariyat, 49'}},
+  {id:'naba',verse:true,ar:'وَخَلَقْنَاكُمْ أَزْوَاجًا',fr:'Et Nous vous avons créés en couples.',en:'And We created you in pairs.',
+    ref:{ar:'النبأ: ٨',fr:'Sourate An-Naba\', 8',en:'Surah An-Naba, 8'}},
+  {id:'yasin',verse:true,ar:'سُبْحَانَ الَّذِي خَلَقَ الْأَزْوَاجَ كُلَّهَا',fr:'Gloire à Celui qui a créé tous les couples.',en:'Exalted is He who created all pairs.',
+    ref:{ar:'يس: ٣٦',fr:'Sourate Yâ-Sîn, 36',en:'Surah Ya-Sin, 36'}},
+  {id:'furqan',verse:true,ar:'رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا',
+    fr:'Seigneur, fais que nos épouses et nos descendants soient la joie de nos yeux, et fais de nous un modèle pour les pieux.',
+    en:'Our Lord, grant us from our spouses and offspring comfort to our eyes, and make us a leader for the righteous.',
+    ref:{ar:'الفرقان: ٧٤',fr:'Sourate Al-Furqân, 74',en:'Surah Al-Furqan, 74'}},
+  {id:'hamd',ar:'الحمد لله الذي بنعمته تتمّ الصالحات',fr:'Louange à Allah, par la grâce de qui s\'accomplissent les bonnes choses',en:'Praise be to Allah, by whose grace good things are fulfilled'},
+  {id:'baraka',ar:'على بركة الله',fr:'Avec la bénédiction d\'Allah',en:'With the blessing of Allah'}
+];
+var OPENINGS={};OPENING_LIST.forEach(function(o){OPENINGS[o.id]=o});
+function openingsOf(inv){var a=Array.isArray(inv.openings)?inv.openings:inv.opening&&inv.opening!=='none'?[inv.opening]:[];
+  return OPENING_LIST.filter(function(o){return a.indexOf(o.id)>=0})}
+function openingHtml(inv,L){var list=openingsOf(inv);if(!list.length)return'';
+  return '<div class="rq-openings">'+list.map(function(o){
+    if(o.verse)return '<figure class="rq-opening rq-verse"><blockquote><p class="rq-ayah" lang="ar" dir="rtl">﴿ '+esc(o.ar)+' ﴾</p>'+(L!=='ar'?'<p class="rq-ayah-tr">'+esc(o[L]||o.fr)+'</p>':'')+'</blockquote>'+
+      '<figcaption class="rq-ayah-ref"'+(L==='ar'?' lang="ar"':'')+'>'+esc(o.ref[L]||o.ref.fr)+'</figcaption></figure>';
+    return '<div class="rq-opening"><p class="rq-basmala" lang="ar" dir="rtl">'+esc(o.ar)+'</p>'+(L!=='ar'&&o[L]?'<p class="rq-ayah-tr">'+esc(o[L])+'</p>':'')+'</div>'}).join('')+'</div>'}
 var RQA={pocket:'/assets/env/pocket.webp',flap:'/assets/env/flap.webp',flapshadow:'/assets/env/flapshadow.webp',interior:'/assets/env/interior.webp',card:'/assets/env/card.webp',linen:'/assets/env/linen.webp'};
 var LOGO='/assets/logo-light.webp';
 var LOGO_DARK='/assets/logo-dark.webp';
@@ -209,7 +225,7 @@ function hostsOf(inv){var h=inv.hosts||{};if(h.mode!=='parents'&&h.mode!=='famil
     if(fr||ar)s.push({side:x[0],fr:fr||ar,ar:ar||fr})});
   return s.length?{fam:fam,mothers:h.mothers!==false,s:s}:null}
 function hostsLines(inv,L){var h=hostsOf(inv);if(!h)return null;var s=h.s,m=h.mothers;
-  if(L==='ar')return{lead:h.fam?'تتشرّف':'يتشرّف',lines:s.map(function(x,i){return (i?'و':'')+(h.fam?'عائلة ':'السيد ')+x.ar+(!h.fam&&m?' وحرمه':'')})};
+  if(L==='ar')return{lead:h.fam?'تتشرّف':'يتشرّف',lines:h.fam&&s.length>1?['عائلتا '+s[0].ar+' و'+s[1].ar]:s.map(function(x,i){return (i?'و':'')+(h.fam?'عائلة ':'السيد ')+x.ar+(!h.fam&&m?' وحرمه':'')})};
   if(L==='en')return{lead:'',lines:h.fam?[s.length>1?'The '+s[0].fr+' and '+s[1].fr+' families':'The '+s[0].fr+' family']:s.map(function(x,i){return (i?'and ':'')+(m?'Mr and Mrs ':'Mr ')+x.fr})};
   return{lead:'',lines:h.fam?(s.length>1?['Les familles '+s[0].fr,'et '+s[1].fr]:['La famille '+s[0].fr]):s.map(function(x,i){return (i?'et ':'')+(m?'Monsieur et Madame ':'Monsieur ')+x.fr})}}
 function hostsMsg(inv,L){var h=hostsOf(inv);if(!h)return'';var ev=HOST_EV[inv.eventType]||HOST_EV.wedding,two=h.s.length>1,son=h.s[0].side==='g';
@@ -306,7 +322,7 @@ function render(root,inv,opts){
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+openingHtml(inv.opening,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+openingHtml(inv,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
