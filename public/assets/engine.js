@@ -236,7 +236,8 @@ function hostsMsg(inv,L){var h=hostsOf(inv);if(!h)return'';var ev=HOST_EV[inv.ev
 function hostsHtml(inv,L){var h=hostsLines(inv,L);if(!h)return'';
   return '<div class="rq-hosts">'+(h.lead?'<p class="rq-hosts-lead">'+esc(h.lead)+'</p>':'')+h.lines.map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>'}
 function waLink(inv,r){
-  var num=String(inv.whatsapp||'').replace(/[^0-9]/g,'');if(!num)return'';
+  /* the couple's number in international form: a Tunisian 8-digit number gets 216, 00… becomes … */
+  var num=String(inv.whatsapp||'').replace(/[^0-9]/g,'');if(num.indexOf('00')===0)num=num.slice(2);if(num.length===8)num='216'+num;if(!num)return'';
   var n=namesOf(inv,'fr');
   var txt='RSVP · '+n[0]+' & '+n[1]+'\n'+r.name+' : '+(r.attending?'Présent(e) ✓':'Absent(e)')+(r.attending?' · '+r.guests+' pers.':'')+(r.dietary?'\nRégime : '+r.dietary:'')+(r.message?'\n« '+r.message+' »':'');
   return 'https://wa.me/'+num+'?text='+encodeURIComponent(txt);

@@ -28,6 +28,16 @@ export const slug = (s: string) => String(s || '').normalize('NFD').replace(/[̀
 /* `a` is the bride, `b` the groom; the groom's name comes first unless the couple chose otherwise (same rule as engine.js) */
 export const coupleNames = (i: any): string[] => { const a = i?.a?.name || '', b = i?.b?.name || ''; return i?.nameOrder === 'bride' ? [a, b] : [b, a]; };
 
+/* any typed phone → international form: "98 765 432" → +21698765432, "0033 6…" → +336…, "+216…" kept (same rule as public/assets/phone.js) */
+export function intlPhone(raw: unknown): string {
+  const s = String(raw == null ? '' : raw).trim(), d = s.replace(/[^0-9]/g, '');
+  if (!d) return '';
+  if (s.startsWith('+')) return '+' + d;
+  if (d.startsWith('00')) return '+' + d.slice(2);
+  if (d.length === 8) return '+216' + d;
+  return d.length > 8 ? '+' + d : s.slice(0, 30);
+}
+
 export const clampStr = (v: unknown, n: number) => String(v == null ? '' : v).slice(0, n);
 
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));

@@ -83,3 +83,4 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .opens-list .chk{align-self:auto;min-height:36px}
 .opens-list .chk>span{display:flex;flex-direction:column;min-width:0}
 .opens-list .ar{display:block;font-family:Amiri,serif;color:var(--muted);font-size:15px;line-height:1.5;text-align:start}
+.glist li.gedit .ph{flex:1 1 230px}

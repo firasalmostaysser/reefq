@@ -9,12 +9,12 @@ var DEMO={id:'demo',theme:'reefq',eventType:'wedding',lang:'fr',a:{name:'Yasmine
   message:{fr:'',ar:'',en:''},rsvpBy:'2027-05-20',maxGuests:4};
 /* Words the page builds in script (French first); the page copy itself comes from landing-i18n.js. */
 var UI={
-  fr:{title:'Reefq · Invitations digitales',guest:'Famille Ben Salah',badge:'Démo',missing:'Indiquez vos prénoms et votre numéro WhatsApp.',failed:'Commande non envoyée : ',try_:'Essayer',live:'Voir en direct',sur:'Sur mesure',cards:'Cartes',close:'Fermer',themes:'Thèmes',lang:'Langue',
+  fr:{title:'Reefq · Invitations digitales',guest:'Famille Ben Salah',badge:'Démo',missing:'Indiquez vos prénoms et votre numéro WhatsApp.',badphone:'Vérifiez le numéro WhatsApp (8 chiffres pour la Tunisie).',failed:'Commande non envoyée : ',try_:'Essayer',live:'Voir en direct',sur:'Sur mesure',cards:'Cartes',close:'Fermer',themes:'Thèmes',lang:'Langue',
     ph:{'o-names':'Yasmine & Karim','o-city':'Tunis'},demo:{}},
-  ar:{title:'رِفق · دعوات أعراس رقمية',guest:'عائلة بن صالح',badge:'دعوة تجريبية',missing:'أدخلوا اسميكما ورقم الواتساب.',failed:'تعذّر إرسال الطلب: ',try_:'جرّبوه',live:'شاهدوه مباشرة',sur:'حسب الطلب',cards:'بطاقات',close:'إغلاق',themes:'التصاميم',lang:'اللغة',
+  ar:{title:'رِفق · دعوات أعراس رقمية',guest:'عائلة بن صالح',badge:'دعوة تجريبية',missing:'أدخلوا اسميكما ورقم الواتساب.',badphone:'ثبّتوا في رقم الواتساب (8 أرقام في تونس).',failed:'تعذّر إرسال الطلب: ',try_:'جرّبوه',live:'شاهدوه مباشرة',sur:'حسب الطلب',cards:'بطاقات',close:'إغلاق',themes:'التصاميم',lang:'اللغة',
     ph:{'o-names':'ياسمين وكريم','o-city':'تونس'},
     demo:{venue:'دار المرسى',city:'المرسى، تونس',dress:'لباس سهرة بألوان فاتحة',places:['بيت العائلة، سوسة','بلدية المرسى','دار المرسى، المرسى']}},
-  en:{title:'Reefq · Digital invitations',guest:'Ben Salah family',badge:'Demo',missing:'Please enter your first names and your WhatsApp number.',failed:'Order not sent: ',try_:'Try it',live:'See it live',sur:'Made to measure',cards:'Cards',close:'Close',themes:'Themes',lang:'Language',
+  en:{title:'Reefq · Digital invitations',guest:'Ben Salah family',badge:'Demo',missing:'Please enter your first names and your WhatsApp number.',badphone:'Please check the WhatsApp number (8 digits for Tunisia).',failed:'Order not sent: ',try_:'Try it',live:'See it live',sur:'Made to measure',cards:'Cards',close:'Close',themes:'Themes',lang:'Language',
     ph:{'o-names':'Yasmine & Karim','o-city':'Tunis'},
     demo:{city:'La Marsa, Tunis',dress:'Evening wear, light tones',places:['Family home, Sousse','La Marsa town hall','Dar El Marsa, La Marsa']}}
 };
@@ -128,9 +128,12 @@ var SRC=(function(){var q=new URLSearchParams(location.search),k='rq_src',v=null
   if(v)try{localStorage.setItem(k,JSON.stringify(v))}catch(x){}
   return v||{src:{},ref:''}})();
 if(SRC.ref){var rn=document.createElement('p');rn.className='small ref-note';rn.textContent=lang==='ar'?'🎁 هديّة من أحبابكم: تخفيض 10 % يُطبَّق تلقائيًا.':lang==='en'?'🎁 A gift from your friends: 10 % off, applied automatically.':'🎁 Un cadeau de vos proches : -10 %, appliqué automatiquement.';var sb=$('#of button[type=submit]');sb.parentNode.insertBefore(rn,sb)}
+/* the couple picks the country (Tunisia by default) and types only the number; we send +216… */
+if(window.ReefqPhone)ReefqPhone.attach($('#o-phone'));
 $('#of').onsubmit=function(e){e.preventDefault();
-  var names=$('#o-names').value.trim(),phone=$('#o-phone').value.trim(),err=$('#o-err'),btn=$('#of button[type=submit]');
-  if(!names||!phone){err.textContent=ui('missing');err.hidden=false;(names?$('#o-phone'):$('#o-names')).focus();return}err.hidden=true;
+  var names=$('#o-names').value.trim(),pin=$('#o-phone'),phone=window.ReefqPhone?ReefqPhone.value(pin):pin.value.trim(),err=$('#o-err'),btn=$('#of button[type=submit]');
+  if(!names||!pin.value.trim()){err.textContent=ui('missing');err.hidden=false;(names?pin:$('#o-names')).focus();return}
+  if(window.ReefqPhone&&!ReefqPhone.valid(pin)){err.textContent=ui('badphone');err.hidden=false;pin.focus();return}err.hidden=true;
   btn.disabled=true;
   fetch('/api/public/orders',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({names:names,date:$('#o-date').value,city:$('#o-city').value,guests:$('#o-guests').value,plan:$('#o-plan').value,theme:$('#o-theme').value,model:modelName(),site:siteSlug(),note:$('#o-note').value,phone:phone,lang:lang,src:SRC.src,ref:SRC.ref,website:$('#o-web').value})})
    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Erreur');return j})})

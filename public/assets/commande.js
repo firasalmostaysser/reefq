@@ -148,10 +148,11 @@ function renderGuests(){
   $('#b-gcount').textContent=G.length?G.length+' invitation(s) · '+seats+' place(s) réservée(s)':'Aucun invité pour l\'instant.';
   $('#b-glist').innerHTML=G.map(function(g,i){
     if(i===gEdit)return '<li class="gedit"><input id="ge-name" aria-label="Nom" value="'+esc(g.name)+'"><input id="ge-phone" aria-label="Numéro WhatsApp" inputmode="tel" placeholder="Numéro WhatsApp" value="'+esc(g.phone||'')+'"><input id="ge-seats" aria-label="Places" type="number" min="1" max="50" value="'+(+g.seats||1)+'"><span class="gbtns"><button class="btn sm primary" type="button" id="ge-ok">OK</button><button class="btn sm ghost" type="button" id="ge-cancel">Annuler</button></span></li>';
-    return '<li><span><b>'+esc(g.name)+'</b>'+(g.phone?' · '+esc(g.phone):'')+' · '+(+g.seats||1)+' pl.</span><span class="gbtns"><button class="btn sm ghost" type="button" data-edb="'+i+'" aria-label="Modifier '+esc(g.name)+'">Modifier</button><button class="btn sm ghost" type="button" data-rmb="'+i+'" aria-label="Retirer '+esc(g.name)+'">Retirer</button></span></li>'}).join('');
+    return '<li><span><b>'+esc(g.name)+'</b>'+(g.phone?' · '+esc(window.ReefqPhone?ReefqPhone.format(g.phone):g.phone):'')+' · '+(+g.seats||1)+' pl.</span><span class="gbtns"><button class="btn sm ghost" type="button" data-edb="'+i+'" aria-label="Modifier '+esc(g.name)+'">Modifier</button><button class="btn sm ghost" type="button" data-rmb="'+i+'" aria-label="Retirer '+esc(g.name)+'">Retirer</button></span></li>'}).join('');
   document.querySelectorAll('[data-rmb]').forEach(function(b){b.onclick=function(){G.splice(+b.dataset.rmb,1);gEdit=-1;renderGuests();touchB()}});
   document.querySelectorAll('[data-edb]').forEach(function(b){b.onclick=function(){gEdit=+b.dataset.edb;renderGuests();$('#ge-name').focus()}});
   if(gEdit>=0&&$('#ge-ok')){
+    if(window.ReefqPhone)ReefqPhone.attach($('#ge-phone'));
     $('#ge-ok').onclick=guestDone;$('#ge-cancel').onclick=function(){gEdit=-1;renderGuests()};
     $('#b-glist .gedit').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();guestDone()}else if(e.key==='Escape'){gEdit=-1;renderGuests()}};
   }
@@ -159,12 +160,13 @@ function renderGuests(){
 /* a guest is corrected in place (name, WhatsApp number, seats) and keeps their personal link */
 var gEdit=-1,kT=null;
 function guestDone(){
-  var nm=$('#ge-name').value.trim();if(!nm){$('#ge-name').focus();return false}
-  Object.assign(G[gEdit],{name:nm,phone:$('#ge-phone').value.trim(),seats:Math.min(50,Math.max(1,parseInt($('#ge-seats').value,10)||1))});
+  var nm=$('#ge-name').value.trim(),ph=$('#ge-phone');if(!nm){$('#ge-name').focus();return false}
+  if(ph.value.trim()&&window.ReefqPhone&&!ReefqPhone.valid(ph)){toast('Vérifiez le numéro (8 chiffres pour la Tunisie)');ph.focus();return false}
+  Object.assign(G[gEdit],{name:nm,phone:window.ReefqPhone?ReefqPhone.value(ph):ph.value.trim(),seats:Math.min(50,Math.max(1,parseInt($('#ge-seats').value,10)||1))});
   gEdit=-1;renderGuests();touchB();return true}
 $('#b-add').onclick=function(){
   var lines=$('#b-paste').value.split(/\n+/).map(function(l){return l.trim()}).filter(Boolean);if(!lines.length){$('#b-paste').focus();return}
-  lines.forEach(function(l){var p=l.split(/[,;\t]/).map(function(x){return x.trim()}),s=parseInt(p[2],10);if(p[0])G.push({name:p[0],phone:p[1]||'',seats:s>0?s:1})});
+  lines.forEach(function(l){var p=l.split(/[,;\t]/).map(function(x){return x.trim()}),s=parseInt(p[2],10);if(p[0])G.push({name:p[0],phone:p[1]&&window.ReefqPhone?ReefqPhone.normalize(p[1])||p[1]:p[1]||'',seats:s>0?s:1})});
   $('#b-paste').value='';renderGuests();touchB();toast(lines.length+' ligne(s) ajoutée(s). Pensez à enregistrer.');
 };
 $('#b-form').onsubmit=function(e){e.preventDefault();

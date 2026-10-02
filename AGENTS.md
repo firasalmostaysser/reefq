@@ -26,7 +26,7 @@ If `npm run guard` fails, undo the change it names. Do not edit the guard, the t
 
 - Anything in `netlify/` (API, orders, payments, guests, RSVP, Canva sync, invitation pages), except adding a new theme id to `netlify/lib/themes.mts`
 - `netlify.toml`, `package.json`, `package-lock.json`, `.env*`, `test/`, `tools/guard.mjs`, `.github/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`
-- Logic files: `public/assets/commande.js`, `invite.js`, `analytics.js`, `site-bar.js`, `wording-templates.js`, `vendor/`, `public/studio/studio.js`, `public/apercu.html` (client-space preview), `tools/seed.mjs`
+- Logic files: `public/assets/commande.js`, `invite.js`, `analytics.js`, `site-bar.js`, `wording-templates.js`, `phone.js`, `vendor/`, `public/studio/studio.js`, `public/apercu.html` (client-space preview), `tools/seed.mjs`
 - In `engine.js`: `esc`, `rng`, `hash`, `pad`, `loc`, `fmtDate`, `namesOf`, `initials`, `waLink`, `mapsHref`, `rsvpHtml`, `wireRsvp`, `renderRsvp`, `envOpts`, `couple`, `pairText`, `hostsOf`, `hostsLines`, `hostsMsg`, `openingsOf` (name order, invitation grammar, opening lines), and the keys of `window.ReefqInvite`. You may restyle the markup of `pairHtml` and `hostsHtml` but keep their text.
 - Existing theme ids (`reefq`, `zitouna`, `yasmine`, `layl`, `sidi`, `kairouan`, `oldmoney`, `sauge`, `bordeaux`, `sahara`): saved invitations use them. Restyle a theme freely, but never rename or remove its id. A new theme goes in both `THEME_LIST` (engine.js) and `THEME_IDS` (netlify/lib/themes.mts).
 

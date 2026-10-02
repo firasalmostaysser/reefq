@@ -1,5 +1,5 @@
 import type { Context, Config } from '@netlify/functions';
-import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError, coupleNames } from '../lib/util.mts';
+import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError, coupleNames, intlPhone } from '../lib/util.mts';
 import { invitations, rsvps, orders, files, opens, siteTemplates, listJSON, listEntries, rateLimit, isProduction, DATA_STORES } from '../lib/stores.mts';
 import { sendDigest } from '../lib/digest-run.mts';
 import { isStudio, login, logout } from '../lib/auth.mts';
@@ -266,7 +266,7 @@ function checkSiteUrl(raw: unknown) {
 /* `locked`: prepared by a couple who has not paid yet; guests cannot open it. Only the server sets or clears it (opts.locked, payment confirmed). */
 /* `base`: the version the editor started from (its updatedAt). If someone else saved since (the couple in their client space, the team in
    the studio), the save is refused with 409 rather than silently overwriting their changes. */
-async function saveInvitation(iid: string, body: any, opts: { locked?: boolean; base?: unknown } = {}) {
+async function saveInvitation(iid: string, body: any, opts: { locked?: boolean; base?: unknown; skipOrder?: boolean } = {}) {
   delete body.id; delete body.sample;
   const prev: any = await invitations().get(iid, { type: 'json' });
   if (opts.base != null && prev?.updatedAt && +opts.base !== prev.updatedAt) throw new HttpError(409, 'stale');
@@ -287,6 +287,7 @@ async function saveInvitation(iid: string, body: any, opts: { locked?: boolean; 
   if (prev?.canvaVer && !keep) await deleteSite(iid).catch(() => null);
   if (JSON.stringify(doc).length > MAX_INVITE_BYTES) throw new HttpError(413, 'Invitation too large. Use smaller photos.');
   await invitations().setJSON(iid, doc);
+  if (!opts.skipOrder) await syncOrder(doc).catch(e => console.error('order sync', e));
   return doc;
 }
 
@@ -377,6 +378,7 @@ async function createOrder(req: Request, context: Context) {
     createdAt: now, updatedAt: now, proofs: [], inviteId: null, adminNote: '',
     history: [{ at: now, status: 'awaiting_payment', note: 'Commande reçue', by: 'client' }] };
   for (const k of ['names', 'date', 'city', 'guests', 'theme', 'model', 'note', 'phone', 'lang']) o[k] = clampStr(b[k], 600);
+  o.phone = intlPhone(o.phone);
   if (/^[a-z0-9-]{1,60}$/.test(String(b.site || ''))) o.site = b.site;
   if (referred) o.referrer = refCode;
   /* where the couple came from (utm_source/utm_campaign on ad and post links, "invitation" from a guest's invitation footer) */
@@ -395,6 +397,21 @@ async function getOrder(code: string) {
   return o;
 }
 async function saveOrder(o: any) { o.updatedAt = Date.now(); await orders().setJSON(o.code, o); return o; }
+
+/* One source of truth: the invitation. Whoever edits it (studio or couple), its order follows, so the Orders page, the
+   client space header, WhatsApp messages and the morning summary all show the same names, date, city, theme and language. */
+function orderFromInvitation(o: any, inv: any): boolean {
+  const [n1, n2] = coupleNames(inv), next: any = { date: inv.date, city: inv.city, theme: inv.theme, lang: inv.lang };
+  if (n1 && n2 && n2 !== '—') next.names = `${n1} & ${n2}`;
+  let changed = false;
+  for (const k of Object.keys(next)) if (next[k] && o[k] !== next[k]) { o[k] = next[k]; changed = true; }
+  return changed;
+}
+async function syncOrder(inv: any) {
+  if (!inv.orderCode) return;
+  const o: any = await orders().get(inv.orderCode, { type: 'json' });
+  if (o && o.inviteId === inv.id && orderFromInvitation(o, inv)) await saveOrder(o);
+}
 
 /* The client space is opened with the secret link sent at checkout (?t=…). */
 async function clientOrder(code: string, t: string | null) {
@@ -500,16 +517,17 @@ async function clientBrief(req: Request, context: Context, o: any) {
     inv.guests = b.guests.slice(0, MAX_GUESTS).map((g: any) => {
       const nm = clampStr(g?.name, 120).trim(); if (!nm) return null;
       const old: any = prev.get(g.id);
-      return { ...(old || { id: id(10) }), name: nm, phone: clampStr(g.phone, 30).trim(), seats: Math.min(50, Math.max(1, Math.round(+g.seats || 1))) };
+      return { ...(old || { id: id(10) }), name: nm, phone: intlPhone(clampStr(g.phone, 30)), seats: Math.min(50, Math.max(1, Math.round(+g.seats || 1))) };
     }).filter(Boolean);
   }
   if (!inv.a.name || !inv.b.name) return err(400, 'Indiquez vos deux prénoms.');
-  await saveInvitation(inv.id, inv);
-  if (!o.briefAt) {
-    o.briefAt = Date.now();
-    o.history.push({ at: o.briefAt, status: 'brief', note: 'Invitation préparée par les mariés', by: 'client' });
+  await saveInvitation(inv.id, inv, { skipOrder: true });
+  const synced = orderFromInvitation(o, inv);
+  if (!o.briefAt || synced) {
+    const first = !o.briefAt;
+    if (first) { o.briefAt = Date.now(); o.history.push({ at: o.briefAt, status: 'brief', note: 'Invitation préparée par les mariés', by: 'client' }); }
     await saveOrder(o);
-    later(context, notify(`Invitation préparée ${o.code}`, `${o.names} ont rempli leur invitation (${(inv.guests || []).length} invités).${o.status === 'paid' ? ' Elle est déjà en ligne.' : ' Elle sera en ligne dès la confirmation du paiement.'}${o.site ? '\nDesign sur mesure : le designer peut commencer.' : ''}\n${siteUrl()}/studio/`));
+    if (first) later(context, notify(`Invitation préparée ${o.code}`, `${o.names} ont rempli leur invitation (${(inv.guests || []).length} invités).${o.status === 'paid' ? ' Elle est déjà en ligne.' : ' Elle sera en ligne dès la confirmation du paiement.'}${o.site ? '\nDesign sur mesure : le designer peut commencer.' : ''}\n${siteUrl()}/studio/`));
   }
   return json(await clientView(o));
 }

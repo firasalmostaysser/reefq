@@ -39,10 +39,10 @@ let v = await view(); const gid = v.brief.guests[0].id; assert.ok(gid);
 await c.click('#b-toggle'); await c.click('[data-edb="0"]');
 await c.fill('#ge-name', ''); await c.click('#ge-ok'); assert.equal(await c.locator('#ge-name').count(), 1, 'an empty name is refused');
 await c.fill('#ge-name', 'Famille Trabelsi'); await c.fill('#ge-phone', '55 999 000'); await c.fill('#ge-seats', '5'); await c.click('#ge-ok');
-assert.match(await c.textContent('#b-glist'), /55 999 000 · 5 pl\./); assert.match(await c.textContent('#b-status'), /non enregistrées/);
+assert.match(await c.textContent('#b-glist'), /\+216 55 999 000 · 5 pl\./, 'shown readable, stored international'); assert.match(await c.textContent('#b-status'), /non enregistrées/);
 // a guest still being edited is kept when saving
 await c.click('[data-edb="0"]'); await c.fill('#ge-seats', '6'); await csave(c);
-v = await view(); assert.deepEqual(v.brief.guests.map(g => [g.id, g.phone, g.seats]), [[gid, '55 999 000', 6]]);
+v = await view(); assert.deepEqual(v.brief.guests.map(g => [g.id, g.phone, g.seats]), [[gid, '+21655999000', 6]]);
 
 step('studio: sign in, confirm the payment');
 const s = await page(1300, 900);
@@ -71,7 +71,7 @@ await s.fill('#k-venue', 'Dar Hammamet');
 step('studio guests: corrected in place, the link is kept');
 await s.click('#tab-guests'); await s.click('[data-edg="0"]'); await s.fill('#sge-phone', '55 999 111'); await s.click('#sge-ok');
 await s.waitForFunction(() => document.querySelector('#status').textContent === 'Saved');
-let full = (await sapi(`/api/invitations/${iid}`)).body; assert.deepEqual(full.guests.map(x => [x.id, x.phone]), [[gid, '55 999 111']]);
+let full = (await sapi(`/api/invitations/${iid}`)).body; assert.deepEqual(full.guests.map(x => [x.id, x.phone]), [[gid, '+21655999111']]);
 
 step('studio refreshes by itself when it comes back into view');
 await c.reload(); await c.waitForSelector('#b-toggle:not([hidden])'); await c.click('#b-toggle');
@@ -159,6 +159,26 @@ await s.waitForFunction(() => !document.querySelector('#o-badge').hidden && /^\(
 await s.click('#tab-orders'); await s.click('[data-of=all]'); await s.waitForSelector(`tr:has([data-od="${ncode}"]) .pill:has-text("New")`);
 assert.equal(new URL(s.url()).hash, '#orders', 'the open section is kept in the address');
 await sapi(`/api/orders/${ncode}`, { method: 'DELETE' });
+
+step('phone: country picker on the order form, Tunisia by default, no Israel; numbers stored as +216…');
+const pf = await page(390, 844); await pf.goto(BASE + '/'); await pf.waitForSelector('#o-phone');
+assert.equal(await pf.inputValue('.ph-cc'), 'TN');
+assert.equal(await pf.locator('.ph-cc option[value="IL"]').count(), 0);
+assert.ok(await pf.locator('.ph-cc option[value="PS"]').count());
+assert.equal((await sapi(`/api/orders/${code}`)).body.phone, '+21698222333', 'a local Tunisian number gets +216');
+await pf.fill('#o-names', 'Test & Phone'); await pf.fill('#o-phone', '12 34'); await pf.click('#of button[type=submit]');
+assert.match(await pf.textContent('#o-err'), /8 chiffres/);
+
+step('one source of truth: a studio edit reaches the order, its WhatsApp message and the client space');
+await s.click('#tab-list'); await s.waitForSelector(`[data-card="${iid}"]`); await s.click(`[data-card="${iid}"] [data-la=edit]`);
+await s.waitForFunction(id => document.querySelector(`[data-inv="${id}"]`).getAttribute('aria-pressed') === 'true', iid);
+await s.fill('#k-b-name', 'Aly'); await s.fill('#k-date', '2027-09-09');
+await s.click('#tab-orders'); await s.click('[data-of=all]'); await s.click(`[data-od="${code}"]`);
+await s.waitForFunction(() => /Aly & Hana/.test(document.querySelector('#od-title').textContent));
+assert.match(await s.textContent('#od-info'), /2027-09-09/);
+assert.match(decodeURIComponent(await s.getAttribute('#od-wa', 'href')), /^https:\/\/wa\.me\/21698222333\?text=Bonjour Aly & Hana/);
+await c.reload(); await c.waitForFunction(() => document.querySelector('#h-names').textContent === 'Aly & Hana');
+assert.equal(await c.inputValue('#b-date'), '2027-09-09');
 
 // clean up
 await sapi(`/api/orders/${code}`, { method: 'DELETE' }); await sapi(`/api/invitations/${iid}`, { method: 'DELETE' });

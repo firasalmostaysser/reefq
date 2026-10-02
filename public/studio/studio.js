@@ -209,10 +209,12 @@ function renderChips(){
   if(!draft.id)html+='<button class="chip" type="button" aria-pressed="true"><span class="dot" style="background:'+col[draft.theme]+'"></span>'+esc(draft.sample?'Example: '+names(draft):(names(draft)==='? & ?'?'New couple':names(draft)))+'</button>';
   html+=invites.filter(function(i){return!i.archived||i.id===draft.id}).map(function(i){return '<button class="chip" type="button" data-inv="'+esc(i.id)+'" aria-pressed="'+(draft.id===i.id)+'"><span class="dot" style="background:'+(col[i.theme]||'#999')+'"></span>'+esc(names(i))+'</button>'}).join('');
   $('#chips').innerHTML=html||'<span class="status">No saved invitations yet</span>';
-  $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f&&f.id!==draft.id)leaveDraft().then(function(go){if(go)load(f)})}});
+  $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f&&f.id!==draft.id)leaveDraft().then(function(go){if(go)openInv(f)})}});
   $('#btn-del').hidden=!draft.id;$('#btn-dup').hidden=!draft.id;
 }
 function load(inv,keepView){wOcc=null;gEditS=-1;if(!keepView)opened={};draft=clone(inv);delete draft.sample;delete draft.photos;delete draft.musicUrl;delete draft.music;dirty=false;if(!keepView)rsvps=[];status('Saved','ok');fillForm();renderChips();if(!keepView){preview(true);loadRsvps()}else{keepOpen();preview(true)}refreshSide();if(!keepView)fetchLatest()}
+/* open an invitation from the list or the chips: always its latest saved version (the couple may have just edited it) */
+function openInv(i){return api('/api/invitations/'+encodeURIComponent(i.id)).then(function(f){replaceInv(f);load(f)},function(){load(i)})}
 /* The couple can edit their invitation from their client space at any time: the studio always works on the latest saved version.
    It is fetched when an invitation is opened and when the studio tab comes back into view; unsaved studio edits are never replaced. */
 function fetchLatest(){var id=draft.id;if(!id||draft.sample)return Promise.resolve(null);return api('/api/invitations/'+encodeURIComponent(id)).then(function(inv){replaceInv(inv);
@@ -232,7 +234,9 @@ function doSave(quiet){
   var btn=$('#btn-save');if(btn.disabled)return Promise.resolve(false);btn.disabled=true;btn.textContent='Saving…';status('Saving…','');
   var req=draft.id?api('/api/invitations/'+encodeURIComponent(draft.id),{method:'PUT',body:body}):api('/api/invitations',{method:'POST',body:body});
   return req.then(function(saved){var editedSince=JSON.stringify(draft)!==JSON.stringify(body);if(!editedSince){draft=saved;dirty=false;status('Saved','ok')}else{draft.id=saved.id;draft.updatedAt=saved.updatedAt;status('Unsaved changes','')}
-    var i=invites.findIndex(function(x){return x.id===saved.id});if(i>=0)invites[i]=saved;else invites.unshift(saved);renderChips();refreshSide();return true})
+    var i=invites.findIndex(function(x){return x.id===saved.id});if(i>=0)invites[i]=saved;else invites.unshift(saved);renderChips();refreshSide();
+    /* the order follows its invitation (names, date, city, theme, language): refresh the Orders list and the open order */
+    if(saved.orderCode&&ME)loadLeads();return true})
    .catch(function(e){if(e.status===409){btn.disabled=false;status('Changed elsewhere since you opened it','bad');return onStale()}status(e.status===413?'This invitation is too large to save. Shorten the texts and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;btn.textContent='Save invitation';backupDraft();
      /* changes typed during the save, or a failed save (offline), are tried again */
      if(dirty&&draft.id){clearTimeout(autoT);autoT=setTimeout(autoSave,v===false?10000:2000)}return v});
@@ -283,7 +287,8 @@ $('#w-use').onclick=function(){
 
 /* ---------- tabs ---------- */
 var PANELS=['list','design','guests','deliver','orders','settings'];
-function showTab(t){if(t!==tab)scrollTo(0,0);if(t==='orders'&&tab!=='orders')seenPrev=seenAt();if(tab==='design'&&t!=='design'&&dirty)autoSave();tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(t==='design')refit()}
+function showTab(t){if(t!==tab)scrollTo(0,0);if(t==='orders'&&tab!=='orders')seenPrev=seenAt();/* leaving Design with unsaved changes: save first, then show the next tab with fresh data */
+  var pend=tab==='design'&&t!=='design'&&dirty?autoSave():null;tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');if(pend)pend.then(function(){if(tab===t)refreshSide()});else refreshSide();if(t==='design')refit()}
 $$('[data-tab]').forEach(function(b){b.onclick=function(){showTab(b.dataset.tab)}});
 
 function refreshSide(){if(tab==='list'){renderList();if(lState==='ok')api('/api/invitations').then(function(r){invites=r.items;renderChips();renderList();loadCounts()}).catch(function(){})}if(tab==='guests'){renderGuests();renderGuestList();loadOpens()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings'){renderSettings();loadSiteTpls()}}
@@ -333,7 +338,7 @@ function renderList(){
 }
 function replaceInv(inv){var k=invites.findIndex(function(x){return x.id===inv.id});if(k>=0)invites[k]=inv;else invites.unshift(inv)}
 function listAction(a,i,btn){
-  if(a==='edit'){(draft.id===i.id?Promise.resolve(true):leaveDraft()).then(function(go){if(go){if(draft.id!==i.id)load(i);showTab('design')}});return}
+  if(a==='edit'){(draft.id===i.id?Promise.resolve(true):leaveDraft()).then(function(go){if(go){if(draft.id!==i.id)openInv(i);showTab('design')}});return}
   if(a==='preview'){quickView(i);return}
   if(a==='del'){confirmDelete(i);return}
   btn.disabled=true;
@@ -407,7 +412,9 @@ function personalMsg(g,l){
   if(l==='en')return 'Hello '+g.name+',\nWe would love you to celebrate '+(EV_EN[ev]||EV_EN.wedding)+' of '+n[0]+' & '+n[1]+' on '+d+'.\n'+(s>1?'We have reserved '+s+' seats for you.\n':'')+'Open your invitation and reply here:\n'+link;
   return 'Bonjour '+g.name+',\nNous avons la joie de vous inviter '+(EV_FR[ev]||EV_FR.wedding)+' de '+n[0]+' & '+n[1]+', le '+d+'.\n'+(s>1?s+' places vous sont réservées.\n':'')+'Ouvrez votre invitation et confirmez votre présence ici :\n'+link;
 }
-function waHref(g,l){var num=String(g.phone||'').replace(/[^0-9]/g,'');if(num.length===8)num='216'+num;return 'https://wa.me/'+num+'?text='+encodeURIComponent(personalMsg(g,l))}
+/* WhatsApp number in international form (+216 added to a Tunisian 8-digit number, 00 → +) */
+function waNum(p){return ReefqPhone.normalize(p).replace(/[^0-9]/g,'')}
+function waHref(g,l){var num=waNum(g.phone);return 'https://wa.me/'+num+'?text='+encodeURIComponent(personalMsg(g,l))}
 var gEditS=-1;
 function renderGuestList(){
   var gl=draft.guests||[],rows=$('#g-rows'),lang=$('#g-lang').value;
@@ -418,13 +425,14 @@ function renderGuestList(){
   rows.innerHTML=gl.map(function(g,i){var r=byG[g.id],st=r?(r.attending?'<span class="pill yes">Coming · '+(+r.guests||1)+'</span>':'<span class="pill no">Not coming</span>'):opened[g.id]?'<span class="pill sent" title="Opened '+opened[g.id].count+'×">Opened · '+new Date(opened[g.id].last).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})+'</span>':g.sent?'<span class="pill sent">Sent</span>':'<span class="pill wait">Not sent</span>';
     var ok=!!personalLink(g),ph=String(g.phone||'').replace(/[^0-9]/g,'');
     if(i===gEditS)return '<tr class="gedit"><td><input id="sge-name" aria-label="Guest name" value="'+esc(g.name)+'"></td><td><input id="sge-phone" aria-label="WhatsApp number" inputmode="tel" value="'+esc(g.phone||'')+'"></td><td class="num"><input id="sge-seats" aria-label="Seats" type="number" min="1" max="50" value="'+(+g.seats||1)+'" style="width:64px"></td><td colspan="3"><span class="gst"><button class="btn sm primary" type="button" id="sge-ok">Save guest</button><button class="btn sm ghost" type="button" id="sge-cancel">Cancel</button></span></td></tr>';
-    return '<tr><td>'+esc(g.name)+'</td><td>'+esc(g.phone||'')+'</td><td class="num">'+(+g.seats||1)+'</td><td>'+st+'</td><td><span class="gst">'+
+    return '<tr><td>'+esc(g.name)+'</td><td>'+esc(g.phone?ReefqPhone.format(g.phone):'')+'</td><td class="num">'+(+g.seats||1)+'</td><td>'+st+'</td><td><span class="gst">'+
       (ok&&ph?'<a class="btn sm primary" target="_blank" rel="noopener" data-send="'+i+'" href="'+esc(waHref(g,lang))+'">WhatsApp</a>':'')+(ok?'<button class="btn sm" type="button" data-copyg="'+i+'">Copy link</button>':'<span class="status">Save first</span>')+'</span></td><td><span class="gst"><button class="btn sm ghost" type="button" data-edg="'+i+'" aria-label="Edit '+esc(g.name)+'">Edit</button><button class="btn sm ghost" type="button" data-rmg="'+i+'" aria-label="Remove guest">✕</button></span></td></tr>'}).join('');
   /* a guest is corrected in place and keeps their personal link */
   $$('[data-edg]').forEach(function(b){b.onclick=function(){gEditS=+b.dataset.edg;renderGuestList();$('#sge-name').focus()}});
   if(gEditS>=0&&$('#sge-ok')){
+    ReefqPhone.attach($('#sge-phone'));
     var done=function(){var nm=$('#sge-name').value.trim();if(!nm){$('#sge-name').focus();return}var g=draft.guests[gEditS];
-      g.name=nm;g.phone=$('#sge-phone').value.trim();g.seats=Math.min(50,Math.max(1,parseInt($('#sge-seats').value,10)||1));gEditS=-1;touch();renderGuestList();if(draft.id)doSave(true)};
+      var ph=$('#sge-phone');if(ph.value.trim()&&!ReefqPhone.valid(ph)){toast('Check the number (8 digits for Tunisia)',true);ph.focus();return}g.name=nm;g.phone=ReefqPhone.value(ph);g.seats=Math.min(50,Math.max(1,parseInt($('#sge-seats').value,10)||1));gEditS=-1;touch();renderGuestList();if(draft.id)doSave(true)};
     $('#sge-ok').onclick=done;$('#sge-cancel').onclick=function(){gEditS=-1;renderGuestList()};
     $('#g-rows .gedit').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();done()}else if(e.key==='Escape'){gEditS=-1;renderGuestList()}};
   }
@@ -436,7 +444,7 @@ $('#g-lang').onchange=renderGuestList;
 $('#g-add').onclick=function(){
   var lines=$('#g-paste').value.split(/\n+/).map(function(l){return l.trim()}).filter(Boolean);if(!lines.length){$('#g-paste').focus();return}
   draft.guests=draft.guests||[];
-  lines.forEach(function(l){var p=l.split(/[,;\t]/).map(function(x){return x.trim()});var seats=parseInt(p[2],10);draft.guests.push({id:gid(),name:p[0],phone:p[1]||'',seats:seats>0?seats:1})});
+  lines.forEach(function(l){var p=l.split(/[,;\t]/).map(function(x){return x.trim()});var seats=parseInt(p[2],10);draft.guests.push({id:gid(),name:p[0],phone:p[1]?ReefqPhone.normalize(p[1])||p[1]:'',seats:seats>0?seats:1})});
   $('#g-paste').value='';touch();renderGuestList();
   if(draft.id)doSave(true);else toast('Guests added. Save the invitation to get their links.');
 };
@@ -580,7 +588,7 @@ function openOrder(code,keep){
   var o=orders.find(function(x){return x.code===code});if(!o)return;oSel=code;renderOrders();
   var d=$('#o-detail');d.hidden=false;if(!keep)d.scrollIntoView({behavior:'smooth',block:'start'});
   var st=OST[o.status]||[o.status,''];$('#od-title').textContent=o.code+' · '+o.names;$('#od-status').textContent=st[0];$('#od-status').className='pill '+st[1];
-  var wa=String(o.phone||'').replace(/[^0-9]/g,'');if(wa.length===8)wa='216'+wa;
+  var wa=waNum(o.phone);
   var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],[o.deposit<o.price?'Deposit':'To pay',o.deposit+' DT'],['Invitation',o.briefAt?'Prepared by the couple '+tshort(o.briefAt):'Not prepared yet'],['Source',o.source?Object.values(o.source).join(' / '):''],['Referred by',o.referrer?o.referrer+' (-10 %)':''],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],[o.site?'Website template':'Canva model',o.site?(o.model||o.site)+' · /modeles/'+o.site:o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
   $('#od-info').innerHTML=info.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'<dt>History</dt><dd>'+o.history.map(function(h){return esc(new Date(h.at).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+(OST[h.status]||[h.status])[0]+(h.note?' · '+h.note:''))}).join('<br>')+'</dd>';
   /* the list refreshes every minute: what is being typed in this order stays */

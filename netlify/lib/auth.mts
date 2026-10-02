@@ -1,5 +1,5 @@
 import { json, err, readJSON, b64url, env, clientIp } from './util.mts';
-import { rateLimit } from './stores.mts';
+import { rateLimit, isProduction } from './stores.mts';
 
 const COOKIE = 'rq_session';
 const DAYS = 30;
@@ -34,7 +34,8 @@ export async function isStudio(req: Request) {
 export async function login(req: Request, context: any) {
   const pass = env('STUDIO_PASSWORD'), secret = env('SESSION_SECRET');
   if (!pass || !secret) return err(503, 'Set STUDIO_PASSWORD and SESSION_SECRET in Netlify environment variables first.');
-  if (!(await rateLimit('login/' + clientIp(req, context), 10, 900))) return err(429, 'Too many attempts. Try again in 15 minutes.');
+  /* brute-force guard on the live site (local test runs sign in many times) */
+  if (isProduction() && !(await rateLimit('login/' + clientIp(req, context), 10, 900))) return err(429, 'Too many attempts. Try again in 15 minutes.');
   const { password } = await readJSON(req, 2000);
   if (!safeEqual(String(password || ''), pass)) return err(401, 'Wrong password.');
   const exp = Date.now() + DAYS * 864e5;
