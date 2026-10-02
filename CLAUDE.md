@@ -1,6 +1,6 @@
 # Reefq: notes for Claude and contributors
 
-Read `README.md` for setup, architecture and deploy.
+Read `README.md` for setup, architecture and deploy. How the business runs (flow, daily routine, designer guide, marketing, roadmap with triggers, data and backups) is in `docs/`; keep those docs true when a flow changes.
 
 ## Brand principles (internal: apply them everywhere, never state them in copy, marketing or UI)
 

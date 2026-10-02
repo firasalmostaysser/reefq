@@ -5,7 +5,7 @@ alwaysApply: true
 
 Follow `AGENTS.md` at the repo root in full. The essentials:
 
-- Visual work only. Never edit `netlify/` (except a new id in `netlify/lib/themes.mts`), `netlify.toml`, `package*.json`, `.env*`, `test/`, `tools/guard.mjs`, `.github/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`, `public/assets/{commande,invite,analytics,site-bar,wording-templates}.js`, `public/assets/vendor/`, `public/studio/studio.js`.
+- Visual work only. Never edit `netlify/` (except a new id in `netlify/lib/themes.mts`), `netlify.toml`, `package*.json`, `.env*`, `test/`, `tools/guard.mjs`, `.github/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`, `public/assets/{commande,invite,analytics,site-bar,wording-templates}.js`, `public/assets/vendor/`, `public/studio/studio.js`, `public/apercu.html`, `tools/seed.mjs`.
 - In `public/assets/engine.js` never change the RSVP/data functions (`esc`, `rng`, `hash`, `pad`, `loc`, `fmtDate`, `namesOf`, `initials`, `waLink`, `mapsHref`, `rsvpHtml`, `wireRsvp`, `renderRsvp`, `envOpts`), the `window.ReefqInvite` keys, or existing theme ids.
 - Never rename or remove an element `id`, a class used by JavaScript, a form `name`, or a `data-*` attribute. Add new classes instead.
 - Brand: videos have no audio track and no music; no images of women (including AI-generated); no alcohol, dancing or nightlife. Never mention these rules in copy.

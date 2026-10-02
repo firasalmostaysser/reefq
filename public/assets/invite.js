@@ -21,12 +21,12 @@ function show(inv,guest,demo){
 }
 if(m[1]==='demo'){show(DEMO,q.get('to')?{id:'demo',name:q.get('to'),seats:+q.get('n')||2}:null,true);return}
 fetch('/api/public/invitations/'+m[1]+(q.get('g')?'?g='+encodeURIComponent(q.get('g')):''))
-  .then(function(r){if(r.status===404||r.status===410)throw 404;if(!r.ok)throw 1;return r.json()})
+  .then(function(r){if(r.status===404||r.status===410)throw 404;if(r.status===409)throw 409;if(!r.ok)throw 1;return r.json()})
   .then(function(d){
     // a custom design is served by the server once published; until then guests see this line
     if(d.invitation.custom){msg('Cette invitation sera bientôt disponible.');return}
     show(d.invitation,d.guest,false);
     fetch('/api/public/invitations/'+encodeURIComponent(m[1])+'/open',{method:'POST',keepalive:true,headers:{'content-type':'application/json'},body:JSON.stringify({guestId:q.get('g')||''})}).catch(function(){});
   })
-  .catch(function(e){msg(e===404?'Cette invitation est introuvable. Demandez un nouveau lien aux mariés.':'L\'invitation n\'a pas pu se charger. Actualisez la page.')});
+  .catch(function(e){msg(e===409?'Cette invitation sera bientôt disponible.':e===404?'Cette invitation est introuvable. Demandez un nouveau lien aux mariés.':'L\'invitation n\'a pas pu se charger. Actualisez la page.')});
 })();

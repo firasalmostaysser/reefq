@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Aperçu · Reefq</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@400;500;600;700&family=Pinyon+Script&display=swap">
+<link rel="stylesheet" href="/assets/invitation.css">
+<style>html,body{margin:0;height:100%;background:#0c0c0c}#r{height:100%}</style>
+</head>
+<body>
+<div id="r"></div>
+<script src="/assets/engine.js"></script>
+<script>
+/* Client space preview: the parent page (same origin) posts the invitation as the couple fills it in. Replies are not sent. */
+(function(){
+  var root=document.getElementById('r'),last='';
+  addEventListener('message',function(e){
+    if(e.origin!==location.origin||!e.data||e.data.type!=='rq-preview')return;
+    var key=JSON.stringify(e.data.inv);if(key===last)return;last=key;
+    root.innerHTML='';var el=document.createElement('div');el.style.height='100%';root.appendChild(el);
+    ReefqInvite.render(el,e.data.inv,{preview:true,badge:'Aperçu',guest:e.data.guest||null,startOpen:!!e.data.open,
+      onRsvp:function(){return new Promise(function(res){setTimeout(function(){res({})},400)})}});
+  });
+  parent.postMessage({type:'rq-preview-ready'},location.origin);
+})();
+</script>
+</body>
+</html>

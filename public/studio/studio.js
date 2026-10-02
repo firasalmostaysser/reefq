@@ -483,7 +483,7 @@ $('#gq-print').onclick=function(){
 };
 /* ---------- orders & RIB payments ---------- */
 var orders=[],oFilter='verify',oSel=null,proofUrl=null,oState='loading',oBusy=false,oSeq=0;
-var OST={awaiting_payment:['Awaiting transfer','info'],proof_sent:['Proof to verify','warn'],paid:['Paid · client','good'],rejected:['Proof rejected','bad'],cancelled:['Cancelled','bad']};
+var OST={awaiting_payment:['Awaiting transfer','info'],proof_sent:['Proof to verify','warn'],paid:['Paid · client','good'],rejected:['Proof rejected','bad'],cancelled:['Cancelled','bad'],brief:['Invitation prepared by the couple','info']};
 var OFILTERS=[['verify','To verify'],['awaiting','Awaiting'],['paid','Paid'],['all','All']];
 function loadLeads(){var seq=++oSeq;if(!orders.length){oState='loading';renderOrders()}
   return api('/api/orders').then(function(r){if(seq!==oSeq)return;orders=r.items;oState='ok';renderOrders();if(oSel){var o=orders.find(function(x){return x.code===oSel});if(o)openOrder(o.code,true)}}).catch(function(e){if(seq!==oSeq)return;if(!orders.length){oState='error';renderOrders()}else if(tab==='orders')fail(e)})}
@@ -510,12 +510,12 @@ function openOrder(code,keep){
   var d=$('#o-detail');d.hidden=false;if(!keep)d.scrollIntoView({behavior:'smooth',block:'start'});
   var st=OST[o.status]||[o.status,''];$('#od-title').textContent=o.code+' · '+o.names;$('#od-status').textContent=st[0];$('#od-status').className='pill '+st[1];
   var wa=String(o.phone||'').replace(/[^0-9]/g,'');if(wa.length===8)wa='216'+wa;
-  var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],['Deposit',o.deposit+' DT'],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],[o.site?'Website template':'Canva model',o.site?(o.model||o.site)+' · /modeles/'+o.site:o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
+  var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],[o.deposit<o.price?'Deposit':'To pay',o.deposit+' DT'],['Invitation',o.briefAt?'Prepared by the couple '+tshort(o.briefAt):'Not prepared yet'],['Source',o.source?Object.values(o.source).join(' / '):''],['Referred by',o.referrer?o.referrer+' (-10 %)':''],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],[o.site?'Website template':'Canva model',o.site?(o.model||o.site)+' · /modeles/'+o.site:o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
   $('#od-info').innerHTML=info.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'<dt>History</dt><dd>'+o.history.map(function(h){return esc(new Date(h.at).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+(OST[h.status]||[h.status])[0]+(h.note?' · '+h.note:''))}).join('<br>')+'</dd>';
   $('#od-note').value=o.adminNote||'';$('#od-amount').value=o.paid||o.deposit;$('#od-reason').value='';
   var closed=o.status==='paid'||o.status==='cancelled';$('#od-confirm').hidden=o.status==='paid'||o.status==='cancelled';$('#od-reject').hidden=closed;$('#od-cancel').hidden=o.status==='cancelled';$('#od-reopen').hidden=!closed;
   $('#od-invite').textContent=o.inviteId?'Open the invitation in Design':'Create invitation from this order';
-  var msg='Bonjour '+(o.names||'')+',\n'+(o.status==='paid'?'Votre paiement est confirmé, merci ! Votre espace client Reefq :\n':'Voici votre espace client Reefq pour la commande '+o.code+' (acompte '+o.deposit+' DT par virement) :\n')+clientLink(o);
+  var msg='Bonjour '+(o.names||'')+',\n'+(o.status==='paid'?'Votre paiement est confirmé, merci ! Votre espace client Reefq :\n':'Voici votre espace client Reefq pour la commande '+o.code+'. Vous pouvez y préparer votre invitation et voir l\'aperçu, puis régler '+o.deposit+' DT par virement :\n')+clientLink(o);
   var w=$('#od-wa');w.hidden=!wa;w.href='https://wa.me/'+wa+'?text='+encodeURIComponent(msg);
   $('#od-proofs').innerHTML=o.proofs.length>1?o.proofs.map(function(p,i){return '<button class="chip" type="button" data-pi="'+i+'" aria-pressed="'+(i===o.proofs.length-1)+'">Proof '+(i+1)+'</button>'}).join(''):'';
   $$('[data-pi]').forEach(function(b){b.onclick=function(){$$('[data-pi]').forEach(function(x){x.setAttribute('aria-pressed',x===b)});showProof(o,+b.dataset.pi)}});
@@ -543,6 +543,9 @@ $('#od-invite').onclick=function(){var o=orders.find(function(x){return x.code==
   var go=function(inv){var i=invites.findIndex(function(x){return x.id===inv.id});if(i<0)invites.unshift(inv);load(inv);$('#tab-design').click();toast('Invitation opened in Design')};
   if(o.inviteId){api('/api/invitations/'+o.inviteId).then(go).catch(fail);return}
   api('/api/orders/'+o.code+'/invitation',{method:'POST'}).then(function(r){var i=orders.findIndex(function(x){return x.code===r.order.code});orders[i]=r.order;go(r.invitation)}).catch(fail)};
+$('#od-delete').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(!o)return;
+  ask({title:'Delete order '+o.code+'?',body:'<p>For test orders and spam. The order and its receipts are deleted for good'+(o.inviteId?'; its invitation stays in Invitations':'')+'.</p>'+(o.status==='paid'?'<p><b>This order is paid.</b></p>':''),ok:'Delete',danger:true,typeToConfirm:o.status==='paid'?o.code:''}).then(function(go){if(!go)return;
+    api('/api/orders/'+o.code,{method:'DELETE'}).then(function(){orders=orders.filter(function(x){return x.code!==o.code});oSel=null;$('#o-detail').hidden=true;renderOrders();toast('Order deleted')}).catch(fail)})};
 $('#o-refresh').onclick=function(){var b=this;b.disabled=true;b.textContent='Refreshing…';loadLeads().then(function(){b.disabled=false;b.textContent='Refresh'})};
 /* ---------- settings ---------- */
 function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME&&ME.canva?(cs&&cs.connected?'Connected to Canva'+(cs.lastRun?' · last sync '+new Date(cs.lastRun).toLocaleString('fr-TN')+(cs.count!=null?' · '+cs.count+' templates':'')+(cs.failed&&cs.failed.length?' · '+cs.failed.length+' could not be read: '+cs.failed.map(function(f){return f.title}).join(', '):'')+(cs.sites?' · '+cs.sites.count+' website templates'+(cs.sites.failed&&cs.sites.failed.length?' ('+cs.sites.failed.length+' could not be read)':''):''):'')+(cs.lastError?' · last error: '+cs.lastError:''):'Canva is configured. Press Connect Canva once.'):'Add CANVA_CLIENT_ID, CANVA_CLIENT_SECRET and CANVA_FOLDER_ID in Netlify environment variables to enable Canva.';$('#s-bank').textContent=ME&&ME.bankReady?'Bank details are set. Clients see them on their payment page.':'Add BANK_NAME, BANK_HOLDER, BANK_RIB and BANK_IBAN in Netlify environment variables so clients see your RIB.';var ig=[
@@ -554,6 +557,12 @@ function renderSettings(){var cs=ME&&ME.canvaStatus;$('#s-canva').textContent=ME
   $('#s-integ-sum').textContent=ME?on+' of '+ig.length+' are on.':'';
   $('#s-integ').innerHTML=ig.map(function(x){return '<li><span class="pill '+(x[1]?'ok':'off')+'">'+(x[1]?'On':'Off')+'</span><b>'+x[0]+'</b><small>'+x[2]+(x[1]?'':' To turn it on, set '+x[3].map(function(v){return '<code>'+v+'</code>'}).join(' and ')+' in Netlify → Environment variables.')+'</small></li>'}).join('');
   $('#s-canva-actions').hidden=!(ME&&ME.canva)}
+/* ---------- data: backup and the morning summary (Settings) ---------- */
+$('#s-backup').onclick=function(){location.href='/api/export'};
+$('#s-digest').onclick=function(){var b=this;if(b.disabled)return;b.disabled=true;$('#s-digest-out').hidden=true;
+  api('/api/digest?dry=1',{method:'POST'}).then(function(d){var o=$('#s-digest-out');o.textContent=d.text;o.hidden=false;
+    var on=d.alerts&&(d.alerts.telegram||d.alerts.email);$('#s-digest-send').hidden=!on;$('#s-digest-hint').textContent=on?'':'Turn on Telegram or email alerts (Integrations below) to receive this every morning at 08:00.'}).catch(fail).then(function(){b.disabled=false})};
+$('#s-digest-send').onclick=function(){var b=this;if(b.disabled)return;b.disabled=true;api('/api/digest',{method:'POST'}).then(function(){toast('Summary sent')}).catch(fail).then(function(){b.disabled=false})};
 /* ---------- website templates (Settings) ---------- */
 var STPL=[];
 function loadSiteTpls(){return api('/api/site-templates').then(function(r){STPL=r.items;renderSiteTpls()}).catch(function(){})}

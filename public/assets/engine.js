@@ -295,7 +295,7 @@ function render(root,inv,opts){
           (inv.note?'<p class="rq-muted" style="margin:14px 0 0;font-style:italic">'+esc(inv.note)+'</p>':'')+'</div>';
       }
       if(on('rsvp'))html+=rsvpHtml(R);
-      html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span><img alt="Reefq رِفق" src="'+(th==='layl'?LOGO_DARK:LOGO)+'"></div></section>';
+      html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span>'+(opts.preview||!inv.id?'':'<a class="rq-foot-link" target="_top" href="/?utm_source=invitation&amp;utm_medium=footer" aria-label="Reefq">')+'<img alt="Reefq رِفق" src="'+(th==='layl'?LOGO_DARK:LOGO)+'">'+(opts.preview||!inv.id?'':'</a>')+'</div></section>';
     }
     html+='</div>';
     root.innerHTML=html;

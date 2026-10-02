@@ -16,7 +16,7 @@ export default async (req: Request) => {
     }
   }
   const og = `<meta property="og:title" content="${escHtml(title)}"><meta property="og:description" content="${escHtml(desc)}"><meta property="og:image" content="${escHtml(new URL('/assets/og.jpg', url).toString())}"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">`;
-  if (inv && inv.designSource === 'canva' && inv.canvaStatus === 'published') {
+  if (inv && inv.designSource === 'canva' && inv.canvaStatus === 'published' && !inv.locked) {
     const page = await sitePage(inv, { title, og }).catch(() => null);
     if (page) return new Response(page, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=60' } });
   }

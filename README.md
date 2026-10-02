@@ -1,11 +1,13 @@
 # Reefq · رِفق
 
-Digital wedding invitations that open like a real envelope. One site holds everything:
+Digital wedding invitations that open like a real envelope. One site holds everything.
+
+**Running the business** (flow, daily routine, designer guide, marketing plan, roadmap, data and backups): see [`docs/`](docs/README.md).
 
 | URL | What it is | Who uses it |
 | --- | --- | --- |
 | `/` | Landing page: live envelope demo, 10 themes, card designs, made-to-measure website templates, packages, order form (`?modele=<slug>` preselects a template) | Couples |
-| `/commande/<code>?t=<token>` | Client space: pay the deposit by bank transfer, upload the receipt, then follow the invitation and guest replies | Couples |
+| `/commande/<code>?t=<token>` | Client space: prepare the invitation (details, text, theme, guests) with a live preview, pay by bank transfer, upload the receipt, then share the links and follow guest replies | Couples |
 | `/studio/` | Reefq Studio: invitations, guest lists, RSVPs, orders and payment checks, settings | Reefq team (password) |
 | `/i/<id>` | A couple's invitation. `?g=<guest id>` greets a family by name and reserves their seats | Guests |
 | `/modeles/<slug>` | Live preview of a website template, with "Choisir ce modèle" | Couples |
@@ -33,16 +35,18 @@ public/                   static site
     env/*.webp            pre-rendered envelope paper layers (tools/render_assets.py)
 netlify/
   functions/
-    api.mts               /api/*: invitations, RSVPs, orders, receipts, uploads, wording
+    api.mts               /api/*: invitations, RSVPs, orders, receipts, uploads, the couple's own invitation, backups, seeding
+    daily-digest.mts      08:00 Tunis: team summary on Telegram/email, auto-cancel of stale unpaid orders, Monday backup
     media.mts             /media/* and /templates.json
     invite-page.mts       /i/<id> with link-preview tags (or our copy of a custom design)
     site.mts              /site/*: files of custom designs and website templates
     modeles.mts           /modeles/<slug>: website template previews
     canva-auth.mts        /auth/canva/start and /callback
     canva-sync-background.mts, canva-cron.mts   Canva sync every 15 min
-  lib/                    auth, stores (Blobs), canva, sites (custom designs), notify (Telegram/email), wording, themes
+  lib/                    auth, stores (Blobs), canva, sites (custom designs), notify (Telegram/email), digest (morning summary), themes
 test/                     unit tests, smoke.mjs (end to end), theme-shots.mjs (screenshots)
-tools/                    envelope textures, promo videos and posters
+tools/                    seed.mjs (demo data / restore a backup locally), guard.mjs, envelope textures, promo videos and posters
+docs/                     operations, designer guide, marketing, roadmap, data
 ```
 
 ## Run locally
@@ -53,7 +57,8 @@ cp .env.example .env         # set STUDIO_PASSWORD and SESSION_SECRET at least
 npm i -g deno                # netlify dev needs Deno for edge features
 npm run dev                  # http://localhost:8888
 npm test                     # unit tests, offline
-npm run test:e2e             # order → receipt → studio check → invitation → guest RSVP (needs npm run dev)
+npm run test:e2e             # order → couple prepares the invitation → receipt → studio check → guest RSVP → summary, backup, referral (needs npm run dev)
+npm run seed                 # demo couples in every state (needs npm run dev); `npm run seed -- backup.json` loads a backup
 ```
 
 Local data lives in `.netlify/` and never touches production.
@@ -70,7 +75,7 @@ The site is a Netlify project. Connect the GitHub repo in Netlify (Project confi
 | `SESSION_SECRET` | Yes | Long random string that signs studio sessions |
 | `REEFQ_WHATSAPP` | Yes | Your WhatsApp number, `216XXXXXXXX` |
 | `BANK_NAME`, `BANK_HOLDER`, `BANK_RIB`, `BANK_IBAN` | Yes | Shown to clients on the payment step |
-| `DEPOSIT_PERCENT` | No | Deposit share, default 50 |
+| `DEPOSIT_PERCENT` | No | Share paid upfront, default 100 (full payment). 50 = deposit |
 | `POSTHOG_KEY`, `POSTHOG_HOST` | No | Analytics and error tracking |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | No | Alerts for new orders and receipts |
 | `RESEND_API_KEY`, `ALERT_EMAIL`, `ALERT_FROM` | No | Same alerts by email |
@@ -85,13 +90,17 @@ The studio's **Settings → Integrations** card shows which of these are on.
 ## Payment by bank transfer (RIB)
 
 1. A couple orders on the landing page and lands on their client space with a private link.
-2. They transfer the deposit to your RIB with the order code as reference, then upload a photo or PDF of the receipt.
-3. The team gets an alert (Telegram or email, with the receipt attached), checks the bank account, and confirms in **Studio → Orders**. Receipts are private and only viewable in the studio.
-4. Confirming unlocks the client space: invitation link, guest links and live RSVPs. "Create invitation from this order" prefills the invitation.
+2. They prepare their invitation there (names, date, venue, text, theme, guest list for Signature/Prestige) and see a live preview. It is saved but **locked**: guests cannot open it yet.
+3. They transfer the price to your RIB with the order code as reference, then upload a photo or PDF of the receipt.
+4. The team gets an alert (Telegram or email, with the receipt attached), checks the bank account, and confirms in **Studio → Orders**. Receipts are private and only viewable in the studio.
+5. Confirming unlocks the invitation and the client space: invitation link, guest links and QR codes, live RSVPs. If the couple has not prepared anything yet, an invitation is created from the order for them to fill. Custom designs are shared once the designer marks them published.
+
+Orders also record where the couple came from (`utm_*` on links; `invitation` from the footer of guests' invitations) and an optional referrer (`?ref=RQ-XXXXX` from the thank-you message: 10 % off, applied when the referring order is paid).
 
 ## Integrations
 
-- **PostHog:** pageviews, clicks, JS errors and these events: `order_created`, `client_space_viewed`, `payment_proof_uploaded`, `theme_previewed`, `invitation_opened`, `rsvp_sent`. Cookieless (no consent banner). Private link tokens (`?t=`, `?g=`) are removed before sending; no names or phone numbers are sent.
+- **PostHog:** pageviews, clicks, JS errors and these events: `order_created`, `client_space_viewed`, `brief_saved`, `payment_proof_uploaded`, `theme_previewed`, `invitation_opened`, `rsvp_sent`. Cookieless (no consent banner). Private link tokens (`?t=`, `?g=`) are removed before sending; no names or phone numbers are sent.
+- **Morning summary:** `daily-digest.mts` sends the team's to-do list at 08:00 (Tunis) through the same alert channels; Studio → Settings previews it. Logic in `netlify/lib/digest.mts`, tested by `test/digest.test.mjs`.
 - **Telegram alerts:** create a bot with @BotFather, add it to your team group, get the chat id (send a message, then open `https://api.telegram.org/bot<TOKEN>/getUpdates`), set the two variables.
 - **Email alerts:** create a Resend account, verify your domain, set the variables.
 - **Canva:** see below.

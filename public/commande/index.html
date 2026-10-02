@@ -28,8 +28,66 @@
 
     <ol class="track" id="track" aria-label="Étapes de la commande"></ol>
 
+    <section class="card" id="brief" hidden>
+      <div class="bhead"><h2 id="b-title">Préparez votre invitation</h2><button class="btn sm ghost" type="button" id="b-toggle" hidden>Modifier</button></div>
+      <p class="muted small" id="b-lead">Quelques minutes suffisent. Vous voyez l'aperçu à chaque étape, et vous pourrez tout modifier plus tard sur le même lien.</p>
+      <p class="muted small" id="b-done" hidden></p>
+      <form id="b-form" novalidate>
+        <fieldset>
+          <legend>Les mariés</legend>
+          <div class="g2">
+            <label class="f"><span>Prénom 1</span><input id="b-a" maxlength="60" required></label>
+            <label class="f"><span>Prénom 2</span><input id="b-b" maxlength="60" required></label>
+            <label class="f"><span>Prénom 1 en arabe <i>(facultatif)</i></span><input id="b-a-ar" dir="rtl" lang="ar" maxlength="60"></label>
+            <label class="f"><span>Prénom 2 en arabe <i>(facultatif)</i></span><input id="b-b-ar" dir="rtl" lang="ar" maxlength="60"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Le jour J</legend>
+          <div class="g2">
+            <label class="f"><span>Occasion</span><select id="b-event"></select></label>
+            <label class="f"><span>Date</span><input id="b-date" type="date" required></label>
+            <label class="f"><span>Heure</span><input id="b-time" type="time" value="20:00"></label>
+            <label class="f"><span>Ville</span><input id="b-city" maxlength="160" placeholder="Sousse"></label>
+            <label class="f"><span>Salle ou lieu</span><input id="b-venue" maxlength="160" placeholder="Salle des fêtes Dar El Yasmine"></label>
+            <label class="f"><span>Lien Google Maps <i>(facultatif)</i></span><input id="b-maps" type="url" inputmode="url" maxlength="500" placeholder="https://maps.app.goo.gl/…"></label>
+            <label class="f"><span>Tenue souhaitée <i>(facultatif)</i></span><input id="b-dress" maxlength="160" placeholder="Tenue de soirée"></label>
+            <label class="f"><span>Répondre avant le <i>(facultatif)</i></span><input id="b-rsvpby" type="date"></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Le style</legend>
+          <div class="g2">
+            <label class="f" id="b-theme-wrap"><span>Thème</span><select id="b-theme"></select></label>
+            <label class="f"><span>Langue principale</span><select id="b-lang"><option value="fr">Français</option><option value="ar">العربية</option><option value="en">English</option></select></label>
+            <label class="f"><span>En tête de l'invitation</span><select id="b-open"></select></label>
+            <label class="f"><span>Ton du texte</span><select id="b-tone"></select></label>
+          </div>
+          <p class="muted small" id="b-custom-note" hidden>Votre site sur mesure est dessiné par notre designer à partir de ces informations.</p>
+          <details class="more"><summary>Modifier le texte de l'invitation</summary>
+            <label class="f"><span>Français</span><textarea id="b-msg-fr" maxlength="600"></textarea></label>
+            <label class="f"><span>العربية</span><textarea id="b-msg-ar" dir="rtl" lang="ar" maxlength="600"></textarea></label>
+            <label class="f"><span>English</span><textarea id="b-msg-en" maxlength="600"></textarea></label>
+          </details>
+          <label class="f" id="b-story-wrap"><span>Votre histoire en quelques lignes <i>(facultatif)</i></span><textarea id="b-story" maxlength="1500" placeholder="Tout a commencé…"></textarea></label>
+        </fieldset>
+        <fieldset id="b-guests-wrap">
+          <legend>Vos invités</legend>
+          <p class="muted small">Chaque famille reçoit son lien, à son nom, avec ses places réservées. Une ligne par invitation : <b>nom, téléphone, places</b>. Vous pouvez en ajouter à tout moment.</p>
+          <label class="f"><span class="sr">Ajouter des invités</span><textarea id="b-paste" rows="4" placeholder="Famille Ben Salah, 22 123 456, 4&#10;Amira et Youssef, 98 765 432, 2"></textarea></label>
+          <button class="btn sm" type="button" id="b-add">Ajouter à la liste</button>
+          <p class="muted small" id="b-gcount"></p>
+          <ul class="glist" id="b-glist"></ul>
+        </fieldset>
+        <label class="f" id="b-seats-wrap"><span>Places par réponse sur le lien partagé</span><input id="b-seats" type="number" min="1" max="20" value="2"></label>
+        <p class="err" id="b-err" hidden></p>
+        <div class="bactions"><button class="btn primary" type="submit" id="b-save">Enregistrer mon invitation</button><button class="btn ghost" type="button" id="b-pv-btn">Voir l'aperçu</button><span class="muted small" id="b-status"></span></div>
+      </form>
+      <div class="pvwrap" id="b-pv" hidden><iframe id="b-frame" title="Aperçu de votre invitation"></iframe></div>
+    </section>
+
     <section class="card" id="pay" hidden>
-      <h2>Réglez l'acompte par virement</h2>
+      <h2 id="p-title">Réglez votre commande par virement</h2>
       <p class="lead-s">Montant à virer : <b id="p-amount"></b> <span class="muted" id="p-of"></span></p>
       <div class="alert" id="p-rejected" hidden></div>
       <dl class="bank" id="bank"></dl>
@@ -58,7 +116,7 @@
 
     <section class="card" id="space" hidden>
       <h2>Votre invitation</h2>
-      <div id="inv-none"><p>Notre équipe prépare votre invitation. Vous recevrez le lien ici et sur WhatsApp.</p></div>
+      <div id="inv-none"><p id="inv-none-txt">Notre équipe prépare votre invitation. Vous recevrez le lien ici et sur WhatsApp.</p></div>
       <div id="inv-box" hidden>
         <div class="linkrow"><code id="inv-link"></code><button class="btn sm" type="button" id="inv-copy">Copier</button><a class="btn sm primary" id="inv-open" target="_blank" rel="noopener">Ouvrir</a></div>
         <div class="tiles"><div class="tile"><b id="t-total">0</b><span>Réponses</span></div><div class="tile"><b id="t-coming">0</b><span>Personnes présentes</span></div><div class="tile"><b id="t-declined">0</b><span>Absents</span></div></div>
@@ -77,6 +135,7 @@
 </main>
 <script src="/assets/analytics.js"></script>
 <script src="/assets/vendor/qrcode.js"></script>
+<script src="/assets/wording-templates.js"></script>
 <script src="/assets/commande.js"></script>
 </body>
 </html>

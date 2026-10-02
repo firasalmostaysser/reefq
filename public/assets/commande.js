@@ -20,12 +20,17 @@ function render(o){
   $('#h-names').textContent=o.names||'Votre commande';$('#h-code').textContent=o.code;$('#h-plan').textContent='Offre '+o.plan+' · '+o.price+' DT';
   var st=STATUS[o.status]||[o.status,''];$('#h-status').textContent=st[0];$('#h-status').className='pill '+st[1];
   if(o.whatsapp){var wa=$('#wa-help');wa.hidden=false;wa.href='https://wa.me/'+String(o.whatsapp).replace(/[^0-9]/g,'')+'?text='+encodeURIComponent('Bonjour Reefq, ma commande '+o.code+' ('+(o.names||'')+').')}
-  var step=o.status==='paid'?(o.invitation?4:3):o.status==='proof_sent'?2:1;
-  $('#track').innerHTML=['Commande reçue','Virement envoyé','Paiement vérifié','Invitation livrée'].map(function(s,i){return '<li class="'+(i+1<step||(i+1===step&&o.status==='paid'&&step===4)?'done':i+1===step?'now':'')+'">'+s+'</li>'}).join('');
+  /* steps: prepare the invitation, pay, we check, share it with the guests */
+  var paid=o.status==='paid',sent=o.status==='proof_sent'||paid,steps=[['Votre invitation',!!o.briefAt],['Virement envoyé',sent],['Paiement vérifié',paid],['Invitation en ligne',paid&&!!o.invitation]];
+  var nowI=steps.findIndex(function(s){return !s[1]});
+  $('#track').innerHTML=steps.map(function(s,i){return '<li class="'+(s[1]?'done':i===nowI?'now':'')+'">'+s[0]+'</li>'}).join('');
   var needPay=o.status==='awaiting_payment'||o.status==='rejected';
-  $('#pay').hidden=!needPay;$('#checking').hidden=o.status!=='proof_sent';$('#paid').hidden=o.status!=='paid';$('#space').hidden=o.status!=='paid';
+  $('#pay').hidden=!needPay;$('#checking').hidden=o.status!=='proof_sent';$('#paid').hidden=!paid;$('#space').hidden=!paid;
+  renderBrief(o);
   if(needPay){
-    $('#p-amount').textContent=o.deposit+' DT';$('#p-of').textContent='(acompte sur '+o.price+' DT, le reste à la livraison de votre invitation)';$('#p-ref').textContent=o.code;
+    var full=o.deposit>=o.price;
+    $('#p-title').textContent=full?'Réglez votre commande par virement':'Réglez l\'acompte par virement';
+    $('#p-amount').textContent=o.deposit+' DT';$('#p-of').textContent=full?(o.referrer?'(-10 % offert par vos proches)':''):'(acompte sur '+o.price+' DT, le reste à la livraison de votre invitation)';$('#p-ref').textContent=o.code;
     var rej=o.history.filter(function(h){return h.status==='rejected'}).pop();$('#p-rejected').hidden=o.status!=='rejected';if(rej)$('#p-rejected').textContent='Nous n\'avons pas trouvé ce virement : '+(rej.note||'')+'. Vérifiez et renvoyez un justificatif.';
     var b=o.bank||{},rows=[['Banque',b.name],['Titulaire',b.holder],['RIB',b.rib],['IBAN',b.iban],['Motif',o.code]].filter(function(r){return r[1]});
     $('#bank').innerHTML=b.rib?rows.map(function(r,i){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd><button class="btn ghost sm" type="button" data-cp="'+i+'">Copier</button>'}).join(''):'<dt>RIB</dt><dd>Nous vous envoyons notre RIB sur WhatsApp.</dd><span></span>';
@@ -35,6 +40,7 @@ function render(o){
   if(o.status==='paid'){
     $('#paid-txt').textContent='Nous avons bien reçu '+o.paid+' DT. Votre espace client est ouvert : vous y trouverez votre invitation et les réponses de vos invités en direct.';
     var inv=o.invitation;$('#inv-none').hidden=!!inv;$('#inv-box').hidden=!inv;
+    $('#inv-none-txt').textContent=o.designPending?'Notre designer dessine votre site sur mesure à partir de vos informations. Le lien et les liens de vos invités apparaîtront ici dès qu\'il est prêt.':o.briefAt?'Votre invitation se prépare. Actualisez cette page dans un instant.':'Remplissez « Préparez votre invitation » ci-dessus : elle sera en ligne dès que vous enregistrez.';
     if(inv){var link=location.origin+inv.url;$('#inv-link').textContent=link;$('#inv-open').href=link;$('#inv-copy').onclick=function(){copy(link)};
       var r=o.rsvps||{total:0,coming:0,declined:0,items:[]};$('#t-total').textContent=r.total;$('#t-coming').textContent=r.coming;$('#t-declined').textContent=r.declined;
       $('#csv').href=API+'/rsvps.csv'+Q;
@@ -46,8 +52,89 @@ function render(o){
       document.querySelectorAll('[data-gq]').forEach(function(x){x.onclick=function(){var g=gl[+x.dataset.gq];guestQr(location.origin+g.link,cn,g.name,x.dataset.k)}});
     }
   }
-  clearInterval(poll);if(o.status==='proof_sent'||o.status==='paid')poll=setInterval(load,o.status==='paid'?60000:30000);
+  clearInterval(poll);if(o.status==='proof_sent'||o.status==='paid')poll=setInterval(function(){if(!dirty)load()},o.status==='paid'?60000:30000);
 }
+
+/* ---------- the couple prepares their invitation ---------- */
+var RW=window.ReefqWording,THEME_NAMES={reefq:'Reefq',zitouna:'Zitouna',yasmine:'Yasmine',layl:'Layl',sidi:'Sidi Bou Said',kairouan:'Kairouan',oldmoney:'Old Money',sauge:'Sauge',bordeaux:'Bordeaux',sahara:'Sahara'};
+var B=null,G=[],dirty=false,briefOpen=null,pvReady=false,pvShown=false;
+function opts(list,cur){return list.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===cur?' selected':'')+'>'+esc(x.label)+'</option>'}).join('')}
+function toneOf(ev,msg){if(!msg||!msg.fr)return 'classic';var t=RW.TONES.filter(function(x){return RW.get(ev,x.id).fr===msg.fr})[0];return t?t.id:'custom'}
+function renderBrief(o){
+  var box=$('#brief');box.hidden=o.status==='cancelled';if(box.hidden||dirty)return;
+  B=o.brief||{};G=(B.guests||[]).map(function(g){return{id:g.id,name:g.name,phone:g.phone,seats:g.seats}});
+  var names=String(o.names||'').split(/\s*(?:&|et|\+|و)\s*/i),ev=B.eventType||'wedding';
+  $('#b-a').value=(B.a&&B.a.name)||names[0]||'';$('#b-b').value=(B.b&&B.b.name&&B.b.name!=='—'?B.b.name:'')||names[1]||'';
+  $('#b-a-ar').value=(B.a&&B.a.ar)||'';$('#b-b-ar').value=(B.b&&B.b.ar)||'';
+  $('#b-event').innerHTML=opts(RW.EVENTS.map(function(x){return{id:x.id,label:x.label.fr}}),ev);
+  $('#b-date').value=B.date||o.date||'';$('#b-time').value=B.time||'20:00';$('#b-city').value=B.city||o.city||'';$('#b-venue').value=B.venue||'';$('#b-maps').value=B.maps||'';
+  $('#b-dress').value=B.dress||'';$('#b-rsvpby').value=B.rsvpBy||'';$('#b-seats').value=B.maxGuests||2;
+  $('#b-theme').innerHTML=opts((o.themes||Object.keys(THEME_NAMES)).map(function(t){return{id:t,label:THEME_NAMES[t]||t}}),B.theme||o.theme||'reefq');
+  $('#b-lang').value=B.lang||'fr';
+  $('#b-open').innerHTML=opts(RW.OPENINGS.map(function(x){return{id:x.id,label:x.label.fr}}),B.opening||'none');
+  var tone=toneOf(ev,B.message);
+  $('#b-tone').innerHTML=opts(RW.TONES.map(function(x){return{id:x.id,label:x.label.fr}}).concat(tone==='custom'?[{id:'custom',label:'Texte personnalisé'}]:[]),tone);
+  var m=B.message&&B.message.fr?B.message:RW.get(ev,tone);$('#b-msg-fr').value=m.fr||'';$('#b-msg-ar').value=m.ar||'';$('#b-msg-en').value=m.en||'';
+  $('#b-story').value=(B.story&&(B.story[B.lang||'fr']||B.story.fr))||'';
+  $('#b-theme-wrap').hidden=!!o.custom;$('#b-custom-note').hidden=!o.custom;
+  $('#b-guests-wrap').hidden=!o.guestLinks;$('#b-pv-btn').hidden=!!o.custom;$('#b-story-wrap').hidden=!o.guestLinks;
+  if(briefOpen===null)briefOpen=!o.briefAt;
+  setBriefOpen(briefOpen,o);renderGuests();preview();
+}
+function setBriefOpen(on,o){o=o||O;briefOpen=on;$('#b-form').hidden=!on;$('#b-lead').hidden=!on;$('#b-toggle').hidden=on||!o.briefAt;
+  $('#b-title').textContent=o.briefAt?'Les détails de votre invitation':'Préparez votre invitation';
+  var d=$('#b-done');d.hidden=!o.briefAt;
+  d.textContent=o.briefAt?(o.status==='paid'?'Enregistrée et en ligne. Modifiez-la quand vous voulez : vos invités voient les changements sur le même lien.':'Enregistrée. Elle sera en ligne dès que nous aurons confirmé votre virement.'):'';
+  if(!on&&!pvShown)$('#b-pv').hidden=true}
+$('#b-toggle').onclick=function(){setBriefOpen(true);$('#b-form').scrollIntoView({behavior:'smooth',block:'start'})};
+function collect(){
+  var lang=$('#b-lang').value,story={};story[lang]=$('#b-story').value.trim();
+  return {theme:$('#b-theme').value,lang:lang,eventType:$('#b-event').value,opening:$('#b-open').value,
+    a:{name:$('#b-a').value.trim(),ar:$('#b-a-ar').value.trim()},b:{name:$('#b-b').value.trim(),ar:$('#b-b-ar').value.trim()},
+    date:$('#b-date').value,time:$('#b-time').value,city:$('#b-city').value.trim(),venue:$('#b-venue').value.trim(),maps:$('#b-maps').value.trim(),
+    dress:$('#b-dress').value.trim(),rsvpBy:$('#b-rsvpby').value,maxGuests:+$('#b-seats').value||2,
+    message:{fr:$('#b-msg-fr').value.trim(),ar:$('#b-msg-ar').value.trim(),en:$('#b-msg-en').value.trim()},story:story,guests:G};
+}
+function touchB(){dirty=true;$('#b-status').textContent='Modifications non enregistrées';preview()}
+$('#b-form').addEventListener('input',touchB);
+$('#b-form').addEventListener('change',function(e){
+  if(e.target.id==='b-tone'||e.target.id==='b-event'){var t=$('#b-tone').value;if(t!=='custom'){var m=RW.get($('#b-event').value,t);$('#b-msg-fr').value=m.fr;$('#b-msg-ar').value=m.ar;$('#b-msg-en').value=m.en}}
+  touchB()});
+/* preview: the same engine as the guests', in a phone-sized frame, refreshed as they type */
+var pvT=null;
+function preview(open){if(!pvShown)return;clearTimeout(pvT);pvT=setTimeout(function(){
+  var d=collect(),f=$('#b-frame');if(!pvReady||!f.contentWindow)return;
+  var inv={id:'apercu',theme:O&&O.custom?'reefq':d.theme,lang:d.lang,eventType:d.eventType,opening:d.opening,a:d.a,b:d.b,date:d.date,time:d.time,city:d.city,venue:d.venue,maps:d.maps,dress:d.dress,rsvpBy:d.rsvpBy,maxGuests:d.maxGuests,message:d.message,story:d.story,events:[],photos:[]};
+  var g=G[0]?{id:'g',name:G[0].name,seats:G[0].seats}:null;
+  f.contentWindow.postMessage({type:'rq-preview',inv:inv,guest:g,open:!!open},location.origin)},250)}
+addEventListener('message',function(e){if(e.origin===location.origin&&e.data&&e.data.type==='rq-preview-ready'){pvReady=true;preview()}});
+$('#b-pv-btn').onclick=function(){pvShown=!pvShown;$('#b-pv').hidden=!pvShown;this.textContent=pvShown?'Masquer l\'aperçu':'Voir l\'aperçu';if(pvShown){var f=$('#b-frame');if(!f.getAttribute('src'))f.src='/apercu.html';preview();$('#b-pv').scrollIntoView({behavior:'smooth',block:'center'})}};
+/* guest list: one line per invitation, "name, phone, seats" */
+function renderGuests(){
+  var seats=G.reduce(function(s,g){return s+(+g.seats||1)},0);
+  $('#b-gcount').textContent=G.length?G.length+' invitation(s) · '+seats+' place(s) réservée(s)':'Aucun invité pour l\'instant.';
+  $('#b-glist').innerHTML=G.map(function(g,i){return '<li><span><b>'+esc(g.name)+'</b>'+(g.phone?' · '+esc(g.phone):'')+' · '+(+g.seats||1)+' pl.</span><button class="btn sm ghost" type="button" data-rmb="'+i+'" aria-label="Retirer '+esc(g.name)+'">Retirer</button></li>'}).join('');
+  document.querySelectorAll('[data-rmb]').forEach(function(b){b.onclick=function(){G.splice(+b.dataset.rmb,1);renderGuests();touchB()}});
+}
+$('#b-add').onclick=function(){
+  var lines=$('#b-paste').value.split(/\n+/).map(function(l){return l.trim()}).filter(Boolean);if(!lines.length){$('#b-paste').focus();return}
+  lines.forEach(function(l){var p=l.split(/[,;\t]/).map(function(x){return x.trim()}),s=parseInt(p[2],10);if(p[0])G.push({name:p[0],phone:p[1]||'',seats:s>0?s:1})});
+  $('#b-paste').value='';renderGuests();touchB();toast(lines.length+' ligne(s) ajoutée(s). Pensez à enregistrer.');
+};
+$('#b-form').onsubmit=function(e){e.preventDefault();
+  var d=collect(),er=$('#b-err'),btn=$('#b-save');er.hidden=true;
+  if(!d.a.name||!d.b.name){er.textContent='Indiquez vos deux prénoms.';er.hidden=false;$('#b-a').focus();return}
+  if(!d.date){er.textContent='Indiquez la date.';er.hidden=false;$('#b-date').focus();return}
+  if($('#b-paste').value.trim()){$('#b-add').click();d=collect()}
+  btn.disabled=true;btn.textContent='Enregistrement…';
+  fetch(API+'/invitation'+Q,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(d)})
+   .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Enregistrement impossible');return j})})
+   .then(function(o){var first=!O.briefAt;dirty=false;$('#b-status').textContent='Enregistré';briefOpen=false;render(o);toast('Invitation enregistrée');
+     if(window.rqTrack)window.rqTrack('brief_saved',{plan:o.plan,first:first,guests:G.length,paid:o.status==='paid'});
+     var next=o.status==='paid'?$('#space'):!$('#pay').hidden?$('#pay'):$('#brief');next.scrollIntoView({behavior:'smooth',block:'start'})})
+   .catch(function(x){er.textContent=x.message;er.hidden=false}).then(function(){btn.disabled=false;btn.textContent='Enregistrer mon invitation'});
+};
+addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue=''}});
 
 $('#proof-file').onchange=function(){
   file=this.files[0]||null;$('#proof-err').hidden=true;$('#proof-send').disabled=!file;

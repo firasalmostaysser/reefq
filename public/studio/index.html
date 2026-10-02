@@ -268,6 +268,7 @@
         <button class="btn" type="button" id="od-invite">Create invitation from this order</button>
         <a class="btn primary" id="od-wa" target="_blank" rel="noopener">Send client space on WhatsApp</a>
         <button class="btn ghost" type="button" id="od-copy">Copy client space link</button>
+        <button class="btn ghost" type="button" id="od-delete">Delete order</button>
       </div>
     </div>
   </section>
@@ -287,6 +288,13 @@
         <label class="f"><span>Published site address</span><input id="st-url" inputmode="url" placeholder="https://….my.canva.site/…"></label>
         <button class="btn" type="button" id="st-add-btn">Add template</button>
       </form>
+    </div>
+    <div class="card">
+      <h2>Morning summary &amp; backups</h2>
+      <p class="hint">Every morning at 08:00 the team gets one message: receipts to verify, unpaid orders to remind (WhatsApp link ready), couples who have not prepared their invitation, custom designs to publish, weddings this week, and yesterday's numbers. Unpaid orders older than 14 days are cancelled. Every Monday a full backup file arrives in the same chat.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" type="button" id="s-digest">Preview today's summary</button><button class="btn primary" type="button" id="s-digest-send" hidden>Send it now</button><button class="btn ghost" type="button" id="s-backup">Download a backup</button></div>
+      <p class="hint" id="s-digest-hint"></p>
+      <pre class="digest" id="s-digest-out" hidden></pre>
     </div>
     <div class="card">
       <h2>Bank transfer (RIB)</h2>

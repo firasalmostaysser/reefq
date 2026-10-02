@@ -19,16 +19,31 @@ const shot = (p, n) => process.env.SHOTS && p.screenshot({ path: `test/out-${n}.
 
 // 1. A couple orders on the landing page and lands on their client space
 const c = await page(390, 844);
-await c.goto(BASE + '/'); await c.waitForSelector('#demo .rq3-seal');
+await c.goto(BASE + '/?utm_source=facebook&utm_campaign=reel-1'); await c.waitForSelector('#demo .rq3-seal');
 // the landing demo opens its envelope by itself once it is on screen (about 1.5 s + the opening animation)
 await c.waitForFunction(() => !document.querySelector('#demo .rq3') && document.querySelector('#demo .rq-scroll'), null, { timeout: 10000 });
 await c.fill('#o-names', 'Nour & Sami'); await c.fill('#o-phone', '98 765 432'); await c.fill('#o-date', '2027-06-19'); await c.fill('#o-city', 'Sfax');
 await c.selectOption('#o-plan', 'Signature');
 await c.click('#of button[type=submit]');
 await c.waitForURL(/\/commande\/RQ-/); await c.waitForSelector('#pay:not([hidden])');
-assert.match(await c.textContent('#p-amount'), /125 DT/);
-const clientUrl = c.url(), code = clientUrl.match(/RQ-[A-Z0-9]{5}/)[0];
+assert.match(await c.textContent('#p-amount'), /249 DT/);
+const clientUrl = c.url(), code = clientUrl.match(/RQ-[A-Z0-9]{5}/)[0], ctok = new URL(clientUrl).searchParams.get('t');
 await shot(c, '1-pay');
+
+// 1b. Before paying, the couple prepares their invitation, adds guests and sees the preview; guests cannot open it yet
+await c.waitForSelector('#brief:not([hidden]) #b-form:not([hidden])');
+assert.equal(await c.inputValue('#b-a'), 'Nour'); assert.equal(await c.inputValue('#b-b'), 'Sami'); assert.equal(await c.inputValue('#b-date'), '2027-06-19');
+await c.fill('#b-venue', 'Dar Sfax'); await c.fill('#b-time', '19:30'); await c.selectOption('#b-theme', 'zitouna'); await c.selectOption('#b-tone', 'blessing');
+assert.match(await c.inputValue('#b-msg-fr'), /bénédiction/);
+await c.fill('#b-paste', ['Famille Jlassi, 20 000 000, 3', 'Oncle Mourad, , 1'].join(String.fromCharCode(10))); await c.click('#b-add');
+assert.match(await c.textContent('#b-gcount'), /2 invitation.* 4 place/);
+await c.click('#b-pv-btn'); const pv = c.frameLocator('#b-frame'); await pv.locator('.rq3-seal').waitFor({ timeout: 10000 });
+assert.match(await pv.locator('.rq3-dear').textContent(), /Famille Jlassi/);
+await c.click('#b-save'); await c.waitForSelector('#b-done:not([hidden])');
+assert.match(await c.textContent('#b-done'), /dès que nous aurons confirmé/);
+assert.match(await c.textContent('#track li.done'), /Votre invitation/);
+const pre = await (await c.request.get(`${BASE}/api/public/orders/${code}?t=${ctok}`)).json();
+assert.equal(pre.brief.venue, 'Dar Sfax'); assert.equal(pre.brief.guests.length, 2); assert.equal(pre.brief.theme, 'zitouna'); assert.equal(pre.brief.time, '19:30');
 
 // 2. They upload the transfer receipt
 const receipt = join(tmpdir(), 'reefq-receipt.png');
@@ -42,13 +57,20 @@ const s = await page(1300, 900);
 await s.goto(BASE + '/studio/'); await s.waitForSelector('#login:not([hidden])');
 await s.fill('#l-pass', PASSWORD); await s.click('#l-form button'); await s.waitForSelector('#studio:not([hidden])');
 await s.click('#tab-orders'); await s.waitForSelector(`[data-od="${code}"]`);
+const ord = await s.evaluate(async c => (await (await fetch('/api/orders/' + c)).json()), code);
+assert.deepEqual(ord.source, { source: 'facebook', campaign: 'reel-1' }); assert.ok(ord.briefAt && ord.inviteId);
+assert.equal((await s.request.get(`${BASE}/api/public/invitations/${ord.inviteId}`)).status(), 409, 'an unpaid invitation stays closed to guests');
 await s.click(`[data-od="${code}"]`); await s.waitForSelector('#od-proof img, #od-proof a');
 await shot(s, '3-review');
 await s.fill('#od-amount', '125'); await s.click('#od-confirm');
 await s.waitForFunction(() => /Paid/.test(document.querySelector('#od-status').textContent));
+assert.equal((await s.request.get(`${BASE}/api/public/invitations/${ord.inviteId}`)).status(), 200, 'confirming the payment opens the invitation');
 await s.click('#od-invite'); await s.waitForFunction(() => document.querySelector('#k-a-name').value === 'Nour');
+assert.equal(await s.inputValue('#k-venue'), 'Dar Sfax');
 // wording comes from the ready-made texts (no AI): occasion + tone fill the three languages
 await s.selectOption('#w-tone', 'families'); await s.selectOption('#w-open', 'bismillah'); await s.click('#w-use');
+// the couple already chose a text in their client space, so the studio asks before replacing it
+await s.waitForSelector('#dlg[open]'); await s.click('#dlg-ok');
 await s.waitForFunction(() => document.querySelector('#k-msg-fr').value.length > 20 && document.querySelector('#k-msg-ar').value.length > 10);
 await s.fill('#k-venue', 'Dar Sfax'); await s.click('#btn-save'); await s.waitForFunction(() => document.querySelector('#status').textContent === 'Saved');
 await s.click('#tab-guests'); await s.fill('#g-paste', 'Famille Karray, 22 111 333, 2'); await s.click('#g-add');
@@ -67,7 +89,8 @@ await shot(c, '4-client-space');
 const inv = invUrl.split('/i/')[1];
 const saved = await s.evaluate(async id => (await (await fetch('/api/invitations/' + id)).json()), inv);
 assert.equal(saved.opening, 'bismillah');
-const gid = saved.guests[0].id;
+assert.equal(saved.guests.length, 3); assert.equal(saved.theme, 'zitouna');
+const gid = saved.guests.find(x => x.name === 'Famille Karray').id;
 const g = await page(390, 844);
 await g.goto(`${BASE}/i/${inv}?g=${gid}`); await g.waitForSelector('.rq3-seal');
 assert.match(await g.textContent('.rq3-dear'), /Famille Karray/);
@@ -201,6 +224,22 @@ assert.equal(tinv2.designSource, 'canva'); assert.equal(tinv2.siteTemplate, tpl.
 site.closeAllConnections?.(); await new Promise(r => site.close(r));
 const g3 = await page(390, 844); await g3.goto(`${BASE}/i/${cid}?g=${cgid}`);
 await g3.waitForSelector('#late'); await g3.waitForFunction(() => document.querySelector('#late').complete && document.querySelector('#late').naturalWidth > 0);
+
+// 14. Operations: morning summary (dry run), backup round trip, a referral link gives -10 %, test orders can be deleted
+const dg = await s.evaluate(async () => (await (await fetch('/api/digest?dry=1', { method: 'POST' })).json()));
+assert.match(dg.text, /Hier : [^]*Ce mois : /); assert.ok(dg.text.includes('Studio : '));
+const bk = await s.evaluate(async () => (await (await fetch('/api/export')).json()));
+assert.equal(bk.app, 'reefq'); assert.ok(bk.orders.some(o => o.key === code) && bk.invitations.length && bk.rsvps.length);
+const imp = await s.evaluate(async b => (await (await fetch('/api/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) })).json()), { app: 'reefq', orders: bk.orders.filter(o => o.key === code) });
+assert.equal(imp.counts.orders, 1);
+const R = await page(390, 844); await R.goto(BASE + '/?ref=' + code); await R.waitForSelector('.ref-note');
+await R.fill('#o-names', 'Lina & Bilel'); await R.fill('#o-phone', '22 000 111'); await R.selectOption('#o-plan', 'Signature'); await R.click('#of button[type=submit]');
+await R.waitForURL(/\/commande\/RQ-/); await R.waitForSelector('#pay:not([hidden])');
+assert.match(await R.textContent('#p-amount'), /224 DT/);
+const rcode = R.url().match(/RQ-[A-Z0-9]{5}/)[0];
+assert.equal(await s.evaluate(async c => (await (await fetch('/api/orders/' + c)).json()).referrer, rcode), code);
+assert.equal(await s.evaluate(async c => (await fetch('/api/orders/' + c, { method: 'DELETE' })).status, rcode), 200);
+assert.equal(await s.evaluate(async c => (await fetch('/api/orders/' + c)).status, rcode), 410);
 
 console.log('E2E passed:', code, invUrl, errs.length ? errs : '');
 await b.close();

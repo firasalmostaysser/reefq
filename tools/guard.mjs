@@ -22,7 +22,7 @@ const LOCKED = [
   /^netlify\/(?!lib\/themes\.mts$)/, /^netlify\.toml$/, /^package(-lock)?\.json$/, /^deno\.lock$/,
   /^\.env/, /^test\//, /^tools\/guard\.mjs$/, /^\.github\//, /^\.cursor\//, /^AGENTS\.md$/, /^CLAUDE\.md$/,
   /^public\/assets\/(commande|invite|analytics|site-bar|wording-templates)\.js$/,
-  /^public\/assets\/vendor\//, /^public\/studio\/studio\.js$/,
+  /^public\/assets\/vendor\//, /^public\/studio\/studio\.js$/, /^public\/apercu\.html$/, /^tools\/seed\.mjs$/,
 ];
 const REVIEW = [/^public\/assets\/engine\.js$/, /^public\/assets\/landing\.js$/, /^netlify\/lib\/themes\.mts$/, /\.html$/];
 for (const p of changed) {

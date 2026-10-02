@@ -1,6 +1,7 @@
 import type { Context, Config } from '@netlify/functions';
 import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError } from '../lib/util.mts';
-import { invitations, rsvps, orders, files, opens, siteTemplates, listJSON, rateLimit } from '../lib/stores.mts';
+import { invitations, rsvps, orders, files, opens, siteTemplates, listJSON, listEntries, rateLimit, isProduction, DATA_STORES } from '../lib/stores.mts';
+import { sendDigest } from '../lib/digest-run.mts';
 import { isStudio, login, logout } from '../lib/auth.mts';
 import { canvaStatus, uniqueSlug } from '../lib/canva.mts';
 import { allowedSiteUrl, cleanSiteUrl, snapshotSite, deleteSite, personalOnly } from '../lib/sites.mts';
@@ -10,6 +11,9 @@ import { notify, later, siteUrl, alertsConfigured } from '../lib/notify.mts';
 const MAX_INVITE_BYTES = 900_000;
 const PRICES: Record<string, number> = { Essentiel: 149, Signature: 249, Prestige: 349 };
 const ORDER_STATUSES = ['awaiting_payment', 'proof_sent', 'paid', 'rejected', 'cancelled'];
+const REFERRAL_OFF = 10;                       // % off for couples who come through a past client's link (?ref=RQ-XXXXX)
+const GUEST_PLANS = ['Signature', 'Prestige'];  // plans with one personal link per guest
+const MAX_GUESTS = 1500;
 
 export default async (req: Request, context: Context) => {
   try { return await route(req, context); }
@@ -29,7 +33,7 @@ async function route(req: Request, context: Context): Promise<Response> {
   /* ---------------- public ---------------- */
   if (p === '/api/login' && m === 'POST') return login(req, context);
   if (p === '/api/logout' && m === 'POST') return logout();
-  if (p === '/api/config' && m === 'GET') return json({ whatsapp: env('REEFQ_WHATSAPP'), prices: PRICES, depositPercent: depositPct(),
+  if (p === '/api/config' && m === 'GET') return json({ whatsapp: env('REEFQ_WHATSAPP'), prices: PRICES, depositPercent: depositPct(), referralOff: REFERRAL_OFF,
     posthog: env('POSTHOG_KEY') ? { key: env('POSTHOG_KEY'), host: env('POSTHOG_HOST') || 'https://us.i.posthog.com' } : null });
 
   if ((mm = p.match(/^\/api\/public\/invitations\/([a-z0-9-]{3,80})$/)) && m === 'GET') return publicInvitation(mm[1], url.searchParams.get('g'));
@@ -47,6 +51,11 @@ async function route(req: Request, context: Context): Promise<Response> {
   if ((mm = p.match(/^\/api\/public\/orders\/(RQ-[A-Z0-9]{5})$/))) {
     const o = await clientOrder(mm[1], url.searchParams.get('t'));
     if (m === 'GET') return json(await clientView(o));
+  }
+  /* The couple prepares their own invitation from the client space, before or after paying. It goes live once the payment is confirmed. */
+  if ((mm = p.match(/^\/api\/public\/orders\/(RQ-[A-Z0-9]{5})\/invitation$/)) && m === 'PUT') {
+    const o = await clientOrder(mm[1], url.searchParams.get('t'));
+    return clientBrief(req, context, o);
   }
   if ((mm = p.match(/^\/api\/public\/orders\/(RQ-[A-Z0-9]{5})\/proof$/)) && m === 'POST') {
     const o = await clientOrder(mm[1], url.searchParams.get('t'));
@@ -108,7 +117,7 @@ async function route(req: Request, context: Context): Promise<Response> {
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/duplicate$/)) && m === 'POST') {
     const src: any = await invitations().get(mm[1], { type: 'json' });
     if (!src) return err(404, 'Not found');
-    const { id: _id, createdAt, updatedAt, archived, archivedAt, orderCode, guests, canvaUrl, canvaDesignId, canvaStatus: _cs, canvaVer, canvaBase, canvaPublishedAt, ...copy } = src;
+    const { id: _id, createdAt, updatedAt, archived, archivedAt, orderCode, guests, locked, canvaUrl, canvaDesignId, canvaStatus: _cs, canvaVer, canvaBase, canvaPublishedAt, ...copy } = src;
     return json(await saveInvitation(slug((src.a?.name || '') + '-' + (src.b?.name || '')) + '-' + id(4), { ...copy, guests: [] }));
   }
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})\/rsvps$/))) {
@@ -131,6 +140,12 @@ async function route(req: Request, context: Context): Promise<Response> {
       if ('price' in b && +b.price > 0) o.price = Math.round(+b.price);
       return json(await saveOrder(o));
     }
+    /* For test orders and spam: the order and its receipts go. Its invitation, if any, stays (delete it from Invitations). */
+    if (m === 'DELETE') {
+      for (const pr of o.proofs || []) await files().delete(pr.key).catch(() => null);
+      await orders().delete(o.code);
+      return json({ ok: true });
+    }
   }
   if ((mm = p.match(/^\/api\/orders\/(RQ-[A-Z0-9]{5})\/proof$/)) && m === 'GET') {
     const o = await getOrder(mm[1]);
@@ -147,6 +162,8 @@ async function route(req: Request, context: Context): Promise<Response> {
     if (b.action === 'confirm') {
       o.status = 'paid'; o.paid = Math.max(0, Math.round(+b.amountReceived || o.deposit)); o.paidAt = Date.now();
       o.history.push({ at: Date.now(), status: 'paid', note: note || `Virement de ${o.paid} DT vérifié`, by: 'studio' });
+      /* payment opens everything: the invitation the couple prepared goes live, or an empty one is created for them to fill */
+      await activateInvitation(o);
     } else if (b.action === 'reject') {
       o.status = 'rejected';
       o.history.push({ at: Date.now(), status: 'rejected', note: note || 'Virement introuvable sur le compte', by: 'studio' });
@@ -159,14 +176,7 @@ async function route(req: Request, context: Context): Promise<Response> {
   }
   if ((mm = p.match(/^\/api\/orders\/(RQ-[A-Z0-9]{5})\/invitation$/)) && m === 'POST') {
     const o = await getOrder(mm[1]);
-    if (o.inviteId) { const ex = await invitations().get(o.inviteId, { type: 'json' }); if (ex) return json({ order: o, invitation: ex }); }
-    const [a, bn] = String(o.names || '').split(/\s*(?:&|et|\+|و)\s*/i);
-    const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'ar' ? 'ar' : 'fr',
-      a: { name: (a || o.names || '').trim(), ar: '' }, b: { name: (bn || '').trim() || '—', ar: '' }, date: o.date || '', time: '20:00', city: o.city || '',
-      venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code,
-      ...(o.site ? { designSource: 'canva', siteTemplate: o.site } : {}) };
-    const saved = await saveInvitation(slug(o.names) + '-' + id(4), inv);
-    o.inviteId = saved.id; await saveOrder(o);
+    const saved = await orderInvitation(o);
     return json({ order: o, invitation: saved });
   }
 
@@ -216,6 +226,27 @@ async function route(req: Request, context: Context): Promise<Response> {
     }
   }
 
+  /* ---- backups, seeding, morning summary ---- */
+  if (p === '/api/export' && m === 'GET') {
+    const data: any = { app: 'reefq', version: 1, exportedAt: new Date().toISOString() };
+    for (const [name, s] of Object.entries(DATA_STORES)) data[name] = await listEntries(s());
+    return json(data, 200, { 'content-disposition': `attachment; filename="reefq-backup-${data.exportedAt.slice(0, 10)}.json"` });
+  }
+  /* Seeds local dev and deploy previews from a backup or tools/seed.mjs. Never production: real couples' data is only ever restored by hand. */
+  if (p === '/api/import' && m === 'POST') {
+    if (isProduction()) return err(403, 'Import is disabled on the live site. Use it on `npm run dev` or a deploy preview.');
+    const b = await readJSON(req, 50_000_000);
+    if (b.app !== 'reefq') return err(400, 'Not a Reefq backup file.');
+    const counts: Record<string, number> = {};
+    for (const [name, s] of Object.entries(DATA_STORES)) {
+      const rows = Array.isArray(b[name]) ? b[name] : [];
+      for (const r of rows) if (r && typeof r.key === 'string' && r.value && typeof r.value === 'object') await s().setJSON(r.key, r.value);
+      counts[name] = rows.length;
+    }
+    return json({ ok: true, counts });
+  }
+  if (p === '/api/digest' && m === 'POST') return json(await sendDigest({ send: url.searchParams.get('dry') !== '1', backup: url.searchParams.get('backup') === '1' }));
+
   if (p === '/api/upload' && m === 'POST') return upload(req);
   if (p === '/api/canva/sync' && m === 'POST') {
     const r = await fetch(new URL('/.netlify/functions/canva-sync-background', url), { method: 'POST', headers: { 'x-reefq-key': env('SESSION_SECRET') } });
@@ -232,10 +263,12 @@ function checkSiteUrl(raw: unknown) {
 }
 
 /* ---------------- invitations & RSVPs ---------------- */
-async function saveInvitation(iid: string, body: any) {
+/* `locked`: prepared by a couple who has not paid yet; guests cannot open it. Only the server sets or clears it (opts.locked, payment confirmed). */
+async function saveInvitation(iid: string, body: any, opts: { locked?: boolean } = {}) {
   delete body.id; delete body.sample;
   const prev: any = await invitations().get(iid, { type: 'json' });
   const doc = { ...body, id: iid, createdAt: prev?.createdAt || Date.now(), updatedAt: Date.now() };
+  if (opts.locked ?? prev?.locked) doc.locked = true; else delete doc.locked;
   /* Custom design: the address comes from the studio; publication state is set only by "Mark published" and resets when the address changes. */
   if (doc.designSource !== 'canva') doc.designSource = 'theme';
   doc.canvaUrl = doc.canvaUrl ? String(doc.canvaUrl).trim() : '';
@@ -257,6 +290,7 @@ async function saveInvitation(iid: string, body: any) {
 async function publicInvitation(iid: string, gid: string | null) {
   const inv: any = await invitations().get(iid, { type: 'json' });
   if (!inv) return err(404, 'Invitation not found');
+  if (inv.locked) return err(409, 'Cette invitation sera bientôt disponible.');
   const guest = findGuest(inv, gid);
   /* never reveal how a custom design is made: guests get the invitation texts, not the designer's address */
   const { guests, orderCode, rsvpEndpoint, siteUrl, designSource, canvaUrl, canvaDesignId, canvaStatus: _cs, canvaVer, canvaBase, canvaPublishedAt, ...pub } = inv;
@@ -269,6 +303,7 @@ async function publicRsvp(req: Request, context: Context, iid: string) {
   if (!(await rateLimit(`rsvp/${iid}/${clientIp(req, context)}`, 20, 3600))) return err(429, 'Too many replies from this connection. Try again later.');
   const inv: any = await invitations().get(iid, { type: 'json' });
   if (!inv) return err(404, 'Invitation not found');
+  if (inv.locked) return err(409, 'Cette invitation sera bientôt disponible.');
   const b = await readJSON(req, 10_000);
   if (b.website) return json({ ok: true });
   const guest = findGuest(inv, b.guestId);
@@ -284,6 +319,7 @@ async function recordOpen(req: Request, context: Context, iid: string) {
   if (!(await rateLimit(`open/${clientIp(req, context)}`, 120, 3600))) return json({ ok: true });
   const inv: any = await invitations().get(iid, { type: 'json' });
   if (!inv) return err(404, 'Invitation not found');
+  if (inv.locked) return json({ ok: true });
   const b = await readJSON(req, 2000), guest = findGuest(inv, b.guestId);
   const key = iid + '/' + (guest ? guest.id : 'anon'), s = opens(), now = Date.now();
   const cur: any = await s.get(key, { type: 'json' });
@@ -308,7 +344,9 @@ function csvResponse(list: any[], filename: string) {
 }
 
 /* ---------------- orders & RIB payments ---------------- */
-function depositPct() { const v = +env('DEPOSIT_PERCENT'); return v > 0 && v <= 100 ? v : 50; }
+/* Full payment by default: the couple prepares and previews the invitation before paying, and it goes live as soon as the transfer is
+   confirmed, so there is no balance to chase. DEPOSIT_PERCENT=50 brings back a deposit. */
+function depositPct() { const v = +env('DEPOSIT_PERCENT'); return v > 0 && v <= 100 ? v : 100; }
 
 async function newCode() {
   const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -324,15 +362,26 @@ async function createOrder(req: Request, context: Context) {
   const b = await readJSON(req, 5000);
   if (b.website) return json({ ok: true });
   if (!b.names || !b.phone) return err(400, 'Names and WhatsApp number are required.');
-  const plan = PRICES[b.plan] ? b.plan : 'Signature', price = PRICES[plan];
+  const plan = PRICES[b.plan] ? b.plan : 'Signature';
+  /* a past client's link (?ref=RQ-XXXXX) gives REFERRAL_OFF % off, once the referring order is a real, paid one */
+  const refCode = /^RQ-[A-Z0-9]{5}$/.test(String(b.ref || '')) ? String(b.ref) : '';
+  const referrer: any = refCode ? await orders().get(refCode, { type: 'json' }) : null;
+  const referred = !!(referrer && referrer.status === 'paid');
+  const price = referred ? Math.round(PRICES[plan] * (100 - REFERRAL_OFF) / 100) : PRICES[plan];
   const code = await newCode(), token = id(24), now = Date.now();
   const o: any = { code, token, status: 'awaiting_payment', plan, price, deposit: Math.round(price * depositPct() / 100), paid: 0,
     createdAt: now, updatedAt: now, proofs: [], inviteId: null, adminNote: '',
     history: [{ at: now, status: 'awaiting_payment', note: 'Commande reçue', by: 'client' }] };
   for (const k of ['names', 'date', 'city', 'guests', 'theme', 'model', 'note', 'phone', 'lang']) o[k] = clampStr(b[k], 600);
   if (/^[a-z0-9-]{1,60}$/.test(String(b.site || ''))) o.site = b.site;
+  if (referred) o.referrer = refCode;
+  /* where the couple came from (utm_source/utm_campaign on ad and post links, "invitation" from a guest's invitation footer) */
+  const src = b.src && typeof b.src === 'object' ? b.src : {};
+  const source = Object.fromEntries(['source', 'medium', 'campaign', 'content'].map(k => [k, clampStr(src[k], 60).trim()]).filter(([, v]) => v));
+  if (Object.keys(source).length) o.source = source;
   await orders().setJSON(code, o);
-  later(context, notify(`Nouvelle commande ${code}`, [`${o.names} · ${o.plan} ${price} DT (acompte ${o.deposit} DT)`, `Date : ${o.date || '—'} · ${o.city || '—'} · ${o.guests || '?'} invités`, o.site ? `Modèle sur mesure : ${o.model || o.site} · ${siteUrl()}/modeles/${o.site}` : `Thème : ${o.theme || '—'}${o.model ? ' · modèle ' + o.model : ''}`, `WhatsApp : ${o.phone}`, o.note ? `Note : ${o.note}` : '', `${siteUrl()}/studio/`].filter(Boolean).join('\n')));
+  const pay = o.deposit < price ? `acompte ${o.deposit} DT` : 'paiement complet';
+  later(context, notify(`Nouvelle commande ${code}`, [`${o.names} · ${o.plan} ${price} DT (${pay})`, referred ? `Parrainée par ${refCode} (-${REFERRAL_OFF} %)` : '', o.source ? `Source : ${Object.values(o.source).join(' / ')}` : '', `Date : ${o.date || '—'} · ${o.city || '—'} · ${o.guests || '?'} invités`, o.site ? `Modèle sur mesure : ${o.model || o.site} · ${siteUrl()}/modeles/${o.site}` : `Thème : ${o.theme || '—'}${o.model ? ' · modèle ' + o.model : ''}`, `WhatsApp : ${o.phone}`, o.note ? `Note : ${o.note}` : '', `${siteUrl()}/studio/`].filter(Boolean).join('\n')));
   return json({ code, token, url: `/commande/${code}?t=${token}` });
 }
 
@@ -358,11 +407,16 @@ async function clientView(o: any) {
     theme: o.theme, createdAt: o.createdAt, proofs: o.proofs.map((p: any) => ({ at: p.at, type: p.type })),
     history: o.history.map((h: any) => ({ at: h.at, status: h.status, note: h.status === 'rejected' || h.by === 'client' || h.status === 'paid' ? h.note : '' })),
     bank: { name: env('BANK_NAME'), holder: env('BANK_HOLDER'), rib: env('BANK_RIB'), iban: env('BANK_IBAN') },
-    whatsapp: env('REEFQ_WHATSAPP'), role: o.status === 'paid' ? 'client' : 'pending'
+    whatsapp: env('REEFQ_WHATSAPP'), role: o.status === 'paid' ? 'client' : 'pending',
+    referrer: o.referrer || null, guestLinks: GUEST_PLANS.includes(o.plan), custom: !!o.site, themes: THEME_IDS, briefAt: o.briefAt || null
   };
-  if (o.status === 'paid' && o.inviteId) {
-    const inv: any = await invitations().get(o.inviteId, { type: 'json' });
-    if (inv) {
+  const inv: any = o.inviteId ? await invitations().get(o.inviteId, { type: 'json' }) : null;
+  /* what the couple filled in, to prefill their form (the team may have refined it in the studio) */
+  if (inv) view.brief = { ...pick(inv, BRIEF_FIELDS), guests: (inv.guests || []).map((g: any) => ({ id: g.id, name: g.name, phone: g.phone || '', seats: g.seats || 1 })) };
+  if (o.status === 'paid' && inv) {
+    /* a custom design is shared once the designer has published it */
+    if (inv.designSource === 'canva' && inv.canvaStatus !== 'published') view.designPending = true;
+    else {
       const list = await rsvpList(o.inviteId);
       const yes = list.filter(r => r.attending);
       view.invitation = { id: inv.id, names: [inv.a?.name, inv.b?.name], date: inv.date, url: `/i/${inv.id}`,
@@ -372,6 +426,70 @@ async function clientView(o: any) {
     }
   }
   return view;
+}
+
+/* ---------------- the couple's own invitation (client space) ---------------- */
+const BRIEF_FIELDS = ['theme', 'lang', 'eventType', 'a', 'b', 'date', 'time', 'city', 'venue', 'maps', 'dress', 'rsvpBy', 'maxGuests', 'opening', 'message', 'story'];
+const pick = (o: any, keys: string[]) => Object.fromEntries(keys.filter(k => o[k] !== undefined).map(k => [k, o[k]]));
+const LANGS = ['fr', 'ar', 'en'], EVENT_TYPES = ['wedding', 'engagement', 'henna', 'contract'], OPENING_IDS = ['none', 'bismillah', 'verse'];
+const dateStr = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '';
+const tri = (v: any, n: number) => Object.fromEntries(LANGS.map(l => [l, clampStr(v && v[l], n).trim()]));
+
+/* The order's invitation, created on first need with what the order already knows. Unpaid → locked until the payment is confirmed. */
+async function orderInvitation(o: any) {
+  if (o.inviteId) { const ex: any = await invitations().get(o.inviteId, { type: 'json' }); if (ex) return ex; }
+  const [a, bn] = String(o.names || '').split(/\s*(?:&|et|\+|و)\s*/i);
+  const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'ar' ? 'ar' : 'fr',
+    a: { name: (a || o.names || '').trim(), ar: '' }, b: { name: (bn || '').trim() || '—', ar: '' }, date: o.date || '', time: '20:00', city: o.city || '',
+    venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code,
+    ...(o.site ? { designSource: 'canva', siteTemplate: o.site } : {}) };
+  const saved = await saveInvitation(slug(o.names) + '-' + id(4), inv, { locked: o.status !== 'paid' });
+  o.inviteId = saved.id; await saveOrder(o);
+  return saved;
+}
+
+async function activateInvitation(o: any) {
+  const inv: any = await orderInvitation(o);
+  if (inv.locked) { delete inv.locked; inv.updatedAt = Date.now(); await invitations().setJSON(inv.id, inv); }
+}
+
+async function clientBrief(req: Request, context: Context, o: any) {
+  if (o.status === 'cancelled') return err(409, 'Cette commande est annulée. Contactez-nous sur WhatsApp.');
+  if (!(await rateLimit('brief/' + o.code, 120, 3600))) return err(429, 'Trop de modifications. Réessayez dans un moment.');
+  const b = await readJSON(req, 400_000);
+  const inv: any = { ...(await orderInvitation(o)) };
+  const name = (x: any, cur: any) => ({ name: clampStr(x?.name, 60).trim() || cur?.name || '', ar: clampStr(x?.ar, 60).trim() });
+  if (!o.site && THEME_IDS.includes(b.theme)) inv.theme = b.theme;
+  if (LANGS.includes(b.lang)) inv.lang = b.lang;
+  if (EVENT_TYPES.includes(b.eventType)) inv.eventType = b.eventType;
+  if (OPENING_IDS.includes(b.opening)) inv.opening = b.opening;
+  inv.a = name(b.a, inv.a); inv.b = name(b.b, inv.b);
+  inv.date = dateStr(b.date) || inv.date; inv.rsvpBy = dateStr(b.rsvpBy);
+  inv.time = /^\d{2}:\d{2}$/.test(String(b.time || '')) ? b.time : inv.time;
+  for (const k of ['city', 'venue', 'dress']) inv[k] = clampStr(b[k], 160).trim();
+  const maps = clampStr(b.maps, 500).trim();
+  inv.maps = /^https:\/\/\S+$/.test(maps) ? maps : '';
+  inv.maxGuests = Math.min(20, Math.max(1, Math.round(+b.maxGuests || inv.maxGuests || 2)));
+  if (b.message) inv.message = tri(b.message, 600);
+  if (b.story) inv.story = tri(b.story, 1500);
+  if (GUEST_PLANS.includes(o.plan) && Array.isArray(b.guests)) {
+    /* known guests keep their id (their link) and their "sent" mark; removed ones lose their link */
+    const prev = new Map((inv.guests || []).map((g: any) => [g.id, g]));
+    inv.guests = b.guests.slice(0, MAX_GUESTS).map((g: any) => {
+      const nm = clampStr(g?.name, 120).trim(); if (!nm) return null;
+      const old: any = prev.get(g.id);
+      return { ...(old || { id: id(10) }), name: nm, phone: clampStr(g.phone, 30).trim(), seats: Math.min(50, Math.max(1, Math.round(+g.seats || 1))) };
+    }).filter(Boolean);
+  }
+  if (!inv.a.name || !inv.b.name) return err(400, 'Indiquez vos deux prénoms.');
+  await saveInvitation(inv.id, inv);
+  if (!o.briefAt) {
+    o.briefAt = Date.now();
+    o.history.push({ at: o.briefAt, status: 'brief', note: 'Invitation préparée par les mariés', by: 'client' });
+    await saveOrder(o);
+    later(context, notify(`Invitation préparée ${o.code}`, `${o.names} ont rempli leur invitation (${(inv.guests || []).length} invités).${o.status === 'paid' ? ' Elle est déjà en ligne.' : ' Elle sera en ligne dès la confirmation du paiement.'}${o.site ? '\nDesign sur mesure : le designer peut commencer.' : ''}\n${siteUrl()}/studio/`));
+  }
+  return json(await clientView(o));
 }
 
 async function uploadProof(req: Request, context: Context, o: any) {

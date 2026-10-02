@@ -119,11 +119,20 @@ $$('#lsw a').forEach(function(a){a.onclick=function(e){e.preventDefault();var l=
   try{var u=new URL(location.href);if(u.searchParams.has('lang')){u.searchParams.set('lang',l);history.replaceState(null,'',u)}}catch(x){}
   setLang(l);if(window.rqTrack)window.rqTrack('language_changed',{lang:l})}});
 $$('[data-plan]').forEach(function(a){a.addEventListener('click',function(){$('#o-plan').value=a.dataset.plan})});
+/* Where the couple came from (first visit wins, kept 30 days): utm_* on post and ad links, ?ref=RQ-XXXXX from a past client (-10 %) */
+var SRC=(function(){var q=new URLSearchParams(location.search),k='rq_src',v=null,now=Date.now();
+  try{v=JSON.parse(localStorage.getItem(k)||'null')}catch(x){}
+  if(v&&!(v.at>now-30*864e5))v=null;
+  var fresh={source:q.get('utm_source')||(q.get('fbclid')?'facebook':''),medium:q.get('utm_medium')||'',campaign:q.get('utm_campaign')||'',content:q.get('utm_content')||''},ref=/^RQ-[A-Z0-9]{5}$/.test(q.get('ref')||'')?q.get('ref'):'';
+  if(!v&&(fresh.source||ref))v={src:fresh,ref:ref,at:now};else if(v&&ref)v.ref=ref;
+  if(v)try{localStorage.setItem(k,JSON.stringify(v))}catch(x){}
+  return v||{src:{},ref:''}})();
+if(SRC.ref){var rn=document.createElement('p');rn.className='small ref-note';rn.textContent=lang==='ar'?'🎁 هديّة من أحبابكم: تخفيض 10 % يُطبَّق تلقائيًا.':lang==='en'?'🎁 A gift from your friends: 10 % off, applied automatically.':'🎁 Un cadeau de vos proches : -10 %, appliqué automatiquement.';var sb=$('#of button[type=submit]');sb.parentNode.insertBefore(rn,sb)}
 $('#of').onsubmit=function(e){e.preventDefault();
   var names=$('#o-names').value.trim(),phone=$('#o-phone').value.trim(),err=$('#o-err'),btn=$('#of button[type=submit]');
   if(!names||!phone){err.textContent=ui('missing');err.hidden=false;(names?$('#o-phone'):$('#o-names')).focus();return}err.hidden=true;
   btn.disabled=true;
-  fetch('/api/public/orders',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({names:names,date:$('#o-date').value,city:$('#o-city').value,guests:$('#o-guests').value,plan:$('#o-plan').value,theme:$('#o-theme').value,model:modelName(),site:siteSlug(),note:$('#o-note').value,phone:phone,lang:lang,website:$('#o-web').value})})
+  fetch('/api/public/orders',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({names:names,date:$('#o-date').value,city:$('#o-city').value,guests:$('#o-guests').value,plan:$('#o-plan').value,theme:$('#o-theme').value,model:modelName(),site:siteSlug(),note:$('#o-note').value,phone:phone,lang:lang,src:SRC.src,ref:SRC.ref,website:$('#o-web').value})})
    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Erreur');return j})})
    .then(function(o){if(window.rqTrack)window.rqTrack('order_created',{plan:$('#o-plan').value,theme:$('#o-theme').value,lang:lang,has_model:!!$('#o-model').value,site:siteSlug()||null},true);if(o.url)setTimeout(function(){location.href=o.url},150)})
    .catch(function(x){err.textContent=ui('failed')+x.message;err.hidden=false;btn.disabled=false});

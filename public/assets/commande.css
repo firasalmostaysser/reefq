@@ -49,3 +49,23 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-weight:600;font-size:14px;z-index:50}
 .gbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 @media (max-width:520px){.glinks li{flex-wrap:wrap}.gbtns{width:100%;justify-content:flex-start}}
+
+/* "Préparez votre invitation": the couple's own form, guest list and phone-sized preview */
+.bhead{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.bhead h2{margin:0}
+#b-form{display:flex;flex-direction:column;gap:16px;margin-top:12px}
+#b-form fieldset{border:1px solid var(--line);border-radius:12px;padding:14px 14px 16px;margin:0;min-width:0}
+#b-form legend{font:600 18px var(--display);padding:0 6px}
+#b-form .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){#b-form .g2{grid-template-columns:minmax(0,1fr)}}
+#b-form .f i{font-style:normal;color:var(--muted);font-weight:400}
+#b-form textarea{min-height:70px}
+.more{margin-top:12px}.more summary{cursor:pointer;color:var(--accent);font-weight:600}
+.more .f{margin-top:10px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.glist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+.glist li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.glist li span{min-width:0;overflow-wrap:anywhere}
+.bactions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pvwrap{margin-top:16px;display:flex;justify-content:center}
+.pvwrap iframe{width:min(390px,100%);height:min(760px,82vh);border:0;border-radius:28px;box-shadow:0 0 0 8px #1d1d1d,0 18px 40px rgba(0,0,0,.25);background:#0c0c0c}
