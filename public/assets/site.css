@@ -171,3 +171,5 @@ html[dir=rtl] #o-phone::placeholder{text-align:end}
 .site-pv-acts{display:flex;gap:8px;justify-content:center;margin-top:12px}
 .site-pv-acts .btn.ghost{background:var(--surface)}
 .ref-note{margin:4px 0 10px;color:var(--accent);font-weight:600}
+.foot-legal{font-size:13px;color:var(--muted);margin:6px 0 0}
+.foot-legal a{color:inherit}

@@ -39,8 +39,8 @@ PostHog → Insights → Funnel: `$pageview` (landing) → `order_created` → `
 ### 9. Designer onboarding (Monday)
 Canva team invite, Studio password, Telegram group, `docs/DESIGNER.md`. First week plan is in that guide.
 
-### 10. Terms and privacy
-Before running ads: a short **Conditions de vente** (what is included, delivery, changes, refunds: full refund before the invitation is sent to guests, none after) and **Confidentialité** (we keep names and phone numbers of couples and guests only to deliver the invitation; deletion on request). Ask Claude to add both pages to the site and link them in the footer.
+### 10. Terms and privacy (pages are live, review them)
+Done: `/conditions.html` and `/confidentialite.html`, linked in the landing footer, under the order button and in the client space. Read both once; when the business is registered, add its legal name and tax number (matricule fiscal) in section 9 of the conditions. Refund rule: full refund until a guest opens the invitation.
 
 ### 11. Business registration
 To receive transfers in the business name and later accept cards online (Konnect, Flouci), you need a registered activity (auto-entrepreneur or company) and a business bank account. Start the paperwork now; it gates `docs/ROADMAP.md` phase 2.

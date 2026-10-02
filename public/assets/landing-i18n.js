@@ -87,7 +87,10 @@ window.REEFQ_I18N = {
     o_theme: 'الطابع',
     o_note: 'كلمة عن مشروعكم (اختياري)',
     o_send: 'احجزوا موعدكم',
-    foot: 'دعوات أعراس رقمية، صُنعت في تونس.'
+    foot: 'دعوات أعراس رقمية، صُنعت في تونس.',
+    legal1: 'شروط البيع',
+    legal2: 'السرّية',
+    o_terms: 'بالحجز، توافقون على شروط البيع.'
   },
   en: {
     nav_how: 'How it works',
@@ -175,6 +178,9 @@ window.REEFQ_I18N = {
     o_theme: 'Theme',
     o_note: 'A word about your plans (optional)',
     o_send: 'Book my date',
-    foot: 'Digital wedding invitations, made in Tunisia.'
+    foot: 'Digital wedding invitations, made in Tunisia.',
+    legal1: 'Terms of sale',
+    legal2: 'Privacy',
+    o_terms: 'By booking, you accept our terms of sale.'
   }
 };
