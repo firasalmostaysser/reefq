@@ -34,6 +34,8 @@ Set up as in `docs/MARKETING.md` section 2 (bio links with `utm_…`, automatic 
 Find where the domain is registered → Netlify → Domain management → **Add a domain** → follow the DNS instructions. Then env `SITE_URL=https://reefq.com`, trigger a deploy, and replace `reefq.netlify.app` in the bio links and quick replies.
 
 ### 8. PostHog funnel
+First check which PostHog project receives the site's data: the Netlify key `POSTHOG_KEY` (starts `phc_uEXQ`) must match the project you open in PostHog (Project settings → Project API key). On 2 Oct 2026 the PostHog account connected to Claude only had a different project (key `phc_uMA5…`). Either connect Claude to the right account, or put that project's key in Netlify and redeploy.
+
 PostHog → Insights → Funnel: `$pageview` (landing) → `order_created` → `brief_saved` → `payment_proof_uploaded`. Save it to a dashboard "Reefq weekly". Look at it every Monday (`docs/MARKETING.md` section 10).
 
 ### 9. Designer onboarding (Monday)
