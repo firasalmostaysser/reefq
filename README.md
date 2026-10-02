@@ -42,7 +42,7 @@ netlify/
     site.mts              /site/*: files of custom designs and website templates
     modeles.mts           /modeles/<slug>: website template previews
     canva-auth.mts        /auth/canva/start and /callback
-    canva-sync-background.mts, canva-cron.mts   Canva sync every 15 min
+    canva-sync-background.mts, canva-cron.mts   Canva sync every 6 hours
   lib/                    auth, stores (Blobs), canva, sites (custom designs), notify (Telegram/email), digest (morning summary), themes
 test/                     unit tests, smoke.mjs, edits.mjs, customize.mjs (end to end), theme-shots.mjs (screenshots)
 tools/                    seed.mjs (demo data / restore a backup locally), guard.mjs, envelope textures, promo videos and posters
@@ -108,7 +108,7 @@ Orders also record where the couple came from (`utm_*` on links; `invitation` fr
 
 ## Canva
 
-The designer saves templates in one Canva folder; they appear on the landing page and in the studio within 15 minutes.
+The designer saves templates in one Canva folder; they appear on the landing page and in the studio within 6 hours, or at once with Studio → Settings → **Sync now**.
 
 1. At canva.com/developers, create an integration with scopes `design:meta:read`, `design:content:read`, `folder:read`, and the redirect URL `https://<your site>/auth/canva/callback`.
 2. Set `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET` and `CANVA_FOLDER_ID` (the id in the folder's URL).

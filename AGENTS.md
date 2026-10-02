@@ -3,7 +3,7 @@
 Reefq is a live product: couples pay, guests receive personal links and RSVP. Your job on this repo is
 **visual only**: UI, landing page, videos and invitation themes. Never change how things work.
 
-Read `README.md` for setup. Work on a branch, never on `main`.
+Read `README.md` for setup. Work on a branch, never on `main`. Every merge to `main` is a production deploy and costs Netlify credits (the free allowance ran out on 2 Oct 2026): the owner merges finished branches together, at most once a day.
 
 ## Before you finish, always run
 

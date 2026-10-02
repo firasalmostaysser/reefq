@@ -26,7 +26,7 @@ When in doubt, ask Firas before publishing.
 
 ## 3. Canva folders and naming
 
-Two folders in the Reefq Canva team. The website picks them up automatically every 15 minutes (or Studio → Settings → **Sync now**).
+Two folders in the Reefq Canva team. The website picks them up automatically every 6 hours; press Studio → Settings → **Sync now** to see them at once.
 
 | Folder | What goes in it | Shows on |
 | --- | --- | --- |

@@ -1,6 +1,7 @@
 import type { Config } from '@netlify/functions';
 
-/* Every 15 minutes: start the background Canva sync (scheduled functions stop after 30 seconds). */
+/* Every 6 hours: start the background Canva sync (scheduled functions stop after 30 seconds). Each run costs Netlify
+   credits; the studio's "Sync now" button syncs at once when needed. */
 export default async () => {
   const env = (globalThis as any).Netlify.env;
   if (!(env.get('CANVA_FOLDER_ID') || env.get('CANVA_TEMPLATES_FOLDER_ID')) || !env.get('SESSION_SECRET')) return;
@@ -8,4 +9,4 @@ export default async () => {
   await fetch(base + '/.netlify/functions/canva-sync-background', { method: 'POST', headers: { 'x-reefq-key': env.get('SESSION_SECRET') } });
 };
 
-export const config: Config = { schedule: '*/15 * * * *' };
+export const config: Config = { schedule: '0 */6 * * *' };
