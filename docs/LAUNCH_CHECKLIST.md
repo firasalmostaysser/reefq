@@ -30,8 +30,8 @@ Set up as in `docs/MARKETING.md` section 2 (bio links with `utm_…`, automatic 
 
 ## First two weeks
 
-### 7. Netlify plan (decided 2 Oct 2026: no own domain for now)
-The site stays on **reefq.netlify.app**; the money goes to the Netlify subscription instead of a domain. On 2 Oct 2026 a deploy was refused with "account credit usage exceeded": Netlify → Team → Billing, take a plan with enough credits, then deploy again. Use `reefq.netlify.app` in bio links, quick replies and promo posters. A domain can come later (set `SITE_URL` then).
+### 7. Netlify (decided 2 Oct 2026: no own domain for now)
+The site stays on **reefq.netlify.app**. The money planned for a domain is kept for the Netlify subscription when the free plan is no longer enough. On 2 Oct 2026 Netlify refused a deploy with "account credit usage exceeded", and pushes to `main` were not live: check Netlify → reefq → **Deploys** (skipped deploys = credits) and **Project configuration → Build & deploy → Repository** (must show `firasalmostaysser/reefq`, branch `main`, publish directory `public`). Use `reefq.netlify.app` in bio links, quick replies and promo posters; a domain can come later (set `SITE_URL` then).
 
 ### 8. PostHog funnel
 First check which PostHog project receives the site's data: the Netlify key `POSTHOG_KEY` (starts `phc_uEXQ`) must match the project you open in PostHog (Project settings → Project API key). On 2 Oct 2026 the PostHog account connected to Claude only had a different project (key `phc_uMA5…`). Either connect Claude to the right account, or put that project's key in Netlify and redeploy.
