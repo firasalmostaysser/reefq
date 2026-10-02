@@ -83,7 +83,7 @@ async function route(req: Request, context: Context): Promise<Response> {
   if ((mm = p.match(/^\/api\/invitations\/([a-z0-9-]{3,80})$/))) {
     const iid = mm[1];
     if (m === 'GET') { const d = await invitations().get(iid, { type: 'json' }); return d ? json(d) : err(404, 'Not found'); }
-    if (m === 'PUT') return json(await saveInvitation(iid, await readJSON(req, MAX_INVITE_BYTES)));
+    if (m === 'PUT') { const body = await readJSON(req, MAX_INVITE_BYTES); return json(await saveInvitation(iid, body, { base: body.updatedAt })); }
     if (m === 'DELETE') {
       await invitations().delete(iid);
       for (const s of [rsvps(), opens()]) { const { blobs } = await s.list({ prefix: iid + '/' }); await Promise.all(blobs.map((b: any) => s.delete(b.key))); }
@@ -264,9 +264,12 @@ function checkSiteUrl(raw: unknown) {
 
 /* ---------------- invitations & RSVPs ---------------- */
 /* `locked`: prepared by a couple who has not paid yet; guests cannot open it. Only the server sets or clears it (opts.locked, payment confirmed). */
-async function saveInvitation(iid: string, body: any, opts: { locked?: boolean } = {}) {
+/* `base`: the version the editor started from (its updatedAt). If someone else saved since (the couple in their client space, the team in
+   the studio), the save is refused with 409 rather than silently overwriting their changes. */
+async function saveInvitation(iid: string, body: any, opts: { locked?: boolean; base?: unknown } = {}) {
   delete body.id; delete body.sample;
   const prev: any = await invitations().get(iid, { type: 'json' });
+  if (opts.base != null && prev?.updatedAt && +opts.base !== prev.updatedAt) throw new HttpError(409, 'stale');
   const doc = { ...body, id: iid, createdAt: prev?.createdAt || Date.now(), updatedAt: Date.now() };
   if (opts.locked ?? prev?.locked) doc.locked = true; else delete doc.locked;
   /* Custom design: the address comes from the studio; publication state is set only by "Mark published" and resets when the address changes. */
@@ -358,7 +361,8 @@ async function newCode() {
 }
 
 async function createOrder(req: Request, context: Context) {
-  if (!(await rateLimit('order/' + clientIp(req, context), 10, 3600))) return err(429, 'Too many requests.');
+  /* spam guard on the live site (tests and previews create many orders from one machine) */
+  if (isProduction() && !(await rateLimit('order/' + clientIp(req, context), 10, 3600))) return err(429, 'Trop de commandes depuis cette connexion. Réessayez dans une heure ou écrivez-nous sur WhatsApp.');
   const b = await readJSON(req, 5000);
   if (b.website) return json({ ok: true });
   if (!b.names || !b.phone) return err(400, 'Names and WhatsApp number are required.');
@@ -412,7 +416,7 @@ async function clientView(o: any) {
   };
   const inv: any = o.inviteId ? await invitations().get(o.inviteId, { type: 'json' }) : null;
   /* what the couple filled in, to prefill their form (the team may have refined it in the studio) */
-  if (inv) view.brief = { ...pick(inv, BRIEF_FIELDS), guests: (inv.guests || []).map((g: any) => ({ id: g.id, name: g.name, phone: g.phone || '', seats: g.seats || 1 })) };
+  if (inv) view.brief = { ...pick(inv, BRIEF_FIELDS), updatedAt: inv.updatedAt, guests: (inv.guests || []).map((g: any) => ({ id: g.id, name: g.name, phone: g.phone || '', seats: g.seats || 1 })) };
   if (o.status === 'paid' && inv) {
     /* a custom design is shared once the designer has published it */
     if (inv.designSource === 'canva' && inv.canvaStatus !== 'published') view.designPending = true;
@@ -458,6 +462,8 @@ async function clientBrief(req: Request, context: Context, o: any) {
   if (!(await rateLimit('brief/' + o.code, 120, 3600))) return err(429, 'Trop de modifications. Réessayez dans un moment.');
   const b = await readJSON(req, 400_000);
   const inv: any = { ...(await orderInvitation(o)) };
+  /* the team may have refined it in the studio since this form was loaded */
+  if (b.base != null && inv.updatedAt && +b.base !== inv.updatedAt) return err(409, 'Votre invitation a été modifiée entre-temps.');
   const name = (x: any, cur: any) => ({ name: clampStr(x?.name, 60).trim() || cur?.name || '', ar: clampStr(x?.ar, 60).trim() });
   if (!o.site && THEME_IDS.includes(b.theme)) inv.theme = b.theme;
   if (LANGS.includes(b.lang)) inv.lang = b.lang;

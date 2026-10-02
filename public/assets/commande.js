@@ -52,7 +52,7 @@ function render(o){
       document.querySelectorAll('[data-gq]').forEach(function(x){x.onclick=function(){var g=gl[+x.dataset.gq];guestQr(location.origin+g.link,cn,g.name,x.dataset.k)}});
     }
   }
-  clearInterval(poll);if(o.status==='proof_sent'||o.status==='paid')poll=setInterval(function(){if(!dirty)load()},o.status==='paid'?60000:30000);
+  clearInterval(poll);if(o.status==='proof_sent'||o.status==='paid')poll=setInterval(function(){if(!dirty&&gEdit<0)load()},o.status==='paid'?60000:30000);
 }
 
 /* ---------- the couple prepares their invitation ---------- */
@@ -60,8 +60,15 @@ var RW=window.ReefqWording,THEME_NAMES={reefq:'Reefq',zitouna:'Zitouna',yasmine:
 var B=null,G=[],dirty=false,briefOpen=null,pvReady=false,pvShown=false;
 function opts(list,cur){return list.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===cur?' selected':'')+'>'+esc(x.label)+'</option>'}).join('')}
 function toneOf(ev,msg){if(!msg||!msg.fr)return 'classic';var t=RW.TONES.filter(function(x){return RW.get(ev,x.id).fr===msg.fr})[0];return t?t.id:'custom'}
+/* What the couple typed and did not save yet stays in this browser, and comes back after a reload or a closed tab
+   (only if the saved invitation has not changed in between). */
+var KEY='rq-brief-'+m[1],restored=false;
+function keepDraft(){try{if(dirty)localStorage.setItem(KEY,JSON.stringify({at:Date.now(),d:collect()}));else localStorage.removeItem(KEY)}catch(e){}}
+function savedDraft(o){if(restored)return null;restored=true;var k=null;try{k=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(!k||!k.d)return null;if((k.d.base||null)!==((o.brief&&o.brief.updatedAt)||null)){try{localStorage.removeItem(KEY)}catch(e){}return null}return k}
 function renderBrief(o){
   var box=$('#brief');box.hidden=o.status==='cancelled';if(box.hidden||dirty)return;
+  var k=savedDraft(o);if(k){o=Object.assign({},o,{brief:Object.assign({},k.d,{updatedAt:o.brief&&o.brief.updatedAt})});briefOpen=true}
   B=o.brief||{};G=(B.guests||[]).map(function(g){return{id:g.id,name:g.name,phone:g.phone,seats:g.seats}});
   var names=String(o.names||'').split(/\s*(?:&|et|\+|و)\s*/i),ev=B.eventType||'wedding';
   $('#b-a').value=(B.a&&B.a.name)||names[0]||'';$('#b-b').value=(B.b&&B.b.name&&B.b.name!=='—'?B.b.name:'')||names[1]||'';
@@ -80,6 +87,7 @@ function renderBrief(o){
   $('#b-guests-wrap').hidden=!o.guestLinks;$('#b-pv-btn').hidden=!!o.custom;$('#b-story-wrap').hidden=!o.guestLinks;
   if(briefOpen===null)briefOpen=!o.briefAt;
   setBriefOpen(briefOpen,o);renderGuests();preview();
+  if(k){dirty=true;$('#b-status').textContent='Modifications non enregistrées retrouvées';toast('Nous avons retrouvé vos modifications non enregistrées.')}
 }
 function setBriefOpen(on,o){o=o||O;briefOpen=on;$('#b-form').hidden=!on;$('#b-lead').hidden=!on;$('#b-toggle').hidden=on||!o.briefAt;
   $('#b-title').textContent=o.briefAt?'Les détails de votre invitation':'Préparez votre invitation';
@@ -93,9 +101,9 @@ function collect(){
     a:{name:$('#b-a').value.trim(),ar:$('#b-a-ar').value.trim()},b:{name:$('#b-b').value.trim(),ar:$('#b-b-ar').value.trim()},
     date:$('#b-date').value,time:$('#b-time').value,city:$('#b-city').value.trim(),venue:$('#b-venue').value.trim(),maps:$('#b-maps').value.trim(),
     dress:$('#b-dress').value.trim(),rsvpBy:$('#b-rsvpby').value,maxGuests:+$('#b-seats').value||2,
-    message:{fr:$('#b-msg-fr').value.trim(),ar:$('#b-msg-ar').value.trim(),en:$('#b-msg-en').value.trim()},story:story,guests:G};
+    message:{fr:$('#b-msg-fr').value.trim(),ar:$('#b-msg-ar').value.trim(),en:$('#b-msg-en').value.trim()},story:story,guests:G,base:(B&&B.updatedAt)||null};
 }
-function touchB(){dirty=true;$('#b-status').textContent='Modifications non enregistrées';preview()}
+function touchB(e){if(e&&e.target&&/^ge-/.test(e.target.id))return;dirty=true;clearTimeout(kT);kT=setTimeout(keepDraft,400);$('#b-status').textContent='Modifications non enregistrées';preview()}
 $('#b-form').addEventListener('input',touchB);
 $('#b-form').addEventListener('change',function(e){
   if(e.target.id==='b-tone'||e.target.id==='b-event'){var t=$('#b-tone').value;if(t!=='custom'){var m=RW.get($('#b-event').value,t);$('#b-msg-fr').value=m.fr;$('#b-msg-ar').value=m.ar;$('#b-msg-en').value=m.en}}
@@ -113,9 +121,22 @@ $('#b-pv-btn').onclick=function(){pvShown=!pvShown;$('#b-pv').hidden=!pvShown;th
 function renderGuests(){
   var seats=G.reduce(function(s,g){return s+(+g.seats||1)},0);
   $('#b-gcount').textContent=G.length?G.length+' invitation(s) · '+seats+' place(s) réservée(s)':'Aucun invité pour l\'instant.';
-  $('#b-glist').innerHTML=G.map(function(g,i){return '<li><span><b>'+esc(g.name)+'</b>'+(g.phone?' · '+esc(g.phone):'')+' · '+(+g.seats||1)+' pl.</span><button class="btn sm ghost" type="button" data-rmb="'+i+'" aria-label="Retirer '+esc(g.name)+'">Retirer</button></li>'}).join('');
-  document.querySelectorAll('[data-rmb]').forEach(function(b){b.onclick=function(){G.splice(+b.dataset.rmb,1);renderGuests();touchB()}});
+  $('#b-glist').innerHTML=G.map(function(g,i){
+    if(i===gEdit)return '<li class="gedit"><input id="ge-name" aria-label="Nom" value="'+esc(g.name)+'"><input id="ge-phone" aria-label="Numéro WhatsApp" inputmode="tel" placeholder="Numéro WhatsApp" value="'+esc(g.phone||'')+'"><input id="ge-seats" aria-label="Places" type="number" min="1" max="50" value="'+(+g.seats||1)+'"><span class="gbtns"><button class="btn sm primary" type="button" id="ge-ok">OK</button><button class="btn sm ghost" type="button" id="ge-cancel">Annuler</button></span></li>';
+    return '<li><span><b>'+esc(g.name)+'</b>'+(g.phone?' · '+esc(g.phone):'')+' · '+(+g.seats||1)+' pl.</span><span class="gbtns"><button class="btn sm ghost" type="button" data-edb="'+i+'" aria-label="Modifier '+esc(g.name)+'">Modifier</button><button class="btn sm ghost" type="button" data-rmb="'+i+'" aria-label="Retirer '+esc(g.name)+'">Retirer</button></span></li>'}).join('');
+  document.querySelectorAll('[data-rmb]').forEach(function(b){b.onclick=function(){G.splice(+b.dataset.rmb,1);gEdit=-1;renderGuests();touchB()}});
+  document.querySelectorAll('[data-edb]').forEach(function(b){b.onclick=function(){gEdit=+b.dataset.edb;renderGuests();$('#ge-name').focus()}});
+  if(gEdit>=0&&$('#ge-ok')){
+    $('#ge-ok').onclick=guestDone;$('#ge-cancel').onclick=function(){gEdit=-1;renderGuests()};
+    $('#b-glist .gedit').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();guestDone()}else if(e.key==='Escape'){gEdit=-1;renderGuests()}};
+  }
 }
+/* a guest is corrected in place (name, WhatsApp number, seats) and keeps their personal link */
+var gEdit=-1,kT=null;
+function guestDone(){
+  var nm=$('#ge-name').value.trim();if(!nm){$('#ge-name').focus();return false}
+  Object.assign(G[gEdit],{name:nm,phone:$('#ge-phone').value.trim(),seats:Math.min(50,Math.max(1,parseInt($('#ge-seats').value,10)||1))});
+  gEdit=-1;renderGuests();touchB();return true}
 $('#b-add').onclick=function(){
   var lines=$('#b-paste').value.split(/\n+/).map(function(l){return l.trim()}).filter(Boolean);if(!lines.length){$('#b-paste').focus();return}
   lines.forEach(function(l){var p=l.split(/[,;\t]/).map(function(x){return x.trim()}),s=parseInt(p[2],10);if(p[0])G.push({name:p[0],phone:p[1]||'',seats:s>0?s:1})});
@@ -125,15 +146,26 @@ $('#b-form').onsubmit=function(e){e.preventDefault();
   var d=collect(),er=$('#b-err'),btn=$('#b-save');er.hidden=true;
   if(!d.a.name||!d.b.name){er.textContent='Indiquez vos deux prénoms.';er.hidden=false;$('#b-a').focus();return}
   if(!d.date){er.textContent='Indiquez la date.';er.hidden=false;$('#b-date').focus();return}
-  if($('#b-paste').value.trim()){$('#b-add').click();d=collect()}
+  if(gEdit>=0&&$('#ge-ok')&&!guestDone())return;
+  if($('#b-paste').value.trim())$('#b-add').click();
+  d=collect();
   btn.disabled=true;btn.textContent='Enregistrement…';
   fetch(API+'/invitation'+Q,{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(d)})
-   .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'Enregistrement impossible');return j})})
-   .then(function(o){var first=!O.briefAt;dirty=false;$('#b-status').textContent='Enregistré';briefOpen=false;render(o);toast('Invitation enregistrée');
+   .then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var x=new Error(j.error||'Enregistrement impossible. Réessayez dans un instant.');x.status=r.status;throw x}return j})},
+     function(){throw new Error('Pas de connexion. Vos modifications restent sur cette page : réessayez dans un instant.')})
+   .then(function(o){var first=!O.briefAt;dirty=false;clearTimeout(kT);keepDraft();$('#b-status').textContent='Enregistré';briefOpen=false;render(o);toast('Invitation enregistrée');
      if(window.rqTrack)window.rqTrack('brief_saved',{plan:o.plan,first:first,guests:G.length,paid:o.status==='paid'});
      var next=o.status==='paid'?$('#space'):!$('#pay').hidden?$('#pay'):$('#brief');next.scrollIntoView({behavior:'smooth',block:'start'})})
-   .catch(function(x){er.textContent=x.message;er.hidden=false}).then(function(){btn.disabled=false;btn.textContent='Enregistrer mon invitation'});
+   .catch(function(x){if(x.status===409)return stale();er.textContent=x.message;er.hidden=false}).then(function(){btn.disabled=false;btn.textContent='Enregistrer mon invitation'});
 };
+/* the invitation was saved elsewhere after this page loaded (another phone, or our team): the couple chooses, nothing is lost silently */
+function stale(){
+  var er=$('#b-err');
+  return fetch(API+Q,{cache:'no-store'}).then(function(r){return r.json()}).then(function(o){
+    er.innerHTML='Votre invitation a été modifiée entre-temps, sur un autre appareil ou par notre équipe.<span class="gbtns stale"><button class="btn sm primary" type="button" id="st-load">Voir la dernière version</button><button class="btn sm ghost" type="button" id="st-keep">Garder mes modifications</button></span>';er.hidden=false;
+    $('#st-load').onclick=function(){dirty=false;keepDraft();gEdit=-1;er.hidden=true;render(o);$('#b-status').textContent='Dernière version chargée'};
+    $('#st-keep').onclick=function(){B.updatedAt=o.brief&&o.brief.updatedAt;er.hidden=true;$('#b-form').requestSubmit()};
+  }).catch(function(){er.textContent='Enregistrement impossible. Actualisez la page et réessayez.';er.hidden=false})}
 addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue=''}});
 
 $('#proof-file').onchange=function(){

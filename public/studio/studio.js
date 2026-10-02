@@ -54,6 +54,8 @@ function refit(){clearTimeout(fitTimer);fitTimer=setTimeout(function(){if(fitPv(
 addEventListener('resize',refit);addEventListener('orientationchange',refit);addEventListener('load',refit);
 /* the header and the invitation bar change height when the logo loads or the chips wrap; the phone follows */
 if(window.ResizeObserver){var pvRo=new ResizeObserver(refit);pvRo.observe($('.top'));pvRo.observe($('.bar'))}
+/* an edit made while the invitation is open in the preview redraws it open at the same place, so the change stays in view */
+var pvTop=0;function keepOpen(){if(handle&&handle.isOpen()){pvOpen=true;var s=handle.scroller();pvTop=s?s.scrollTop:0}}
 function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
   fitPv();
   if(handle)handle.destroy();handle=null;
@@ -65,6 +67,7 @@ function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
   }
   var el=document.createElement('div');sc.appendChild(el);
   handle=ReefqInvite.render(el,draft,{preview:true,badge:draft.sample?'Example couple':'Preview',startOpen:pvOpen,onRsvp:function(){return new Promise(function(r){setTimeout(function(){r({})},500)})}});
+  if(pvOpen&&pvTop){var s2=handle.scroller();if(s2)s2.scrollTop=pvTop}pvTop=0;
 },now?0:220)}
 
 /* ---------- form ---------- */
@@ -92,14 +95,25 @@ function renderEvents(){
     '<button class="btn sm ghost" type="button" data-rm="'+i+'" aria-label="Remove celebration">Remove</button></div>'}).join('')||'<p class="hint" style="margin:0">No celebrations listed. The main day still shows.</p>';
   $$('.ev',box).forEach(function(row){
     var i=+row.dataset.i;
-    $$('[data-e]',row).forEach(function(el){el.oninput=el.onchange=function(){draft.events[i][el.dataset.e]=el.value;touch();if(el.dataset.e==='type')renderEvents();preview()}});
+    $$('[data-e]',row).forEach(function(el){el.oninput=el.onchange=function(){draft.events[i][el.dataset.e]=el.value;touch();if(el.dataset.e==='type')renderEvents();keepOpen();preview()}});
   });
   $$('[data-rm]',box).forEach(function(b){b.onclick=function(){draft.events.splice(+b.dataset.rm,1);touch();renderEvents();preview()}});
 }
-function touch(){dirty=true;status(draft.id?'Unsaved changes':'Not saved yet','')}
+/* Auto-save: a saved invitation is saved by itself 2 s after the last change (and when leaving the tab or the page).
+   A new couple is saved once both names are in. Until then the typed draft is kept in this browser and offered back after a reload. */
+var autoT=null,BACKUP='rq-studio-draft';
+function touch(){dirty=true;status(draft.id?'Unsaved changes':'Not saved yet','');backupDraft();clearTimeout(autoT);autoT=setTimeout(autoSave,2000)}
+function autoSave(){clearTimeout(autoT);if(!dirty||draft.sample||!(draft.a&&draft.a.name&&draft.b&&draft.b.name))return Promise.resolve(!dirty);return doSave(true)}
+function backupDraft(){try{if(dirty&&!draft.sample)localStorage.setItem(BACKUP,JSON.stringify({at:Date.now(),draft:draft}));else localStorage.removeItem(BACKUP)}catch(e){}}
+/* before opening another couple or a new one: save what can be saved, ask before dropping what cannot */
+function leaveDraft(){if(!dirty||draft.sample)return Promise.resolve(true);
+  return autoSave().then(function(ok){if(ok&&!dirty)return true;
+    return ask({title:'Leave unsaved changes?',body:'<p>'+esc(draft.id?names(draft):'The new invitation')+' has changes that could not be saved'+(draft.id?'':' (add both names to save it)')+'.</p>',ok:'Discard them',danger:true,cancel:'Stay'}).then(function(go){if(go){dirty=false;backupDraft()}return go})})}
+addEventListener('beforeunload',function(e){if(dirty&&!draft.sample){autoSave();e.preventDefault();e.returnValue=''}});
+document.addEventListener('visibilitychange',function(){if(document.hidden&&dirty)autoSave()});
 function status(t,c){var s=$('#status');s.textContent=t;s.className='status'+(c?' '+c:'')}
 
-$$('[data-k]').forEach(function(el){el.addEventListener('input',function(){var v=el.value;if(el.type==='number')v=Math.max(1,parseInt(v,10)||1);setK(draft,el.dataset.k,v);touch();preview()})});
+$$('[data-k]').forEach(function(el){el.addEventListener('input',function(){var v=el.value;if(el.type==='number')v=Math.max(1,parseInt(v,10)||1);setK(draft,el.dataset.k,v);touch();keepOpen();preview()})});
 $('#ev-add').onclick=function(){(draft.events=draft.events||[]).push({type:'ceremony',date:draft.date||'',time:'',place:''});touch();renderEvents();preview()};
 $('#pv-cover').onclick=function(){pvOpen=false;preview(true)};
 $('#pv-open').onclick=function(){pvOpen=true;preview(true)};
@@ -185,19 +199,33 @@ function renderChips(){
   if(!draft.id)html+='<button class="chip" type="button" aria-pressed="true"><span class="dot" style="background:'+col[draft.theme]+'"></span>'+esc(draft.sample?'Example: '+names(draft):(names(draft)==='? & ?'?'New couple':names(draft)))+'</button>';
   html+=invites.filter(function(i){return!i.archived||i.id===draft.id}).map(function(i){return '<button class="chip" type="button" data-inv="'+esc(i.id)+'" aria-pressed="'+(draft.id===i.id)+'"><span class="dot" style="background:'+(col[i.theme]||'#999')+'"></span>'+esc(names(i))+'</button>'}).join('');
   $('#chips').innerHTML=html||'<span class="status">No saved invitations yet</span>';
-  $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f)load(f)}});
+  $$('[data-inv]').forEach(function(b){b.onclick=function(){var f=invites.find(function(x){return x.id===b.dataset.inv});if(f&&f.id!==draft.id)leaveDraft().then(function(go){if(go)load(f)})}});
   $('#btn-del').hidden=!draft.id;$('#btn-dup').hidden=!draft.id;
 }
-function load(inv){wOcc=null;opened={};draft=clone(inv);delete draft.sample;delete draft.photos;delete draft.musicUrl;delete draft.music;dirty=false;rsvps=[];status('Saved','ok');fillForm();renderChips();preview(true);loadRsvps();refreshSide()}
-$('#btn-new').onclick=function(){wOcc=null;draft=clone(BLANK);dirty=true;pvOpen=false;fillForm();renderChips();preview(true);status('Not saved yet','');$('#k-a-name').focus();refreshSide()};
+function load(inv,keepView){wOcc=null;gEditS=-1;if(!keepView)opened={};draft=clone(inv);delete draft.sample;delete draft.photos;delete draft.musicUrl;delete draft.music;dirty=false;if(!keepView)rsvps=[];status('Saved','ok');fillForm();renderChips();if(!keepView){preview(true);loadRsvps()}else{keepOpen();preview(true)}refreshSide();if(!keepView)fetchLatest()}
+/* The couple can edit their invitation from their client space at any time: the studio always works on the latest saved version.
+   It is fetched when an invitation is opened and when the studio tab comes back into view; unsaved studio edits are never replaced. */
+function fetchLatest(){var id=draft.id;if(!id||draft.sample)return Promise.resolve(null);return api('/api/invitations/'+encodeURIComponent(id)).then(function(inv){replaceInv(inv);
+  if(draft.id===id&&!dirty&&inv.updatedAt!==draft.updatedAt){load(inv,true);toast('Updated with the latest changes')}return inv}).catch(function(){return null})}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)fetchLatest()});
+/* a save refused because someone saved after this copy was opened */
+function onStale(){staleBusy=true;return api('/api/invitations/'+encodeURIComponent(draft.id)).then(function(inv){replaceInv(inv);
+  return ask({title:'This invitation changed meanwhile',body:'<p>'+esc(names(inv))+' was saved elsewhere after you opened it (often the couple, from their client space). Your changes here are not saved yet.</p><p><b>Load latest</b> shows their version; then make your change again. <b>Keep mine</b> saves your version over theirs.</p>',ok:'Load latest',cancel:'Keep mine'}).then(function(fresh){
+    staleBusy=false;if(fresh){load(inv,true);backupDraft();toast('Latest version loaded');return false}draft.updatedAt=inv.updatedAt;return doSave()})}).catch(function(e){staleBusy=false;fail(e);return false})}
+$('#btn-new').onclick=function(){leaveDraft().then(function(go){if(go)newCouple()})};
+function newCouple(){wOcc=null;draft=clone(BLANK);dirty=true;pvOpen=false;fillForm();renderChips();preview(true);status('Not saved yet','');$('#k-a-name').focus();refreshSide()};
+var staleBusy=false;
 function doSave(quiet){
+  clearTimeout(autoT);if(staleBusy)return Promise.resolve(false);
   if(!(draft.a&&draft.a.name&&draft.b&&draft.b.name)){status('Add both names first','bad');return Promise.resolve(false)}
   var body=clone(draft);delete body.sample;
   var btn=$('#btn-save');if(btn.disabled)return Promise.resolve(false);btn.disabled=true;btn.textContent='Saving…';status('Saving…','');
   var req=draft.id?api('/api/invitations/'+encodeURIComponent(draft.id),{method:'PUT',body:body}):api('/api/invitations',{method:'POST',body:body});
-  return req.then(function(saved){var editedSince=JSON.stringify(draft)!==JSON.stringify(body);if(!editedSince){draft=saved;dirty=false;status('Saved','ok')}else{draft.id=saved.id;status('Unsaved changes','')}
+  return req.then(function(saved){var editedSince=JSON.stringify(draft)!==JSON.stringify(body);if(!editedSince){draft=saved;dirty=false;status('Saved','ok')}else{draft.id=saved.id;draft.updatedAt=saved.updatedAt;status('Unsaved changes','')}
     var i=invites.findIndex(function(x){return x.id===saved.id});if(i>=0)invites[i]=saved;else invites.unshift(saved);renderChips();refreshSide();return true})
-   .catch(function(e){status(e.status===413?'This invitation is too large to save. Shorten the texts and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;btn.textContent='Save invitation';return v});
+   .catch(function(e){if(e.status===409){btn.disabled=false;status('Changed elsewhere since you opened it','bad');return onStale()}status(e.status===413?'This invitation is too large to save. Shorten the texts and try again.':e.message||'Could not save. Try again.','bad');return false}).then(function(v){btn.disabled=false;btn.textContent='Save invitation';backupDraft();
+     /* changes typed during the save, or a failed save (offline), are tried again */
+     if(dirty&&draft.id){clearTimeout(autoT);autoT=setTimeout(autoSave,v===false?10000:2000)}return v});
 }
 $('#btn-save').onclick=function(){doSave()};
 $('#btn-dup').onclick=function(){var c=clone(draft);c.id=null;c.guests=[];delete c.archived;delete c.archivedAt;delete c.orderCode;['canvaUrl','canvaDesignId','canvaStatus','canvaVer','canvaBase','canvaPublishedAt','siteTemplate'].forEach(function(k){delete c[k]});draft=c;dirty=true;fillForm();renderChips();preview(true);status('Copy, not saved yet. Change the names and save.','');refreshSide()};
@@ -209,7 +237,7 @@ function ask(o){return new Promise(function(res){
   var d=$('#dlg'),ok=$('#dlg-ok'),inp=$('#dlg-type');
   $('#dlg-title').textContent=o.title;$('#dlg-body').innerHTML=o.body||'';
   ok.textContent=o.ok||'OK';ok.className='btn '+(o.danger?'danger':'primary');
-  $('#dlg-typewrap').hidden=!o.typeToConfirm;inp.value='';$('#dlg-typelabel').textContent=o.typeToConfirm?'Type “'+o.typeToConfirm+'” to confirm':'';
+  $('#dlg-cancel').textContent=o.cancel||'Cancel';$('#dlg-typewrap').hidden=!o.typeToConfirm;inp.value='';$('#dlg-typelabel').textContent=o.typeToConfirm?'Type “'+o.typeToConfirm+'” to confirm':'';
   var norm=function(s){return String(s).trim().replace(/\s+/g,' ').toLowerCase()};
   var check=function(){ok.disabled=!!o.typeToConfirm&&norm(inp.value)!==norm(o.typeToConfirm)};inp.oninput=check;check();
   var done=function(v){d.onclose=null;if(d.open)d.close();res(v)};
@@ -244,7 +272,7 @@ $('#w-use').onclick=function(){
 
 /* ---------- tabs ---------- */
 var PANELS=['list','design','guests','deliver','orders','settings'];
-function showTab(t){if(t!==tab)scrollTo(0,0);tab=t;$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(t==='design')refit()}
+function showTab(t){if(t!==tab)scrollTo(0,0);if(t==='orders'&&tab!=='orders')seenPrev=seenAt();if(tab==='design'&&t!=='design'&&dirty)autoSave();tab=t;try{history.replaceState(null,'','#'+t)}catch(e){}$$('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x.dataset.tab===t)});PANELS.forEach(function(k){$('#p-'+k).hidden=k!==t});$('#bar').hidden=t==='list';$('#pv-fab').hidden=t!=='design';document.body.classList.remove('pv-sheet');refreshSide();if(t==='design')refit()}
 $$('[data-tab]').forEach(function(b){b.onclick=function(){showTab(b.dataset.tab)}});
 
 function refreshSide(){if(tab==='list'){renderList();if(lState==='ok')api('/api/invitations').then(function(r){invites=r.items;renderChips();renderList();loadCounts()}).catch(function(){})}if(tab==='guests'){renderGuests();renderGuestList();loadOpens()}if(tab==='deliver')renderDeliver();if(tab==='orders')loadLeads();if(tab==='settings'){renderSettings();loadSiteTpls()}}
@@ -294,7 +322,7 @@ function renderList(){
 }
 function replaceInv(inv){var k=invites.findIndex(function(x){return x.id===inv.id});if(k>=0)invites[k]=inv;else invites.unshift(inv)}
 function listAction(a,i,btn){
-  if(a==='edit'){(dirty&&draft.id!==i.id&&!draft.sample?ask({title:'Leave unsaved changes?',body:'<p>'+esc(draft.id?names(draft):'The new invitation')+' has changes that are not saved yet.</p>',ok:'Discard and open'}):Promise.resolve(true)).then(function(go){if(go){load(i);showTab('design')}});return}
+  if(a==='edit'){(draft.id===i.id?Promise.resolve(true):leaveDraft()).then(function(go){if(go){if(draft.id!==i.id)load(i);showTab('design')}});return}
   if(a==='preview'){quickView(i);return}
   if(a==='del'){confirmDelete(i);return}
   btn.disabled=true;
@@ -324,7 +352,7 @@ $('#qv-close').onclick=function(){$('#qv').close()};
 $('#qv').addEventListener('click',function(e){if(e.target===this)this.close()});
 $('#qv').addEventListener('close',function(){if(qvHandle){qvHandle.destroy();qvHandle=null}$('#qv-screen').innerHTML=''});
 $('#l-q').oninput=renderList;$('#l-sort').onchange=renderList;
-$('#l-new').onclick=function(){$('#btn-new').click();showTab('design');$('#k-a-name').focus()};
+$('#l-new').onclick=function(){leaveDraft().then(function(go){if(go){newCouple();showTab('design');$('#k-a-name').focus()}})};
 function loadInvites(){lState='loading';renderList();return api('/api/invitations').then(function(r){invites=r.items;lState='ok';renderChips();renderList();loadCounts()}).catch(function(e){if(e.status!==401){lState='error';renderList()}})}
 
 
@@ -366,6 +394,7 @@ function personalMsg(g,l){
   return 'Bonjour '+g.name+',\nNous avons la joie de vous inviter au mariage de '+n[0]+' & '+n[1]+', le '+d+'.\n'+(s>1?s+' places vous sont réservées.\n':'')+'Ouvrez votre invitation et confirmez votre présence ici :\n'+link;
 }
 function waHref(g,l){var num=String(g.phone||'').replace(/[^0-9]/g,'');if(num.length===8)num='216'+num;return 'https://wa.me/'+num+'?text='+encodeURIComponent(personalMsg(g,l))}
+var gEditS=-1;
 function renderGuestList(){
   var gl=draft.guests||[],rows=$('#g-rows'),lang=$('#g-lang').value;
   var byG={};mine().forEach(function(r){if(r.guestId&&!byG[r.guestId])byG[r.guestId]=r});
@@ -374,11 +403,20 @@ function renderGuestList(){
   if(!gl.length){rows.innerHTML='<tr><td colspan="6" class="empty">No guests yet. Paste your list above.</td></tr>';return}
   rows.innerHTML=gl.map(function(g,i){var r=byG[g.id],st=r?(r.attending?'<span class="pill yes">Coming · '+(+r.guests||1)+'</span>':'<span class="pill no">Not coming</span>'):opened[g.id]?'<span class="pill sent" title="Opened '+opened[g.id].count+'×">Opened · '+new Date(opened[g.id].last).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})+'</span>':g.sent?'<span class="pill sent">Sent</span>':'<span class="pill wait">Not sent</span>';
     var ok=!!personalLink(g),ph=String(g.phone||'').replace(/[^0-9]/g,'');
+    if(i===gEditS)return '<tr class="gedit"><td><input id="sge-name" aria-label="Guest name" value="'+esc(g.name)+'"></td><td><input id="sge-phone" aria-label="WhatsApp number" inputmode="tel" value="'+esc(g.phone||'')+'"></td><td class="num"><input id="sge-seats" aria-label="Seats" type="number" min="1" max="50" value="'+(+g.seats||1)+'" style="width:64px"></td><td colspan="3"><span class="gst"><button class="btn sm primary" type="button" id="sge-ok">Save guest</button><button class="btn sm ghost" type="button" id="sge-cancel">Cancel</button></span></td></tr>';
     return '<tr><td>'+esc(g.name)+'</td><td>'+esc(g.phone||'')+'</td><td class="num">'+(+g.seats||1)+'</td><td>'+st+'</td><td><span class="gst">'+
-      (ok&&ph?'<a class="btn sm primary" target="_blank" rel="noopener" data-send="'+i+'" href="'+esc(waHref(g,lang))+'">WhatsApp</a>':'')+(ok?'<button class="btn sm" type="button" data-copyg="'+i+'">Copy link</button>':'<span class="status">Save first</span>')+'</span></td><td><button class="btn sm ghost" type="button" data-rmg="'+i+'" aria-label="Remove guest">✕</button></td></tr>'}).join('');
+      (ok&&ph?'<a class="btn sm primary" target="_blank" rel="noopener" data-send="'+i+'" href="'+esc(waHref(g,lang))+'">WhatsApp</a>':'')+(ok?'<button class="btn sm" type="button" data-copyg="'+i+'">Copy link</button>':'<span class="status">Save first</span>')+'</span></td><td><span class="gst"><button class="btn sm ghost" type="button" data-edg="'+i+'" aria-label="Edit '+esc(g.name)+'">Edit</button><button class="btn sm ghost" type="button" data-rmg="'+i+'" aria-label="Remove guest">✕</button></span></td></tr>'}).join('');
+  /* a guest is corrected in place and keeps their personal link */
+  $$('[data-edg]').forEach(function(b){b.onclick=function(){gEditS=+b.dataset.edg;renderGuestList();$('#sge-name').focus()}});
+  if(gEditS>=0&&$('#sge-ok')){
+    var done=function(){var nm=$('#sge-name').value.trim();if(!nm){$('#sge-name').focus();return}var g=draft.guests[gEditS];
+      g.name=nm;g.phone=$('#sge-phone').value.trim();g.seats=Math.min(50,Math.max(1,parseInt($('#sge-seats').value,10)||1));gEditS=-1;touch();renderGuestList();if(draft.id)doSave(true)};
+    $('#sge-ok').onclick=done;$('#sge-cancel').onclick=function(){gEditS=-1;renderGuestList()};
+    $('#g-rows .gedit').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();done()}else if(e.key==='Escape'){gEditS=-1;renderGuestList()}};
+  }
   $$('[data-send]').forEach(function(a){a.addEventListener('click',function(){var g=draft.guests[+a.dataset.send];if(!g.sent){g.sent=Date.now();touch();doSave(true)}})});
   $$('[data-copyg]').forEach(function(b){b.onclick=function(){var g=draft.guests[+b.dataset.copyg];copy(personalMsg(g,$('#g-lang').value),b)}});
-  $$('[data-rmg]').forEach(function(b){b.onclick=function(){draft.guests.splice(+b.dataset.rmg,1);touch();renderGuestList();if(draft.id)doSave(true)}});
+  $$('[data-rmg]').forEach(function(b){b.onclick=function(){draft.guests.splice(+b.dataset.rmg,1);gEditS=-1;touch();renderGuestList();if(draft.id)doSave(true)}});
 }
 $('#g-lang').onchange=renderGuestList;
 $('#g-add').onclick=function(){
@@ -486,33 +524,53 @@ var orders=[],oFilter='verify',oSel=null,proofUrl=null,oState='loading',oBusy=fa
 var OST={awaiting_payment:['Awaiting transfer','info'],proof_sent:['Proof to verify','warn'],paid:['Paid · client','good'],rejected:['Proof rejected','bad'],cancelled:['Cancelled','bad'],brief:['Invitation prepared by the couple','info']};
 var OFILTERS=[['verify','To verify'],['awaiting','Awaiting'],['paid','Paid'],['all','All']];
 function loadLeads(){var seq=++oSeq;if(!orders.length){oState='loading';renderOrders()}
-  return api('/api/orders').then(function(r){if(seq!==oSeq)return;orders=r.items;oState='ok';renderOrders();if(oSel){var o=orders.find(function(x){return x.code===oSel});if(o)openOrder(o.code,true)}}).catch(function(e){if(seq!==oSeq)return;if(!orders.length){oState='error';renderOrders()}else if(tab==='orders')fail(e)})}
+  var first=oState!=='ok';
+  return api('/api/orders').then(function(r){if(seq!==oSeq)return;if(oState==='ok')announce(orders,r.items);orders=r.items;
+    /* the studio opens where the work is: on Orders when receipts are waiting (unless a section was asked for in the address) */
+    if(first&&tab==='list'&&!location.hash&&orders.some(function(o){return o.status==='proof_sent'}))showTab('orders');oState='ok';renderOrders();if(oSel){var o=orders.find(function(x){return x.code===oSel});if(o)openOrder(o.code,true)}}).catch(function(e){if(seq!==oSeq)return;if(!orders.length){oState='error';renderOrders()}else if(tab==='orders')fail(e)})}
+/* what changed since the last refresh, said once while the studio is open (Telegram tells the phone) */
+function announce(prev,next){var by={};prev.forEach(function(o){by[o.code]=o});var out=[];
+  next.forEach(function(o){var p=by[o.code];
+    if(!p)out.push('New order '+o.code+' · '+o.names+' ('+o.plan+')');
+    else if(o.status==='proof_sent'&&p.status!=='proof_sent')out.push('Receipt to verify · '+o.names);
+    else if(o.briefAt&&!p.briefAt)out.push(o.names+' prepared their invitation');});
+  if(out.length)toast(out.length>2?out.length+' updates in Orders: '+out[0]+'…':out.join(' · '))}
+/* "new" = arrived since the Orders tab was last opened (kept in this browser) */
+var SEEN='rq-orders-seen',seenPrev=0;
+function seenAt(){try{return +localStorage.getItem(SEEN)||0}catch(e){return 0}}
+function markSeen(){try{localStorage.setItem(SEEN,String(Date.now()))}catch(e){}}
+function isNew(o,since){return (o.createdAt||0)>since&&o.status!=='cancelled'}
 function oMatch(o){return oFilter==='all'||(oFilter==='verify'&&o.status==='proof_sent')||(oFilter==='awaiting'&&(o.status==='awaiting_payment'||o.status==='rejected'))||(oFilter==='paid'&&o.status==='paid')}
 function receiptAt(o){for(var i=(o.history||[]).length-1;i>=0;i--)if(o.history[i].status==='proof_sent')return o.history[i].at;return o.createdAt||0}
 function oSort(a,b){return oFilter==='verify'?receiptAt(b)-receiptAt(a):(b.createdAt||0)-(a.createdAt||0)}
 function dshort(t){return new Date(t).toLocaleDateString('fr-TN',{day:'numeric',month:'short'})}
 function tshort(t){return new Date(t).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})}
 function renderOrders(){
-  var n=orders.filter(function(o){return o.status==='proof_sent'}).length,bd=$('#o-badge');bd.hidden=!n;bd.textContent=n;bd.setAttribute('aria-label',n+' receipts to verify');
+  var onTab=tab==='orders'&&!document.hidden;if(onTab&&oState==='ok')markSeen();
+  var n=orders.filter(function(o){return o.status==='proof_sent'}).length,since=seenAt(),nw=orders.filter(function(o){return o.status!=='proof_sent'&&isNew(o,since)}).length,bd=$('#o-badge');
+  bd.hidden=!(n+nw);bd.textContent=n+nw;bd.setAttribute('aria-label',[n?n+' receipts to verify':'',nw?nw+' new orders':''].filter(Boolean).join(', '));
+  document.title=(n+nw?'('+(n+nw)+') ':'')+'Reefq Studio';
   var vb=$('#o-verify');vb.className='verify'+(oState==='ok'?(n?' todo':' done'):'');
   vb.innerHTML=oState==='loading'?'<span class="status">Loading orders…</span>':oState==='error'?'':n?'<b>'+n+'</b><span>'+(n===1?'receipt to verify':'receipts to verify')+'</span>'+(oFilter!=='verify'?'<button class="btn sm" type="button" id="o-showverify">Show '+(n===1?'it':'them')+'</button>':'<small>Newest first. Check the bank account, then confirm.</small>'):'<span>No receipts waiting. You are up to date.</span>';
   var sv=$('#o-showverify');if(sv)sv.onclick=function(){oFilter='verify';renderOrders()};
   $('#o-filters').innerHTML=OFILTERS.map(function(f){var c=orders.filter(function(o){var k=oFilter;oFilter=f[0];var r=oMatch(o);oFilter=k;return r}).length;return '<button class="chip" type="button" data-of="'+f[0]+'" aria-pressed="'+(oFilter===f[0])+'">'+f[1]+' · '+c+'</button>'}).join('');
   $$('[data-of]').forEach(function(b){b.onclick=function(){oFilter=b.dataset.of;renderOrders()}});
   var list=orders.filter(oMatch).sort(oSort);
-  $('#o-rows').innerHTML=oState==='loading'?'<tr><td colspan="7" class="empty">Loading orders…</td></tr>':oState==='error'?'<tr><td colspan="7" class="empty">Could not load the orders. Check your connection. <button class="btn sm" type="button" id="o-retry">Try again</button></td></tr>':list.length?list.map(function(o){var st=OST[o.status]||[o.status,''];return '<tr class="'+(oSel===o.code?'sel':'')+'"><td>'+dshort(o.createdAt)+(o.status==='proof_sent'?'<br><span class="status">Receipt '+esc(tshort(receiptAt(o)))+'</span>':'')+'</td><td><b>'+esc(o.code)+'</b></td><td>'+esc(o.names)+'<br><span class="status">'+esc([o.date,o.city].filter(Boolean).join(' · '))+'</span></td><td>'+esc(o.plan)+'</td><td class="num">'+o.deposit+' DT</td><td><span class="pill '+st[1]+'">'+st[0]+'</span></td><td><button class="btn sm" type="button" data-od="'+esc(o.code)+'">Review</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">'+(oFilter==='verify'?'No receipts to verify right now.':oFilter==='all'?'No orders yet. Orders from the website appear here.':'Nothing in this list.')+'</td></tr>';
+  $('#o-rows').innerHTML=oState==='loading'?'<tr><td colspan="7" class="empty">Loading orders…</td></tr>':oState==='error'?'<tr><td colspan="7" class="empty">Could not load the orders. Check your connection. <button class="btn sm" type="button" id="o-retry">Try again</button></td></tr>':list.length?list.map(function(o){var st=OST[o.status]||[o.status,''];return '<tr class="'+(oSel===o.code?'sel':'')+'"><td>'+dshort(o.createdAt)+(o.status==='proof_sent'?'<br><span class="status">Receipt '+esc(tshort(receiptAt(o)))+'</span>':'')+'</td><td><b>'+esc(o.code)+'</b>'+(isNew(o,seenPrev)?' <span class="pill info">New</span>':'')+'</td><td>'+esc(o.names)+'<br><span class="status">'+esc([o.date,o.city].filter(Boolean).join(' · '))+'</span></td><td>'+esc(o.plan)+'</td><td class="num">'+o.deposit+' DT</td><td><span class="pill '+st[1]+'">'+st[0]+'</span></td><td><button class="btn sm" type="button" data-od="'+esc(o.code)+'">Review</button></td></tr>'}).join(''):'<tr><td colspan="7" class="empty">'+(oFilter==='verify'?'No receipts to verify right now.':oFilter==='all'?'No orders yet. Orders from the website appear here.':'Nothing in this list.')+'</td></tr>';
   var rt=$('#o-retry');if(rt)rt.onclick=loadLeads;
   $$('[data-od]').forEach(function(b){b.onclick=function(){openOrder(b.dataset.od)}});
 }
 function clientLink(o){return ORIGIN+'/commande/'+o.code+'?t='+o.token}
 function openOrder(code,keep){
+  if(noteT&&pendingNote&&code!==oSel)pendingNote(); /* a note still being typed is saved to its own order first */
   var o=orders.find(function(x){return x.code===code});if(!o)return;oSel=code;renderOrders();
   var d=$('#o-detail');d.hidden=false;if(!keep)d.scrollIntoView({behavior:'smooth',block:'start'});
   var st=OST[o.status]||[o.status,''];$('#od-title').textContent=o.code+' · '+o.names;$('#od-status').textContent=st[0];$('#od-status').className='pill '+st[1];
   var wa=String(o.phone||'').replace(/[^0-9]/g,'');if(wa.length===8)wa='216'+wa;
   var info=[['WhatsApp',o.phone],['Date',o.date],['City',o.city],['Guests',o.guests],['Offer',o.plan+' · '+o.price+' DT'],[o.deposit<o.price?'Deposit':'To pay',o.deposit+' DT'],['Invitation',o.briefAt?'Prepared by the couple '+tshort(o.briefAt):'Not prepared yet'],['Source',o.source?Object.values(o.source).join(' / '):''],['Referred by',o.referrer?o.referrer+' (-10 %)':''],['Received',o.paid?o.paid+' DT':'—'],['Theme',o.theme],[o.site?'Website template':'Canva model',o.site?(o.model||o.site)+' · /modeles/'+o.site:o.model],['Message',o.note],['Language',o.lang]].filter(function(r){return r[1]});
   $('#od-info').innerHTML=info.map(function(r){return '<dt>'+r[0]+'</dt><dd>'+esc(r[1])+'</dd>'}).join('')+'<dt>History</dt><dd>'+o.history.map(function(h){return esc(new Date(h.at).toLocaleString('fr-TN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' · '+(OST[h.status]||[h.status])[0]+(h.note?' · '+h.note:''))}).join('<br>')+'</dd>';
-  $('#od-note').value=o.adminNote||'';$('#od-amount').value=o.paid||o.deposit;$('#od-reason').value='';
+  /* the list refreshes every minute: what is being typed in this order stays */
+  if(!keep||odTyped!==code){$('#od-note').value=o.adminNote||'';$('#od-amount').value=o.paid||o.deposit;$('#od-reason').value='';odTyped=null}
   var closed=o.status==='paid'||o.status==='cancelled';$('#od-confirm').hidden=o.status==='paid'||o.status==='cancelled';$('#od-reject').hidden=closed;$('#od-cancel').hidden=o.status==='cancelled';$('#od-reopen').hidden=!closed;
   $('#od-invite').textContent=o.inviteId?'Open the invitation in Design':'Create invitation from this order';
   var msg='Bonjour '+(o.names||'')+',\n'+(o.status==='paid'?'Votre paiement est confirmé, merci ! Votre espace client Reefq :\n':'Voici votre espace client Reefq pour la commande '+o.code+'. Vous pouvez y préparer votre invitation et voir l\'aperçu, puis régler '+o.deposit+' DT par virement :\n')+clientLink(o);
@@ -537,10 +595,17 @@ $('#od-reject').onclick=function(){oAction('reject',{note:$('#od-reason').value.
 $('#od-cancel').onclick=function(){oAction('cancel',{note:$('#od-reason').value.trim()})};
 $('#od-reopen').onclick=function(){oAction('reopen')};
 $('#od-close').onclick=function(){oSel=null;$('#o-detail').hidden=true;renderOrders()};
-$('#od-note-save').onclick=function(){var b=this;if(b.disabled)return;b.disabled=true;api('/api/orders/'+oSel,{method:'PATCH',body:{adminNote:$('#od-note').value}}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;toast('Note saved')}).catch(fail).then(function(){b.disabled=false})};
+var odTyped=null,noteT=null;
+['#od-note','#od-amount','#od-reason'].forEach(function(id){$(id).addEventListener('input',function(){odTyped=oSel})});
+/* the internal note saves itself 1.5 s after typing stops */
+function saveNote(quiet,code,v){clearTimeout(noteT);noteT=null;var b=$('#od-note-save');code=code||oSel;if(v==null)v=$('#od-note').value;if(!code)return;b.disabled=true;b.textContent='Saving…';
+  api('/api/orders/'+code,{method:'PATCH',body:{adminNote:v}}).then(function(o){var i=orders.findIndex(function(x){return x.code===o.code});orders[i]=o;b.textContent='Note saved ✓';if(!quiet)toast('Note saved')}).catch(function(e){b.textContent='Save note';fail(e)}).then(function(){b.disabled=false})}
+$('#od-note').addEventListener('input',function(){$('#od-note-save').textContent='Save note';clearTimeout(noteT);var c=oSel,v=this.value;noteT=setTimeout(function(){saveNote(true,c,v)},1500);pendingNote=function(){saveNote(true,c,v)}});
+var pendingNote=null;
+$('#od-note-save').onclick=function(){if(!this.disabled)saveNote()};
 $('#od-copy').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(o)copy(clientLink(o),this)};
 $('#od-invite').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(!o)return;
-  var go=function(inv){var i=invites.findIndex(function(x){return x.id===inv.id});if(i<0)invites.unshift(inv);load(inv);$('#tab-design').click();toast('Invitation opened in Design')};
+  var go=function(inv){if(draft.id===inv.id){$('#tab-design').click();return}leaveDraft().then(function(ok){if(!ok)return;var i=invites.findIndex(function(x){return x.id===inv.id});if(i<0)invites.unshift(inv);load(inv);$('#tab-design').click();toast('Invitation opened in Design')})};
   if(o.inviteId){api('/api/invitations/'+o.inviteId).then(go).catch(fail);return}
   api('/api/orders/'+o.code+'/invitation',{method:'POST'}).then(function(r){var i=orders.findIndex(function(x){return x.code===r.order.code});orders[i]=r.order;go(r.invitation)}).catch(fail)};
 $('#od-delete').onclick=function(){var o=orders.find(function(x){return x.code===oSel});if(!o)return;
@@ -601,13 +666,21 @@ $('#l-form').onsubmit=function(e){e.preventDefault();var err=$('#l-err');err.hid
 /* ---------- boot ---------- */
 $$('#brand-logo,#l-logo').forEach(function(i){i.src=ReefqInvite.LOGO});$('#brand-logo-d').src=ReefqInvite.LOGO_DARK;
 $('#pv-fab').hidden=true;renderList();fillForm();renderChips();preview(true);status('Example couple. Press "+ New couple" or edit and save.','');
+/* changes typed before the page was closed or reloaded and not saved: offered back once */
+function restoreDraft(){var b=null;try{b=JSON.parse(localStorage.getItem(BACKUP)||'null')}catch(e){}
+  if(!b||!b.draft||!draft.sample)return;
+  ask({title:'Restore unsaved changes?',body:'<p>Changes to <b>'+esc(names(b.draft)==='? & ?'?'a new invitation':names(b.draft))+'</b> typed on '+esc(tshort(b.at))+' were not saved.</p>',ok:'Restore',cancel:'Discard'}).then(function(go){
+    if(!go){try{localStorage.removeItem(BACKUP)}catch(e){}return}
+    load(b.draft.id&&invites.find(function(x){return x.id===b.draft.id})||b.draft,true);draft=clone(b.draft);fillForm();renderChips();preview(true);showTab('design');touch()})}
 function start(){
+  var h=location.hash.slice(1);if(h==='orders'||h==='settings')showTab(h);
   api('/api/me').then(function(me){ME=me;renderSettings();
-    loadLeads();return loadInvites()}).catch(function(){});
+    loadLeads();return loadInvites().then(restoreDraft)}).catch(function(){});
   loadCanva();
 }
 start();
 setInterval(function(){if(document.visibilityState==='visible'&&tab==='guests')loadRsvps()},20000);
 setInterval(loadCanva,5*60*1000);
 setInterval(function(){if(document.visibilityState==='visible'&&ME)loadLeads()},60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&ME){if(tab==='orders')seenPrev=seenAt();loadLeads()}});
 })();

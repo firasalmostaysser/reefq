@@ -15,13 +15,16 @@
 <script>
 /* Client space preview: the parent page (same origin) posts the invitation as the couple fills it in. Replies are not sent. */
 (function(){
-  var root=document.getElementById('r'),last='';
+  var root=document.getElementById('r'),last='',h=null;
   addEventListener('message',function(e){
     if(e.origin!==location.origin||!e.data||e.data.type!=='rq-preview')return;
-    var key=JSON.stringify(e.data.inv);if(key===last)return;last=key;
-    root.innerHTML='';var el=document.createElement('div');el.style.height='100%';root.appendChild(el);
-    ReefqInvite.render(el,e.data.inv,{preview:true,badge:'Aperçu',guest:e.data.guest||null,startOpen:!!e.data.open,
+    var key=JSON.stringify([e.data.inv,e.data.guest]);if(key===last)return;last=key;
+    /* once the couple has opened the envelope, each edit redraws it open at the same place, so the change is in view */
+    var wasOpen=!!(h&&h.isOpen()),sc=h&&h.scroller(),top=sc?sc.scrollTop:0;
+    if(h)h.destroy();root.innerHTML='';var el=document.createElement('div');el.style.height='100%';root.appendChild(el);
+    h=ReefqInvite.render(el,e.data.inv,{preview:true,badge:'Aperçu',guest:e.data.guest||null,startOpen:!!e.data.open||wasOpen,
       onRsvp:function(){return new Promise(function(res){setTimeout(function(){res({})},400)})}});
+    if(wasOpen&&top){var s2=h.scroller();if(s2)s2.scrollTop=top}
   });
   parent.postMessage({type:'rq-preview-ready'},location.origin);
 })();

@@ -66,7 +66,7 @@ No Telegram yet? Studio → Settings → **Preview today's summary** shows the s
 | Transfer received but amount is different | Enter the real amount in "Amount received" and confirm; add an internal note. If too low, ask the difference on WhatsApp before confirming. |
 | Couple paid but wrote no reference | Find it by amount and name, confirm as usual. |
 | Couple wants a refund before using it | Cancel the order in the Studio, refund by transfer, note it. After the invitation was sent to guests: no refund (say so in the terms). |
-| Couple wants a change after sending | They edit it themselves in the client space ("Modifier"); guests see it on the same link. For theme photos, stories in three languages, program with several events (henné, contrat), use the Studio → Design. |
+| Couple wants a change after sending | They edit it themselves in the client space ("Modifier"); guests see it on the same link. Guests are corrected in place (name, number, seats) and keep their link. If the couple and the studio edit at the same time, whoever saves second is asked to load the latest version or keep theirs; nothing is overwritten silently. For theme photos, stories in three languages, program with several events (henné, contrat), use the Studio → Design. |
 | Second event (+49 DT) | Studio → Design → program (events). Ask the +49 DT on WhatsApp, note it on the order. |
 | Express 24 h (+30 DT) | Self-service is instant; only applies to custom designs. Tell the designer. |
 | Couple lost their client space link | Studio → Orders → find them → **Send client space on WhatsApp**. |
