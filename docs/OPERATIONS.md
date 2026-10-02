@@ -104,7 +104,7 @@ Arabic (Tunisian):
 `/khlas`
 > الخلاص بتحويل بنكي مرة وحدة. في الفضاء متاعكم تلقاو الـRIB والمرجع، وبعد تبعثو تصويرة الوصل. أول ما نأكدو التحويل، الدعوة تولّي جاهزة.
 
-Replace `reefq.netlify.app` by `reefq.com` once the domain is connected.
+The site stays on `reefq.netlify.app` (no own domain for now, see `docs/LAUNCH_CHECKLIST.md` item 7).
 
 ## 6. Where to look when something is wrong
 

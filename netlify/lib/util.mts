@@ -25,6 +25,9 @@ export function id(n = 10): string {
 export const slug = (s: string) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
   .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'couple';
 
+/* `a` is the bride, `b` the groom; the groom's name comes first unless the couple chose otherwise (same rule as engine.js) */
+export const coupleNames = (i: any): string[] => { const a = i?.a?.name || '', b = i?.b?.name || ''; return i?.nameOrder === 'bride' ? [a, b] : [b, a]; };
+
 export const clampStr = (v: unknown, n: number) => String(v == null ? '' : v).slice(0, n);
 
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));

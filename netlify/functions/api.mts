@@ -1,5 +1,5 @@
 import type { Context, Config } from '@netlify/functions';
-import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError } from '../lib/util.mts';
+import { json, err, readJSON, id, slug, clampStr, env, clientIp, HttpError, coupleNames } from '../lib/util.mts';
 import { invitations, rsvps, orders, files, opens, siteTemplates, listJSON, listEntries, rateLimit, isProduction, DATA_STORES } from '../lib/stores.mts';
 import { sendDigest } from '../lib/digest-run.mts';
 import { isStudio, login, logout } from '../lib/auth.mts';
@@ -423,7 +423,7 @@ async function clientView(o: any) {
     else {
       const list = await rsvpList(o.inviteId);
       const yes = list.filter(r => r.attending);
-      view.invitation = { id: inv.id, names: [inv.a?.name, inv.b?.name], date: inv.date, url: `/i/${inv.id}`,
+      view.invitation = { id: inv.id, names: coupleNames(inv), date: inv.date, url: `/i/${inv.id}`,
         guests: (inv.guests || []).map((g: any) => ({ id: g.id, name: g.name, seats: g.seats, link: `/i/${inv.id}?g=${g.id}` })) };
       view.rsvps = { total: list.length, coming: yes.reduce((s, r) => s + (r.guests || 1), 0), declined: list.length - yes.length,
         items: list.map(r => ({ name: r.name, attending: r.attending, guests: r.guests, dietary: r.dietary, message: r.message, at: r.at })) };
@@ -433,7 +433,8 @@ async function clientView(o: any) {
 }
 
 /* ---------------- the couple's own invitation (client space) ---------------- */
-const BRIEF_FIELDS = ['theme', 'lang', 'eventType', 'a', 'b', 'date', 'time', 'city', 'venue', 'maps', 'dress', 'rsvpBy', 'maxGuests', 'opening', 'message', 'story'];
+const BRIEF_FIELDS = ['theme', 'lang', 'eventType', 'a', 'b', 'date', 'time', 'city', 'venue', 'maps', 'dress', 'rsvpBy', 'maxGuests', 'opening', 'message', 'story', 'hosts', 'closing', 'show', 'nameOrder'];
+const SECTIONS = ['countdown', 'program', 'story', 'rsvp'];
 const pick = (o: any, keys: string[]) => Object.fromEntries(keys.filter(k => o[k] !== undefined).map(k => [k, o[k]]));
 const LANGS = ['fr', 'ar', 'en'], EVENT_TYPES = ['wedding', 'engagement', 'henna', 'contract'], OPENING_IDS = ['none', 'bismillah', 'verse'];
 const dateStr = (v: unknown) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '';
@@ -443,7 +444,7 @@ const tri = (v: any, n: number) => Object.fromEntries(LANGS.map(l => [l, clampSt
 async function orderInvitation(o: any) {
   if (o.inviteId) { const ex: any = await invitations().get(o.inviteId, { type: 'json' }); if (ex) return ex; }
   const [a, bn] = String(o.names || '').split(/\s*(?:&|et|\+|و)\s*/i);
-  const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'ar' ? 'ar' : 'fr',
+  const inv = { theme: THEME_IDS.includes(o.theme) ? o.theme : 'reefq', eventType: 'wedding', lang: o.lang === 'en' ? 'en' : 'ar', /* most couples are Tunisian and want the Arabic invitation, even when ordering from the French page; the couple can change it */
     a: { name: (a || o.names || '').trim(), ar: '' }, b: { name: (bn || '').trim() || '—', ar: '' }, date: o.date || '', time: '20:00', city: o.city || '',
     venue: '', maps: '', dress: '', note: '', events: [], message: { fr: '', ar: '', en: '' }, photos: [], rsvpBy: '', maxGuests: 2, whatsapp: o.phone || '', guests: [], orderCode: o.code,
     ...(o.site ? { designSource: 'canva', siteTemplate: o.site } : {}) };
@@ -454,7 +455,8 @@ async function orderInvitation(o: any) {
 
 async function activateInvitation(o: any) {
   const inv: any = await orderInvitation(o);
-  if (inv.locked) { delete inv.locked; inv.updatedAt = Date.now(); await invitations().setJSON(inv.id, inv); }
+  /* unlocking is not an edit: updatedAt stays, so a couple with the form open is not told it "changed meanwhile" */
+  if (inv.locked) { delete inv.locked; await invitations().setJSON(inv.id, inv); }
 }
 
 async function clientBrief(req: Request, context: Context, o: any) {
@@ -478,6 +480,18 @@ async function clientBrief(req: Request, context: Context, o: any) {
   inv.maxGuests = Math.min(20, Math.max(1, Math.round(+b.maxGuests || inv.maxGuests || 2)));
   if (b.message) inv.message = tri(b.message, 600);
   if (b.story) inv.story = tri(b.story, 1500);
+  /* who invites (parents or families), the closing line, the name order and the sections the couple turned off */
+  if (b.hosts && typeof b.hosts === 'object') {
+    const side = (v: any) => ({ fr: clampStr(v?.fr, 80).trim(), ar: clampStr(v?.ar, 80).trim() });
+    inv.hosts = { mode: ['parents', 'families'].includes(b.hosts.mode) ? b.hosts.mode : 'none', mothers: b.hosts.mothers !== false, g: side(b.hosts.g), b: side(b.hosts.b) };
+  }
+  if (b.closing) inv.closing = tri(b.closing, 200);
+  if (b.nameOrder) inv.nameOrder = b.nameOrder === 'bride' ? 'bride' : 'groom';
+  if (b.show && typeof b.show === 'object') {
+    const show: any = { ...(inv.show || {}) };
+    for (const k of SECTIONS) if (k in b.show) { if (b.show[k] === false) show[k] = false; else delete show[k]; }
+    inv.show = show;
+  }
   if (GUEST_PLANS.includes(o.plan) && Array.isArray(b.guests)) {
     /* known guests keep their id (their link) and their "sent" mark; removed ones lose their link */
     const prev = new Map((inv.guests || []).map((g: any) => [g.id, g]));

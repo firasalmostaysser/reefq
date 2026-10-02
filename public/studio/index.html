@@ -60,10 +60,25 @@
         <legend>The couple</legend>
         <p class="hint">Arabic names are used when a guest reads the invitation in Arabic.</p>
         <div class="grid">
-          <label class="f"><span>Bride</span><input id="k-a-name" data-k="a.name"></label>
-          <label class="f"><span>Bride (Arabic)</span><input id="k-a-ar" data-k="a.ar" dir="rtl"></label>
           <label class="f"><span>Groom</span><input id="k-b-name" data-k="b.name"></label>
-          <label class="f"><span>Groom (Arabic)</span><input id="k-b-ar" data-k="b.ar" dir="rtl"></label>
+          <label class="f"><span>Groom (Arabic)</span><input id="k-b-ar" data-k="b.ar" dir="rtl" lang="ar"></label>
+          <label class="f"><span>Bride</span><input id="k-a-name" data-k="a.name"></label>
+          <label class="f"><span>Bride (Arabic)</span><input id="k-a-ar" data-k="a.ar" dir="rtl" lang="ar"></label>
+          <label class="f full"><span>Name order</span><select id="k-order" data-k="nameOrder"><option value="groom">Groom first (Tunisian cards)</option><option value="bride">Bride first</option></select></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Who invites</legend>
+        <p class="hint">Parents (“<bdi lang="ar" dir="rtl">السيد … وحرمه</bdi>”, “Monsieur et Madame …”) or families above the couple's names. Leave one side empty if only one family invites. Pick the wording “Continues from the hosts” and the text agrees by itself.</p>
+        <div class="grid">
+          <label class="f"><span>In the name of</span><select id="k-hmode" data-k="hosts.mode"><option value="none">The couple</option><option value="parents">The parents</option><option value="families">The families</option></select></label>
+          <label class="f" id="k-hmothers-wrap"><span>Mothers</span><span><input type="checkbox" id="k-hmothers"> Add “and Madame” / “<bdi lang="ar" dir="rtl">وحرمه</bdi>”</span></label>
+          <label class="f"><span id="k-hg-l">Groom's father</span><input id="k-hg-fr" data-k="hosts.g.fr"></label>
+          <label class="f"><span>… in Arabic</span><input id="k-hg-ar" data-k="hosts.g.ar" dir="rtl" lang="ar"></label>
+          <label class="f"><span id="k-hb-l">Bride's father</span><input id="k-hb-fr" data-k="hosts.b.fr"></label>
+          <label class="f"><span>… in Arabic</span><input id="k-hb-ar" data-k="hosts.b.ar" dir="rtl" lang="ar"></label>
+          <label class="f full"><span>Closing line</span><select id="k-close"></select></label>
         </div>
       </fieldset>
 

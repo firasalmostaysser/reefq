@@ -142,7 +142,7 @@ g2.on('request', r => g2Hosts.add(new URL(r.url()).host));
 await g2.goto(`${BASE}/i/${cid}?g=${cgid}`); await g2.waitForSelector('#design');
 await g2.waitForSelector('#late'); await g2.waitForFunction(() => document.querySelector('#late').complete && document.querySelector('#late').naturalWidth > 0);
 assert.ok(![...g2Hosts].some(h => h.endsWith(':' + SITE_PORT)), 'guest browser never talks to the designer site');
-assert.match(await g2.title(), /Olfa & Ahmed/);
+assert.match(await g2.title(), /Ahmed & Olfa/);
 assert.equal(await g2.$eval('.footer-container', el => getComputedStyle(el).display), 'none');
 assert.equal(await g2.$('audio'), null);
 const html2 = await (await g2.request.get(`${BASE}/i/${cid}`)).text();

@@ -73,3 +73,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .bactions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .pvwrap{margin-top:16px;display:flex;justify-content:center}
 .pvwrap iframe{width:min(390px,100%);height:min(760px,82vh);border:0;border-radius:28px;box-shadow:0 0 0 8px #1d1d1d,0 18px 40px rgba(0,0,0,.25);background:#0c0c0c}
+/* checkboxes: "with the mothers", sections shown */
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;align-self:end;min-height:40px}
+.chk input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.chks{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin-top:12px}
+.chks .chk{min-height:32px}

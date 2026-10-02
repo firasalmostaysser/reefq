@@ -33,7 +33,8 @@ for (const p of changed) {
 
 // 2. engine.js: data, RSVP and link functions must stay byte-identical; public API keys must stay.
 const ENGINE = 'public/assets/engine.js';
-const FROZEN = ['esc', 'rng', 'hash', 'pad', 'loc', 'fmtDate', 'namesOf', 'initials', 'waLink', 'mapsHref', 'rsvpHtml', 'wireRsvp', 'renderRsvp', 'envOpts'];
+const FROZEN = ['esc', 'rng', 'hash', 'pad', 'loc', 'fmtDate', 'namesOf', 'initials', 'waLink', 'mapsHref', 'rsvpHtml', 'wireRsvp', 'renderRsvp', 'envOpts',
+  'couple', 'pairText', 'hostsOf', 'hostsLines', 'hostsMsg']; // name order and the Arabic/French/English grammar of "who invites"
 const fnSource = (src, name) => {
   const m = src.match(new RegExp(`^function ${name}\\(`, 'm'));
   if (!m) return null;

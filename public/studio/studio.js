@@ -73,8 +73,18 @@ function preview(now){clearTimeout(pvTimer);pvTimer=setTimeout(function(){
 /* ---------- form ---------- */
 function fillForm(){
   $$('[data-k]').forEach(function(el){var v=getK(draft,el.dataset.k);el.value=v==null?'':v;if(el.tagName==='SELECT'&&el.selectedIndex<0)el.selectedIndex=0});
-  renderThemes();renderDress();renderEvents();renderEnv();renderShows();renderCanva();renderWording();renderSource();
+  renderThemes();renderDress();renderEvents();renderEnv();renderShows();renderCanva();renderWording();renderSource();renderHosts();
 }
+/* who invites (parents or families) and the closing line; the grammar is done by the engine (hostsLines / hostsMsg) */
+function renderHosts(){var h=draft.hosts||{},fam=h.mode==='families',on=h.mode==='parents'||fam;
+  $('#k-hmothers').checked=h.mothers!==false;$('#k-hmothers-wrap').hidden=h.mode!=='parents';
+  ['#k-hg-fr','#k-hg-ar','#k-hb-fr','#k-hb-ar'].forEach(function(id){$(id).closest('label').hidden=!on});
+  $('#k-hg-l').textContent=fam?'Groom\'s family':'Groom\'s father (full name)';$('#k-hb-l').textContent=fam?'Bride\'s family':'Bride\'s father (full name)';
+  var c=draft.closing||{},cur=!(c.ar||c.fr||c.en)?'none':(RW.CLOSINGS.filter(function(x){return x.text&&(c.ar?x.text.ar===c.ar:x.text.fr===c.fr)})[0]||{id:'custom'}).id;
+  $('#k-close').innerHTML=RW.CLOSINGS.map(function(x){return '<option value="'+x.id+'"'+(x.id===cur?' selected':'')+'>'+esc(x.text?'⁧'+x.text.ar+'⁩ · '+x.text.fr:'None')+'</option>'}).join('')+(cur==='custom'?'<option value="custom" selected>Current custom line</option>':'')}
+$('#k-hmothers').onchange=function(){draft.hosts=draft.hosts||{};draft.hosts.mothers=this.checked;touch();keepOpen();preview()};
+$('#k-hmode').addEventListener('change',function(){renderHosts()});
+$('#k-close').onchange=function(){if(this.value!=='custom')draft.closing=RW.closing(this.value);touch();keepOpen();preview()};
 function renderThemes(){
   $('#themes').innerHTML=THEME_INFO.map(function(t){return '<button type="button" class="theme" data-theme-id="'+t.id+'" aria-pressed="'+(draft.theme===t.id)+'"><span class="sw" style="background:'+t.bg+';color:'+t.fg+'">Y &amp; K</span><span class="tn">'+t.name+'<small>'+t.sub+'</small></span></button>'}).join('');
   $$('[data-theme-id]').forEach(function(b){b.onclick=function(){draft.theme=b.dataset.themeId;touch();renderThemes();preview(true)}});
@@ -192,7 +202,7 @@ function renderShows(){$$('[data-show]').forEach(function(c){c.checked=!(draft.s
 $$('[data-show]').forEach(function(c){c.onchange=function(){draft.show=draft.show||{};draft.show[c.dataset.show]=c.checked;touch();pvOpen=true;preview(true)}});
 
 /* ---------- chips / save ---------- */
-function names(i){return ((i.a&&i.a.name)||'?')+' & '+((i.b&&i.b.name)||'?')}
+function names(i){var n=ReefqInvite.namesOf(i,'fr');return (n[0]||'?')+' & '+(n[1]||'?')}
 function renderChips(){
   var col={};THEME_INFO.forEach(function(t){col[t.id]=t.fg});
   var html='';
@@ -298,7 +308,7 @@ function patchCard(id){var el=$('[data-card="'+id+'"]'),i=invites.find(function(
 function cardHtml(i){
   var t=themeOf(i.theme),st=invStatus(i),n=names(i),id=esc(i.id);
   return '<article class="icard'+(draft.id===i.id?' cur':'')+'" data-card="'+id+'">'+
-    '<div class="ic-sw" style="background:'+t.bg+';color:'+t.fg+'" aria-hidden="true"><span>'+esc(i.a&&i.a.name||'?')+' <i>&amp;</i> '+esc(i.b&&i.b.name||'?')+'</span></div>'+
+    '<div class="ic-sw" style="background:'+t.bg+';color:'+t.fg+'" aria-hidden="true"><span>'+esc(ReefqInvite.namesOf(i,'fr')[0]||'?')+' <i>&amp;</i> '+esc(ReefqInvite.namesOf(i,'fr')[1]||'?')+'</span></div>'+
     '<div class="ic-body"><div class="ic-top"><h3>'+esc(n)+'</h3><span class="pill '+st[1]+'" data-st>'+st[0]+'</span></div>'+
     '<p class="ic-meta">'+(i.date?esc(fmtD(i.date)):'No date yet')+(i.city?' · '+esc(i.city):'')+'</p>'+
     '<p class="ic-meta"><span class="ic-dot" style="background:'+t.fg+'"></span>'+esc(t.name)+' · <span data-rc>'+rcText(rCount[i.id])+'</span></p>'+
@@ -387,11 +397,14 @@ $('#btn-csv').onclick=function(){
 /* personal link ids: 10 random characters from the browser's secure generator, so links cannot be guessed */
 function gid(){var A='abcdefghijkmnopqrstuvwxyz23456789',b=crypto.getRandomValues(new Uint8Array(10)),s='';for(var i=0;i<b.length;i++)s+=A[b[i]%A.length];return s}
 function personalLink(g){return draft.id?ORIGIN+'/i/'+draft.id+'?g='+g.id:''}
+/* Arabic counted noun: 2 → مقعدين, 3–10 → مقاعد, 11+ → مقعدًا */
+function arSeats(s){return s===2?'مقعدين':s<=10?s+' مقاعد':s+' مقعدًا'}
+var EV_AR={wedding:'حفل زفاف',engagement:'حفل خطوبة',henna:'سهرة حنّة',contract:'حفل عقد قران'},EV_FR={wedding:'au mariage',engagement:'aux fiançailles',henna:'à la soirée du henné',contract:'au contrat de mariage'},EV_EN={wedding:'the wedding',engagement:'the engagement',henna:'the henna night',contract:'the marriage contract'};
 function personalMsg(g,l){
-  var n=ReefqInvite.namesOf(draft,l),d=ReefqInvite.fmtDate(draft.date,l),link=personalLink(g)||'[lien]',s=+g.seats||1;
-  if(l==='ar')return 'السلام عليكم '+g.name+'،\nيسعدنا دعوتكم لحضور حفل زفاف '+n[0]+' و'+n[1]+' يوم '+d+'.\n'+(s>1?'حجزنا لكم '+s+' مقاعد.\n':'')+'افتحوا دعوتكم وأكّدوا حضوركم من هنا:\n'+link;
-  if(l==='en')return 'Hello '+g.name+',\nWe would love you to celebrate the wedding of '+n[0]+' & '+n[1]+' on '+d+'.\n'+(s>1?'We have reserved '+s+' seats for you.\n':'')+'Open your invitation and reply here:\n'+link;
-  return 'Bonjour '+g.name+',\nNous avons la joie de vous inviter au mariage de '+n[0]+' & '+n[1]+', le '+d+'.\n'+(s>1?s+' places vous sont réservées.\n':'')+'Ouvrez votre invitation et confirmez votre présence ici :\n'+link;
+  var n=ReefqInvite.namesOf(draft,l),d=ReefqInvite.fmtDate(draft.date,l),link=personalLink(g)||'[lien]',s=+g.seats||1,ev=draft.eventType||'wedding';
+  if(l==='ar')return 'السلام عليكم '+g.name+'،\nيسعدنا دعوتكم لحضور '+(EV_AR[ev]||EV_AR.wedding)+' '+n[0]+' و'+n[1]+' يوم '+d+'.\n'+(s>1?'حجزنا لكم '+arSeats(s)+'.\n':'')+'افتحوا دعوتكم وأكّدوا حضوركم من هنا:\n'+link;
+  if(l==='en')return 'Hello '+g.name+',\nWe would love you to celebrate '+(EV_EN[ev]||EV_EN.wedding)+' of '+n[0]+' & '+n[1]+' on '+d+'.\n'+(s>1?'We have reserved '+s+' seats for you.\n':'')+'Open your invitation and reply here:\n'+link;
+  return 'Bonjour '+g.name+',\nNous avons la joie de vous inviter '+(EV_FR[ev]||EV_FR.wedding)+' de '+n[0]+' & '+n[1]+', le '+d+'.\n'+(s>1?s+' places vous sont réservées.\n':'')+'Ouvrez votre invitation et confirmez votre présence ici :\n'+link;
 }
 function waHref(g,l){var num=String(g.phone||'').replace(/[^0-9]/g,'');if(num.length===8)num='216'+num;return 'https://wa.me/'+num+'?text='+encodeURIComponent(personalMsg(g,l))}
 var gEditS=-1;
@@ -437,10 +450,10 @@ $('#g-csv').onclick=function(){
 /* ---------- deliver ---------- */
 function guestLink(){return draft.id?ORIGIN+'/i/'+draft.id:''}
 function shareMsg(l){
-  var n=ReefqInvite.namesOf(draft,l),d=ReefqInvite.fmtDate(draft.date,l),link=guestLink()||'[lien de l\'invitation]';
-  if(l==='ar')return 'السلام عليكم،\nيسعدنا دعوتكم لحضور حفل زفاف '+n[0]+' و'+n[1]+' يوم '+d+'.\nافتحوا الدعوة وأكّدوا حضوركم من هنا:\n'+link;
-  if(l==='en')return 'Hello,\nWe would love you to celebrate the wedding of '+n[0]+' & '+n[1]+' on '+d+'.\nOpen your invitation and reply here:\n'+link;
-  return 'Bonjour,\nNous avons la joie de vous inviter au mariage de '+n[0]+' & '+n[1]+', le '+d+'.\nOuvrez votre invitation et confirmez votre présence ici :\n'+link;
+  var n=ReefqInvite.namesOf(draft,l),d=ReefqInvite.fmtDate(draft.date,l),link=guestLink()||'[lien de l\'invitation]',ev=draft.eventType||'wedding';
+  if(l==='ar')return 'السلام عليكم،\nيسعدنا دعوتكم لحضور '+(EV_AR[ev]||EV_AR.wedding)+' '+n[0]+' و'+n[1]+' يوم '+d+'.\nافتحوا الدعوة وأكّدوا حضوركم من هنا:\n'+link;
+  if(l==='en')return 'Hello,\nWe would love you to celebrate '+(EV_EN[ev]||EV_EN.wedding)+' of '+n[0]+' & '+n[1]+' on '+d+'.\nOpen your invitation and reply here:\n'+link;
+  return 'Bonjour,\nNous avons la joie de vous inviter '+(EV_FR[ev]||EV_FR.wedding)+' de '+n[0]+' & '+n[1]+', le '+d+'.\nOuvrez votre invitation et confirmez votre présence ici :\n'+link;
 }
 function renderDeliver(){
   $('#msg-langs').innerHTML=[['fr','Français'],['ar','العربية'],['en','English']].map(function(x){return '<button class="chip" type="button" data-ml="'+x[0]+'" aria-pressed="'+(msgLang===x[0])+'">'+x[1]+'</button>'}).join('');

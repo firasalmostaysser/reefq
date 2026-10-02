@@ -1,6 +1,6 @@
 import type { Config } from '@netlify/functions';
 import { invitations } from '../lib/stores.mts';
-import { escHtml } from '../lib/util.mts';
+import { escHtml, coupleNames } from '../lib/util.mts';
 import { sitePage } from '../lib/sites.mts';
 
 /* Serves /i/<id> with the couple's names in the WhatsApp/Facebook link preview. A published custom design is served from our copy. */
@@ -11,7 +11,8 @@ export default async (req: Request) => {
   if (m && m[1] !== 'demo') {
     inv = await invitations().get(m[1], { type: 'json' });
     if (inv) {
-      if (inv.a?.name && inv.b?.name) title = `${inv.a.name} & ${inv.b.name} · Invitation`;
+      const [n1, n2] = coupleNames(inv);
+      if (n1 && n2) title = `${n1} & ${n2} · Invitation`;
       if (inv.date) desc = new Date(inv.date + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) + (inv.city ? ' · ' + inv.city : '');
     }
   }

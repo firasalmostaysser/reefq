@@ -59,7 +59,14 @@ function render(o){
 var RW=window.ReefqWording,THEME_NAMES={reefq:'Reefq',zitouna:'Zitouna',yasmine:'Yasmine',layl:'Layl',sidi:'Sidi Bou Said',kairouan:'Kairouan',oldmoney:'Old Money',sauge:'Sauge',bordeaux:'Bordeaux',sahara:'Sahara'};
 var B=null,G=[],dirty=false,briefOpen=null,pvReady=false,pvShown=false;
 function opts(list,cur){return list.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===cur?' selected':'')+'>'+esc(x.label)+'</option>'}).join('')}
-function toneOf(ev,msg){if(!msg||!msg.fr)return 'classic';var t=RW.TONES.filter(function(x){return RW.get(ev,x.id).fr===msg.fr})[0];return t?t.id:'custom'}
+/* the ready-made text in use; an empty text under the parents' or families' names is the automatic continuation */
+function toneOf(ev,msg,hosts){if(!msg||!(msg.fr||msg.ar))return hosts?'hosts':'classic';var t=RW.TONES.filter(function(x){var g=RW.get(ev,x.id);return x.id!=='hosts'&&(msg.fr?g.fr===msg.fr:g.ar===msg.ar)})[0];return t?t.id:'custom'}
+function closeOf(c){if(!c||!(c.ar||c.fr||c.en))return 'none';var k=RW.CLOSINGS.filter(function(x){return x.text&&(c.ar?x.text.ar===c.ar:x.text.fr===c.fr)})[0];return k?k.id:'custom'}
+/* who invites: labels follow the choice (parents or families), the mothers option only makes sense for parents */
+function hostsUi(){var mode=$('#b-hmode').value,fam=mode==='families';$('#b-hosts').hidden=mode==='none';$('#b-hmothers-wrap').hidden=mode!=='parents';
+  $('#b-hg-l').textContent=fam?'Famille du marié':'Père du marié (nom complet)';$('#b-hb-l').textContent=fam?'Famille de la mariée':'Père de la mariée (nom complet)';
+  $('#b-hg-l-ar').textContent=fam?'عائلة العريس':'والد العريس';$('#b-hb-l-ar').textContent=fam?'عائلة العروس':'والد العروس';
+  $('#b-hg-fr').placeholder=fam?'Ben Salah':'Mohamed Ben Salah';$('#b-hg-ar').placeholder=fam?'بن صالح':'محمد بن صالح';$('#b-hb-fr').placeholder=fam?'Trabelsi':'Ali Trabelsi';$('#b-hb-ar').placeholder=fam?'الطرابلسي':'علي الطرابلسي'}
 /* What the couple typed and did not save yet stays in this browser, and comes back after a reload or a closed tab
    (only if the saved invitation has not changed in between). */
 var KEY='rq-brief-'+m[1],restored=false;
@@ -77,11 +84,17 @@ function renderBrief(o){
   $('#b-date').value=B.date||o.date||'';$('#b-time').value=B.time||'20:00';$('#b-city').value=B.city||o.city||'';$('#b-venue').value=B.venue||'';$('#b-maps').value=B.maps||'';
   $('#b-dress').value=B.dress||'';$('#b-rsvpby').value=B.rsvpBy||'';$('#b-seats').value=B.maxGuests||2;
   $('#b-theme').innerHTML=opts((o.themes||Object.keys(THEME_NAMES)).map(function(t){return{id:t,label:THEME_NAMES[t]||t}}),B.theme||o.theme||'reefq');
-  $('#b-lang').value=B.lang||'fr';
+  $('#b-lang').value=B.lang||'ar';$('#b-order').value=B.nameOrder==='bride'?'bride':'groom';
+  var H=B.hosts||{},hasHosts=H.mode==='parents'||H.mode==='families';
+  $('#b-hmode').value=hasHosts?H.mode:'none';$('#b-hmothers').checked=H.mothers!==false;
+  $('#b-hg-fr').value=(H.g&&H.g.fr)||'';$('#b-hg-ar').value=(H.g&&H.g.ar)||'';$('#b-hb-fr').value=(H.b&&H.b.fr)||'';$('#b-hb-ar').value=(H.b&&H.b.ar)||'';hostsUi();
+  var cl=closeOf(B.closing);B.closingCustom=cl==='custom'?B.closing:null;
+  $('#b-close').innerHTML=opts(RW.CLOSINGS.map(function(x){return{id:x.id,label:x.text?'⁧'+x.text.ar+'⁩ · '+x.text.fr:'Aucune'}}).concat(cl==='custom'?[{id:'custom',label:'Phrase actuelle'}]:[]),cl);
+  document.querySelectorAll('#b-form [data-show]').forEach(function(c){c.checked=!(B.show&&B.show[c.dataset.show]===false)});
   $('#b-open').innerHTML=opts(RW.OPENINGS.map(function(x){return{id:x.id,label:x.label.fr}}),B.opening||'none');
-  var tone=toneOf(ev,B.message);
+  var tone=toneOf(ev,B.message,hasHosts);
   $('#b-tone').innerHTML=opts(RW.TONES.map(function(x){return{id:x.id,label:x.label.fr}}).concat(tone==='custom'?[{id:'custom',label:'Texte personnalisé'}]:[]),tone);
-  var m=B.message&&B.message.fr?B.message:RW.get(ev,tone);$('#b-msg-fr').value=m.fr||'';$('#b-msg-ar').value=m.ar||'';$('#b-msg-en').value=m.en||'';
+  var m=B.message&&(B.message.fr||B.message.ar)?B.message:RW.get(ev,tone);$('#b-msg-fr').value=m.fr||'';$('#b-msg-ar').value=m.ar||'';$('#b-msg-en').value=m.en||'';
   $('#b-story').value=(B.story&&(B.story[B.lang||'fr']||B.story.fr))||'';
   $('#b-theme-wrap').hidden=!!o.custom;$('#b-custom-note').hidden=!o.custom;
   $('#b-guests-wrap').hidden=!o.guestLinks;$('#b-pv-btn').hidden=!!o.custom;$('#b-story-wrap').hidden=!o.guestLinks;
@@ -101,18 +114,25 @@ function collect(){
     a:{name:$('#b-a').value.trim(),ar:$('#b-a-ar').value.trim()},b:{name:$('#b-b').value.trim(),ar:$('#b-b-ar').value.trim()},
     date:$('#b-date').value,time:$('#b-time').value,city:$('#b-city').value.trim(),venue:$('#b-venue').value.trim(),maps:$('#b-maps').value.trim(),
     dress:$('#b-dress').value.trim(),rsvpBy:$('#b-rsvpby').value,maxGuests:+$('#b-seats').value||2,
-    message:{fr:$('#b-msg-fr').value.trim(),ar:$('#b-msg-ar').value.trim(),en:$('#b-msg-en').value.trim()},story:story,guests:G,base:(B&&B.updatedAt)||null};
+    message:{fr:$('#b-msg-fr').value.trim(),ar:$('#b-msg-ar').value.trim(),en:$('#b-msg-en').value.trim()},story:story,guests:G,base:(B&&B.updatedAt)||null,
+    nameOrder:$('#b-order').value,closing:$('#b-close').value==='custom'?(B&&B.closingCustom)||{fr:'',ar:'',en:''}:RW.closing($('#b-close').value),
+    hosts:{mode:$('#b-hmode').value,mothers:$('#b-hmothers').checked,g:{fr:$('#b-hg-fr').value.trim(),ar:$('#b-hg-ar').value.trim()},b:{fr:$('#b-hb-fr').value.trim(),ar:$('#b-hb-ar').value.trim()}},
+    show:[].slice.call(document.querySelectorAll('#b-form [data-show]')).reduce(function(o,c){o[c.dataset.show]=c.checked;return o},{})};
 }
 function touchB(e){if(e&&e.target&&/^ge-/.test(e.target.id))return;dirty=true;clearTimeout(kT);kT=setTimeout(keepDraft,400);$('#b-status').textContent='Modifications non enregistrées';preview()}
 $('#b-form').addEventListener('input',touchB);
 $('#b-form').addEventListener('change',function(e){
+  /* choosing parents or families switches the text to the automatic continuation (unless the couple wrote their own) */
+  if(e.target.id==='b-hmode'){hostsUi();var tn=$('#b-tone').value,on=e.target.value!=='none';
+    if(on&&tn!=='custom'&&tn!=='hosts')$('#b-tone').value='hosts';else if(!on&&tn==='hosts')$('#b-tone').value='classic';
+    if($('#b-tone').value!==tn)e={target:$('#b-tone')}}
   if(e.target.id==='b-tone'||e.target.id==='b-event'){var t=$('#b-tone').value;if(t!=='custom'){var m=RW.get($('#b-event').value,t);$('#b-msg-fr').value=m.fr;$('#b-msg-ar').value=m.ar;$('#b-msg-en').value=m.en}}
   touchB()});
 /* preview: the same engine as the guests', in a phone-sized frame, refreshed as they type */
 var pvT=null;
 function preview(open){if(!pvShown)return;clearTimeout(pvT);pvT=setTimeout(function(){
   var d=collect(),f=$('#b-frame');if(!pvReady||!f.contentWindow)return;
-  var inv={id:'apercu',theme:O&&O.custom?'reefq':d.theme,lang:d.lang,eventType:d.eventType,opening:d.opening,a:d.a,b:d.b,date:d.date,time:d.time,city:d.city,venue:d.venue,maps:d.maps,dress:d.dress,rsvpBy:d.rsvpBy,maxGuests:d.maxGuests,message:d.message,story:d.story,events:[],photos:[]};
+  var inv={id:'apercu',theme:O&&O.custom?'reefq':d.theme,lang:d.lang,eventType:d.eventType,opening:d.opening,a:d.a,b:d.b,date:d.date,time:d.time,city:d.city,venue:d.venue,maps:d.maps,dress:d.dress,rsvpBy:d.rsvpBy,maxGuests:d.maxGuests,message:d.message,story:d.story,hosts:d.hosts,closing:d.closing,nameOrder:d.nameOrder,show:d.show,events:[],photos:[]};
   var g=G[0]?{id:'g',name:G[0].name,seats:G[0].seats}:null;
   f.contentWindow.postMessage({type:'rq-preview',inv:inv,guest:g,open:!!open},location.origin)},250)}
 addEventListener('message',function(e){if(e.origin===location.origin&&e.data&&e.data.type==='rq-preview-ready'){pvReady=true;preview()}});

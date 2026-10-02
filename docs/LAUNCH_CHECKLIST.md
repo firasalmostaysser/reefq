@@ -30,8 +30,8 @@ Set up as in `docs/MARKETING.md` section 2 (bio links with `utm_…`, automatic 
 
 ## First two weeks
 
-### 7. Domain `reefq.com`
-Find where the domain is registered → Netlify → Domain management → **Add a domain** → follow the DNS instructions. Then env `SITE_URL=https://reefq.com`, trigger a deploy, and replace `reefq.netlify.app` in the bio links and quick replies.
+### 7. Netlify plan (decided 2 Oct 2026: no own domain for now)
+The site stays on **reefq.netlify.app**; the money goes to the Netlify subscription instead of a domain. On 2 Oct 2026 a deploy was refused with "account credit usage exceeded": Netlify → Team → Billing, take a plan with enough credits, then deploy again. Use `reefq.netlify.app` in bio links, quick replies and promo posters. A domain can come later (set `SITE_URL` then).
 
 ### 8. PostHog funnel
 First check which PostHog project receives the site's data: the Netlify key `POSTHOG_KEY` (starts `phc_uEXQ`) must match the project you open in PostHog (Project settings → Project API key). On 2 Oct 2026 the PostHog account connected to Claude only had a different project (key `phc_uMA5…`). Either connect Claude to the right account, or put that project's key in Netlify and redeploy.

@@ -1,3 +1,4 @@
+import { coupleNames } from './util.mts';
 /* The morning summary sent to the team (Telegram/email) by daily-digest.mts, and the order clean-up it does.
    Pure: everything comes in as arguments, so test/digest.test.mjs runs it offline.
    Messages to couples are prefilled WhatsApp links: the team taps, checks, sends. */
@@ -79,7 +80,7 @@ export function buildDigest({ orders, invitations, rsvpKeys, now, site }: Input)
   return { text, autoCancel, empty };
 }
 
-const names = (i: any) => [i.a?.name, i.b?.name].filter(Boolean).join(' & ') || i.id;
+const names = (i: any) => coupleNames(i).filter(Boolean).join(' & ') || i.id;
 const hasDetails = (i: any) => !!(i && i.venue && i.date);
 function lastAt(o: any, status: string) {
   for (let k = (o.history || []).length - 1; k >= 0; k--) if (o.history[k].status === status) return o.history[k].at;

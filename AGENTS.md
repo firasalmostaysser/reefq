@@ -27,7 +27,7 @@ If `npm run guard` fails, undo the change it names. Do not edit the guard, the t
 - Anything in `netlify/` (API, orders, payments, guests, RSVP, Canva sync, invitation pages), except adding a new theme id to `netlify/lib/themes.mts`
 - `netlify.toml`, `package.json`, `package-lock.json`, `.env*`, `test/`, `tools/guard.mjs`, `.github/`, `.cursor/`, `AGENTS.md`, `CLAUDE.md`
 - Logic files: `public/assets/commande.js`, `invite.js`, `analytics.js`, `site-bar.js`, `wording-templates.js`, `vendor/`, `public/studio/studio.js`, `public/apercu.html` (client-space preview), `tools/seed.mjs`
-- In `engine.js`: `esc`, `rng`, `hash`, `pad`, `loc`, `fmtDate`, `namesOf`, `initials`, `waLink`, `mapsHref`, `rsvpHtml`, `wireRsvp`, `renderRsvp`, `envOpts`, and the keys of `window.ReefqInvite`
+- In `engine.js`: `esc`, `rng`, `hash`, `pad`, `loc`, `fmtDate`, `namesOf`, `initials`, `waLink`, `mapsHref`, `rsvpHtml`, `wireRsvp`, `renderRsvp`, `envOpts`, `couple`, `pairText`, `hostsOf`, `hostsLines`, `hostsMsg` (name order and invitation grammar), and the keys of `window.ReefqInvite`. You may restyle the markup of `pairHtml` and `hostsHtml` but keep their text.
 - Existing theme ids (`reefq`, `zitouna`, `yasmine`, `layl`, `sidi`, `kairouan`, `oldmoney`, `sauge`, `bordeaux`, `sahara`): saved invitations use them. Restyle a theme freely, but never rename or remove its id. A new theme goes in both `THEME_LIST` (engine.js) and `THEME_IDS` (netlify/lib/themes.mts).
 
 ## Hooks: keep them exactly
@@ -51,6 +51,27 @@ Do not remove or rename buttons, forms and inputs; keep `type="submit"` buttons 
 - Images: WebP, sized for their display box. Put media under `public/assets/media/`.
 - Respect `prefers-reduced-motion`: show the poster instead of playing.
 
+## Arabic and RTL (most couples are Tunisian and read the invitation in Arabic)
+
+- Every Arabic input, textarea and text block has `dir="rtl" lang="ar"`. Arabic inside a French or English sentence goes in `<bdi lang="ar" dir="rtl">…</bdi>`; inside an `<option>` (no HTML allowed) wrap it with U+2067 … U+2069.
+- Never retype or "fix" Arabic wording in code: texts live in `wording-templates.js` and the grammar in the frozen engine functions above (verb agreement يتشرّف / تتشرّف, نجله / نجلهما / كريمتهما / ابنيهما, "و" attached to the second name). Report wording problems to the owner instead.
+- The groom's name comes first by default (`nameOrder`); `a` is the bride and `b` the groom in the data.
+- Check every screen you change in Arabic at 360 px wide: the invitation (language switch عربي) and the client space fields.
+- Tunisian month names are used (جانفي، فيفري، … جويلية، أوت); keep Western digits.
+
 ## Product copy
 
 French UI first; Arabic where existing screens use it (RTL); English where it already exists. Keep the existing tone: warm, simple, respectful.
+
+## Handoff, 2 October 2026: state and who does what
+
+**State.** Everything on `main` passes `npm test` and `npm run test:e2e` (`test/smoke.mjs`, `test/edits.mjs`, `test/customize.mjs`). Latest features: couples edit their invitation with a live preview that stays open; guests are edited in place and keep their link; saves never overwrite each other (409 → "load latest / keep mine"); studio auto-save, restore of unsaved typing, order alerts and badges; Tunisian cards: groom first, "who invites" (parents with or without « وحرمه », or families) with automatic Arabic/French/English grammar, closing line (du'a, …), and sections the couple can switch off (RSVP form, countdown, programme, story). Arabic is the default invitation language.
+
+**Live site.** reefq.netlify.app (no own domain for now). A push to GitHub does not deploy; the owner (or Claude) deploys. Netlify credits ran out on 2 Oct 2026, so the newest code may not be live yet.
+
+**Suggested split** (each on its own branch, `npm run guard` + `npm test` before handing back):
+- **UX agent:** client space flow (`public/commande/index.html`, `commande.css`) and studio layout (`public/studio/index.html`, `studio.css`): fewer steps on screen, clearer grouping, mobile first, Arabic checked at 360 px. Keep every id and `data-*` hook.
+- **UI agent:** invitation themes and the look of the new parts (`invitation.css`: `.rq-hosts`, `.rq-hosts-lead`, `.rq-closing`), landing page (`site.css`, `index.html`, `landing-i18n.js`).
+- **Visuals agent:** illustrations, theme art, posters and silent videos under `public/assets/media/` and `tools/promo/`, following the brand and media rules above (no women, no music, no alcohol). Posters show **reefq.netlify.app**.
+
+Logic changes (anything under "You must not change") go back to the owner and Claude.

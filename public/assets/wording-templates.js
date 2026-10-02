@@ -21,8 +21,29 @@ var TONES = [
   { id: 'classic',   label: { fr: 'Classique', ar: 'كلاسيكي', en: 'Classic' } },
   { id: 'families',  label: { fr: 'Au nom des familles', ar: 'باسم العائلتين', en: 'From the families' } },
   { id: 'blessing',  label: { fr: 'Bénédiction', ar: 'بركة', en: 'Blessing' } },
-  { id: 'modern',    label: { fr: 'Moderne et sobre', ar: 'عصري وبسيط', en: 'Modern and simple' } }
+  { id: 'modern',    label: { fr: 'Moderne et sobre', ar: 'عصري وبسيط', en: 'Modern and simple' } },
+  { id: 'tunisian',  label: { fr: 'Traditionnel tunisien', ar: 'تقليدي تونسي', en: 'Traditional Tunisian' } },
+  /* follows the "who invites" lines (parents or families): the invitation writes it with the right grammar for one or
+     two families, with or without the mothers, so it is stored empty */
+  { id: 'hosts',     label: { fr: 'Suite des parents / familles', ar: 'تكملة لاسم الوالدين أو العائلتين', en: 'Continues from the hosts' } }
 ];
+
+/* optional last line of the invitation card */
+var CLOSINGS = [
+  { id: 'none',     label: { fr: 'Aucune', ar: 'بدون', en: 'None' } },
+  { id: 'presence', label: { fr: 'Votre présence comblera notre joie', ar: 'بحضوركم تكتمل فرحتنا', en: 'Your presence…' },
+    text: { ar: 'بحضوركم تكتمل فرحتنا', fr: 'Votre présence comblera notre joie', en: 'Your presence will make our joy complete' } },
+  { id: 'dua',      label: { fr: 'Invocation pour les mariés', ar: 'دعاء للعروسين', en: 'Prayer for the couple' },
+    text: { ar: 'بارك الله لهما وبارك عليهما وجمع بينهما في خير', fr: 'Qu\'Allah les bénisse et les unisse dans le bien', en: 'May Allah bless them and unite them in goodness' } },
+  { id: 'homes',    label: { fr: 'Que la joie emplisse vos foyers', ar: 'دامت دياركم عامرة بالأفراح', en: 'Joy in your homes' },
+    text: { ar: 'دامت دياركم عامرة بالأفراح', fr: 'Que la joie emplisse toujours vos foyers', en: 'May your homes always be filled with joy' } },
+  { id: 'welcome',  label: { fr: 'Dans l\'attente de vous accueillir', ar: 'في انتظار تشريفكم', en: 'Looking forward' },
+    text: { ar: 'ونحن في انتظار تشريفكم', fr: 'Dans l\'attente du plaisir de vous accueillir', en: 'We look forward to welcoming you' } }
+];
+function closing(id) {
+  var c = CLOSINGS.filter(function (x) { return x.id === id; })[0];
+  return c && c.text ? { fr: c.text.fr, ar: c.text.ar, en: c.text.en } : { fr: '', ar: '', en: '' };
+}
 
 var EVENTS = [
   { id: 'wedding',    label: { fr: 'Mariage', ar: 'زفاف', en: 'Wedding' } },
@@ -44,7 +65,10 @@ var T = {
                 en: 'With the blessing of God and their parents, they invite you to share the joy of their marriage' },
     modern:   { fr: 'Nous nous marions, et ce jour n\'aurait pas la même saveur sans vous',
                 ar: 'قرّرنا أن نكمل الطريق معاً، ويسعدنا أن تكونوا معنا في هذا اليوم',
-                en: 'We are getting married, and the day would not be complete without you' }
+                en: 'We are getting married, and the day would not be complete without you' },
+    tunisian: { fr: 'Dans la joie et avec la bénédiction de Dieu, nous avons l\'honneur de vous convier au mariage de',
+                ar: 'بكلّ فرحٍ وسرور، وعلى بركة الله، نتشرّف بدعوتكم لحضور حفل زفاف',
+                en: 'With joy and God\'s blessing, we are honoured to invite you to the wedding of' }
   },
   engagement: {
     classic:  { fr: 'Entourés de leurs familles, ils ont la joie de vous convier à la célébration de leurs fiançailles',
@@ -58,7 +82,10 @@ var T = {
                 en: 'With God\'s blessing, they invite you to celebrate the beginning of their story' },
     modern:   { fr: 'C\'est officiel : nous nous fiançons, et nous voulons vous avoir à nos côtés',
                 ar: 'أصبح الأمر رسمياً: نحتفل بخطوبتنا ونريدكم إلى جانبنا',
-                en: 'It\'s official: we are engaged, and we would love you to celebrate with us' }
+                en: 'It\'s official: we are engaged, and we would love you to celebrate with us' },
+    tunisian: { fr: 'Dans la joie et avec la bénédiction de Dieu, nous avons l\'honneur de vous convier aux fiançailles de',
+                ar: 'بكلّ فرحٍ وسرور، وعلى بركة الله، نتشرّف بدعوتكم لحضور حفل خطوبة',
+                en: 'With joy and God\'s blessing, we are honoured to invite you to the engagement of' }
   },
   henna: {
     classic:  { fr: 'Fidèles aux traditions de nos familles, nous serions heureux de vous accueillir à la soirée du henné de',
@@ -72,7 +99,10 @@ var T = {
                 en: 'In joy and blessing, join us for the henna night of' },
     modern:   { fr: 'Henné, douceurs et famille réunie : une soirée pour célébrer',
                 ar: 'حنّة وحلويات ولمّة عائلة: سهرة نحتفل فيها بـ',
-                en: 'Henna, sweets and family together: an evening to celebrate' }
+                en: 'Henna, sweets and family together: an evening to celebrate' },
+    tunisian: { fr: 'Dans la joie et la baraka, nous avons l\'honneur de vous convier à la soirée du henné de',
+                ar: 'بكلّ فرحٍ وسرور، نتشرّف بدعوتكم لحضور سهرة حنّة',
+                en: 'In joy and blessing, we are honoured to invite you to the henna night of' }
   },
   contract: {
     classic:  { fr: 'Ils ont la joie de vous convier à la conclusion de leur contrat de mariage',
@@ -86,15 +116,19 @@ var T = {
                 en: 'Following the Sunnah of God and His Messenger, they invite you to witness their marriage contract' },
     modern:   { fr: 'Nous signons, officiellement. Votre présence compterait beaucoup pour nous',
                 ar: 'نوقّع عقد قراننا، وحضوركم يعني لنا الكثير',
-                en: 'We are making it official, and your presence would mean a lot to us' }
+                en: 'We are making it official, and your presence would mean a lot to us' },
+    tunisian: { fr: 'Selon la sunna de Dieu et de Son Messager, nous avons l\'honneur de vous convier au contrat de mariage de',
+                ar: 'على سنّة الله ورسوله، نتشرّف بدعوتكم لحضور حفل عقد قران',
+                en: 'Following the Sunnah of God and His Messenger, we are honoured to invite you to the marriage contract of' }
   }
 };
 
 /* get('wedding','blessing') → { fr, ar, en } ; falls back to wedding/classic */
 function get(event, tone) {
+  if (tone === 'hosts') return { fr: '', ar: '', en: '' };
   var e = T[event] || T.wedding;
   return e[tone] || e.classic;
 }
 
-window.ReefqWording = { OPENINGS: OPENINGS, TONES: TONES, EVENTS: EVENTS, TEXTS: T, get: get };
+window.ReefqWording = { OPENINGS: OPENINGS, TONES: TONES, EVENTS: EVENTS, CLOSINGS: CLOSINGS, TEXTS: T, get: get, closing: closing };
 })();

@@ -44,7 +44,7 @@ netlify/
     canva-auth.mts        /auth/canva/start and /callback
     canva-sync-background.mts, canva-cron.mts   Canva sync every 15 min
   lib/                    auth, stores (Blobs), canva, sites (custom designs), notify (Telegram/email), digest (morning summary), themes
-test/                     unit tests, smoke.mjs (end to end), theme-shots.mjs (screenshots)
+test/                     unit tests, smoke.mjs, edits.mjs, customize.mjs (end to end), theme-shots.mjs (screenshots)
 tools/                    seed.mjs (demo data / restore a backup locally), guard.mjs, envelope textures, promo videos and posters
 docs/                     operations, designer guide, marketing, roadmap, data
 ```
@@ -57,7 +57,8 @@ cp .env.example .env         # set STUDIO_PASSWORD and SESSION_SECRET at least
 npm i -g deno                # netlify dev needs Deno for edge features
 npm run dev                  # http://localhost:8888
 npm test                     # unit tests, offline
-npm run test:e2e             # order → couple prepares the invitation → receipt → studio check → guest RSVP → summary, backup, referral (needs npm run dev)
+npm run test:e2e             # order → couple prepares the invitation → receipt → studio check → guest RSVP → summary, backup, referral;
+                             # editing (preview, guest edits, conflicts, auto-save, alerts); Tunisian card options (needs npm run dev)
 npm run seed                 # demo couples in every state (needs npm run dev); `npm run seed -- backup.json` loads a backup
 ```
 

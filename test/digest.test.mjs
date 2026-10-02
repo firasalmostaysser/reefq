@@ -29,9 +29,10 @@ assert.ok(!/RQ-FRESH|• RQ-STALE/.test(d.text), 'fresh orders wait, stale ones 
 assert.ok(d.text.includes('https://wa.me/21622333444?text='), 'Tunisian 8-digit numbers get the 216 prefix');
 assert.ok(decodeURIComponent(d.text).includes('https://reefq.com/commande/RQ-UNPD1?t=tokRQ-UNPD1'));
 assert.match(d.text, /pas encore préparée \(1\)\n• RQ-NOBRF/);
-assert.match(d.text, /à publier \(designer\) \(1\)\n• Sana & Omar/, 'unpaid (locked) custom designs are not the designer\'s job yet');
-assert.match(d.text, /3 prochains jours \(1\)\n• .* Rim & Ali · 2 invités/);
-assert.match(d.text, /Mariages d'hier.*\n• Amel & Hedi\n  https:\/\/wa\.me\//);
+// the groom's name comes first (b before a), as on Tunisian cards
+assert.match(d.text, /à publier \(designer\) \(1\)\n• Omar & Sana/, 'unpaid (locked) custom designs are not the designer\'s job yet');
+assert.match(d.text, /3 prochains jours \(1\)\n• .* Ali & Rim · 2 invités/);
+assert.match(d.text, /Mariages d'hier.*\n• Hedi & Amel\n  https:\/\/wa\.me\//);
 assert.ok(decodeURIComponent(d.text).includes('https://reefq.com/?ref=RQ-YDAY1'), 'thank-you message carries the referral link');
 assert.match(d.text, /Hier : 1 commande\(s\), 1 paiement\(s\) confirmé\(s\) \(224 DT\), 1 réponse\(s\)/);
 assert.equal(d.empty, false);

@@ -68,6 +68,14 @@
 .rq-sheet.hero .rq-corner svg{width:100%;height:100%;overflow:visible}
 .rq-msg{font-size:18px;font-style:italic;margin:0 auto 10px;max-width:30ch;text-wrap:balance}
 .rq-inv[lang=ar] .rq-msg{font-style:normal;font-size:19px;line-height:1.8}
+/* who invites (parents or families) above the couple, and the closing blessing */
+.rq-hosts{margin:0 auto 10px;max-width:32ch}
+.rq-hosts p{margin:0;font-size:17px;line-height:1.5;text-wrap:balance}
+.rq-hosts .rq-hosts-lead{font-size:15px;opacity:.8;margin-bottom:2px}
+.rq-inv[lang=ar] .rq-hosts p{font-size:19px;line-height:1.9}
+.rq-inv[lang=ar] .rq-hosts .rq-hosts-lead{font-size:17px}
+.rq-closing{margin:18px auto 0;max-width:30ch;font-style:italic;font-size:16px;opacity:.9;text-wrap:balance}
+.rq-inv[lang=ar] .rq-closing{font-style:normal;font-size:18px;line-height:1.8}
 .rq-rule{width:64px;height:1px;background:var(--foil-solid);margin:18px auto;opacity:.8;position:relative}
 .rq-rule::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;background:var(--foil-solid);transform:translate(-50%,-50%) rotate(45deg)}
 .rq-when{font-size:21px;margin:0;font-variant-numeric:lining-nums}

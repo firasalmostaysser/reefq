@@ -5,7 +5,7 @@ var T={
   ev:{henna:'Henna Night',contract:'Marriage Contract',ceremony:'Wedding Ceremony',dinner:'Wedding Dinner',outia:'Outia',brunch:'Farewell Brunch'}},
  fr:{k_engagement:'se fiancent',k_henna:'vous convient à leur soirée du henné',k_contract:'scellent leur union',dear:'Cher·e',seatsFor:'Places réservées pour vous',married:'se disent oui',tap:'Touchez le sceau pour ouvrir',msg:'Entourés de leurs familles, ils ont la joie de vous convier à leur mariage',count:'Avant le grand jour',story:'Notre histoire',just:'Jeunes mariés',d:'Jours',h:'Heures',m:'Minutes',s:'Secondes',program:'Le programme',dress:'Tenue',rsvp:'Merci de confirmer',by:'Réponse souhaitée avant le',name:'Nom et prénom',att:'Serez-vous des nôtres ?',yes:'Avec joie, je serai là',no:'À regret, je ne pourrai pas venir',guests:'Nombre de personnes',diet:'Régime alimentaire',note:'Un mot pour les mariés',send:'Envoyer ma réponse',thanks:'Merci ! Votre réponse est bien parvenue aux mariés.',wa:'Envoyer sur WhatsApp',preview:'Aperçu : les réponses ne sont pas enregistrées.',map:'Ouvrir dans Maps',err:"Votre réponse n'a pas pu être envoyée. Réessayez.",need:'Indiquez votre nom et choisissez une réponse.',personal:'Pour répondre, ouvrez le lien personnel que vous avez reçu.',confirm:'Confirmer ma présence',at:'à',
   ev:{henna:'Soirée du henné',contract:'Contrat de mariage',ceremony:'Cérémonie',dinner:'Dîner de fête',outia:'Outia',brunch:"Brunch d'au revoir"}},
- ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'عزيزنا',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',personal:'للرد، افتحوا الرابط الشخصي الذي وصلكم.',confirm:'تأكيد الحضور',at:'على الساعة',
+ ar:{k_engagement:'يحتفلان بخطوبتهما',k_henna:'يدعوانكم إلى ليلة الحنّة',k_contract:'يحتفلان بعقد قرانهما',dear:'إلى',seatsFor:'عدد المقاعد المحجوزة لكم',married:'يحتفلان بزفافهما',tap:'المسوا الختم لفتح الدعوة',msg:'بقلوبٍ يغمرها الفرح، تتشرّف عائلتاهما بدعوتكم لمشاركتهما فرحة زفافهما',count:'على موعدٍ مع الفرح',story:'حكايتنا',just:'تمّ الزفاف',d:'أيام',h:'ساعات',m:'دقائق',s:'ثوانٍ',program:'برنامج الأفراح',dress:'اللباس',rsvp:'نرجو تأكيد حضوركم',by:'يُرجى الرد قبل',name:'الاسم واللقب',att:'هل ستشاركوننا الفرحة؟',yes:'بكل سرور، سأحضر',no:'أعتذر عن الحضور',guests:'عدد الأشخاص',diet:'ملاحظات غذائية',note:'كلمة للعروسين',send:'إرسال الرد',thanks:'شكراً لكم، وصل ردّكم إلى العروسين.',wa:'أرسل عبر واتساب',preview:'معاينة فقط: لا يتم حفظ الردود.',map:'افتح الخريطة',err:'تعذّر إرسال الرد، حاولوا مجدداً.',need:'أدخلوا الاسم واختاروا الإجابة.',personal:'للرد، افتحوا الرابط الشخصي الذي وصلكم.',confirm:'تأكيد الحضور',at:'على الساعة',
   ev:{henna:'ليلة الحنّة',contract:'عقد القران',ceremony:'حفل الزفاف',dinner:'عشاء الزفاف',outia:'الوطية',brunch:'فطور الوداع'}}
 };
 /* Optional opening line at the top of the invitation (inv.opening: 'none' | 'bismillah' | 'verse'). Texts mirror wording-templates.js. */
@@ -187,8 +187,38 @@ function envOpts(inv,th){var d=ENV_DEFAULTS[th]||ENV_DEFAULTS.reefq,e=inv.env||{
 function pad(n){return String(n).padStart(2,'0')}
 function loc(l){return l==='ar'?'ar-TN':l==='fr'?'fr-TN':'en-GB'}
 function fmtDate(d,l,opt){if(!d)return'';var dt=new Date(d+'T12:00:00');if(isNaN(dt))return d;try{return new Intl.DateTimeFormat(loc(l),opt||{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(dt)}catch(e){return d}}
-function namesOf(inv,l){var a=inv.a||{},b=inv.b||{};if(l==='ar'&&a.ar&&b.ar)return[a.ar,b.ar];return[a.name||'',b.name||'']}
-function initials(inv){var a=(inv.a&&inv.a.name||'?').trim()[0]||'?',b=(inv.b&&inv.b.name||'?').trim()[0]||'?';return a.toUpperCase()+'&'+b.toUpperCase()}
+/* `a` is the bride, `b` the groom. As on Tunisian cards, the groom's name comes first unless the couple chose otherwise. */
+function couple(inv){var a=inv.a||{},b=inv.b||{};return inv.nameOrder==='bride'?[a,b]:[b,a]}
+function namesOf(inv,l){var x=couple(inv);if(l==='ar'&&x[0].ar&&x[1].ar)return[x[0].ar,x[1].ar];return[x[0].name||'',x[1].name||'']}
+function initials(inv){var x=couple(inv),a=(x[0].name||'?').trim()[0]||'?',b=(x[1].name||'?').trim()[0]||'?';return a.toUpperCase()+'&'+b.toUpperCase()}
+/* the two names joined: in Arabic the "و" is attached to the second name (سامي ونور), elsewhere a spaced ampersand */
+function pairHtml(n,L,wrap){var w=wrap?function(s){return '<span class="n">'+esc(s)+'</span>'}:esc;
+  return L==='ar'?w(n[0])+' <span class="amp">و</span>'+w(n[1]):w(n[0])+' <span class="amp">&amp;</span> '+w(n[1])}
+function pairText(n,L){return L==='ar'?n[0]+' و'+n[1]:n[0]+' & '+n[1]}
+
+/* Who invites, as on Tunisian cards: the parents ("السيد … وحرمه") or the families, above the couple's names.
+   hosts = {mode:'parents'|'families', g:{fr,ar} (groom's side), b:{fr,ar} (bride's side), mothers:true}.
+   Arabic puts the verb first, so it agrees with the first host: يتشرّف السيد… / تتشرّف عائلة…; the line under the hosts
+   continues the sentence and names the child with the right possessive (نجله، نجلهما، كريمتهما، ابنيهما). */
+var HOST_EV={wedding:{ar:'حفل زفاف',fr:'au mariage',en:'the wedding'},engagement:{ar:'حفل خطوبة',fr:'aux fiançailles',en:'the engagement'},henna:{ar:'سهرة حنّة',fr:'à la soirée du henné',en:'the henna night'},contract:{ar:'حفل عقد قران',fr:'au contrat de mariage',en:'the marriage contract'}};
+function hostsOf(inv){var h=inv.hosts||{};if(h.mode!=='parents'&&h.mode!=='families')return null;
+  var fam=h.mode==='families',s=[];
+  [['g',h.g],['b',h.b]].forEach(function(x){var v=x[1]||{},fr=String(v.fr||'').trim(),ar=String(v.ar||'').trim();
+    /* a title typed by the couple is not repeated: "عائلة بن صالح" → "بن صالح" */
+    ar=ar.replace(fam?/^عائلة\s+/:/^(السيد|سي)\s+/,'');fr=fr.replace(fam?/^(la\s+)?famille\s+/i:/^(monsieur|m\.|mr\.?)\s+(et\s+madame\s+)?/i,'');
+    if(fr||ar)s.push({side:x[0],fr:fr||ar,ar:ar||fr})});
+  return s.length?{fam:fam,mothers:h.mothers!==false,s:s}:null}
+function hostsLines(inv,L){var h=hostsOf(inv);if(!h)return null;var s=h.s,m=h.mothers;
+  if(L==='ar')return{lead:h.fam?'تتشرّف':'يتشرّف',lines:s.map(function(x,i){return (i?'و':'')+(h.fam?'عائلة ':'السيد ')+x.ar+(!h.fam&&m?' وحرمه':'')})};
+  if(L==='en')return{lead:'',lines:h.fam?[s.length>1?'The '+s[0].fr+' and '+s[1].fr+' families':'The '+s[0].fr+' family']:s.map(function(x,i){return (i?'and ':'')+(m?'Mr and Mrs ':'Mr ')+x.fr})};
+  return{lead:'',lines:h.fam?(s.length>1?['Les familles '+s[0].fr,'et '+s[1].fr]:['La famille '+s[0].fr]):s.map(function(x,i){return (i?'et ':'')+(m?'Monsieur et Madame ':'Monsieur ')+x.fr})}}
+function hostsMsg(inv,L){var h=hostsOf(inv);if(!h)return'';var ev=HOST_EV[inv.eventType]||HOST_EV.wedding,two=h.s.length>1,son=h.s[0].side==='g';
+  if(L==='ar'){var child=two?'ابنيهما':h.fam?(son?'ابنها':'ابنتها'):h.mothers?(son?'نجلهما':'كريمتهما'):(son?'نجله':'كريمته');return 'بدعوتكم لحضور '+ev.ar+' '+child}
+  var many=two||(!h.fam&&h.mothers);
+  if(L==='en')return (many||h.fam?'request':'requests')+' the pleasure of your company at '+ev.en+' of '+(two?'their children':(many||h.fam?'their ':'his ')+(son?'son':'daughter'));
+  return (many?'ont':'a')+' l\'honneur de vous convier '+ev.fr+' de '+(two?'leurs enfants':(many?'leur ':son?'son ':'sa ')+(son?'fils':'fille'))}
+function hostsHtml(inv,L){var h=hostsLines(inv,L);if(!h)return'';
+  return '<div class="rq-hosts">'+(h.lead?'<p class="rq-hosts-lead">'+esc(h.lead)+'</p>':'')+h.lines.map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>'}
 function waLink(inv,r){
   var num=String(inv.whatsapp||'').replace(/[^0-9]/g,'');if(!num)return'';
   var n=namesOf(inv,'fr');
@@ -257,18 +287,18 @@ function render(root,inv,opts){
     clearInterval(st.timer);
     var L=T[st.lang]?st.lang:'fr';st.lang=L;
     root.setAttribute('lang',L);root.setAttribute('dir',L==='ar'?'rtl':'ltr');
-    var n=namesOf(inv,L),msg=(inv.message&&inv.message[L])||t('msg');
+    var n=namesOf(inv,L),msg=(inv.message&&inv.message[L])||hostsMsg(inv,L)||t('msg'),closing=inv.closing&&inv.closing[L]||'';
     var langBar='<div class="rq-lang" role="group" aria-label="Language">'+['fr','ar','en'].map(function(x){return '<button type="button" data-lang="'+x+'" aria-pressed="'+(x===L)+'">'+(x==='ar'?'عربي':x.toUpperCase())+'</button>'}).join('')+'</div>';
     var badge=opts.preview?'<div class="rq-badge">'+(opts.badge||'Preview')+'</div>':'';
-    var amp=L==='ar'?'و':'&amp;';var nameH='<h1 class="rq-names rq-foil"><span class="n">'+esc(n[0])+'</span> <span class="amp">'+amp+'</span> <span class="n">'+esc(n[1])+'</span></h1>';
+    var nameH='<h1 class="rq-names rq-foil">'+pairHtml(n,L,true)+'</h1>';
     var html=badge+langBar+'<div class="rq-scroll">';
     if(!st.open){
       var eo=envOpts(inv,th),cv=inv.canva||null;
       html+='<section class="rq-cover rq3" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,eo.linerInk))+';--linerbg:'+esc(eo.linerBg)+'">'+
        '<div class="rq3-table"></div>'+
-       '<div class="rq3-top">'+(guest&&guest.name?'<p class="rq3-dear">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-caps rq3-kick">'+esc(t('married'))+'</p><h1 class="rq-names rq-foil">'+esc(n[0])+' <span class="amp">'+amp+'</span> '+esc(n[1])+'</h1><p class="rq-date-s">'+esc(dots(inv.date))+'</p></div>'+
+       '<div class="rq3-top">'+(guest&&guest.name?'<p class="rq3-dear">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-caps rq3-kick">'+esc(t('married'))+'</p><h1 class="rq-names rq-foil">'+pairHtml(n,L)+'</h1><p class="rq-date-s">'+esc(dots(inv.date))+'</p></div>'+
        '<div class="rq3-env"><div class="rq3-shadow"></div><div class="rq3-int"></div>'+
-        '<div class="rq3-card"><div class="rq3-cardtex"></div>'+(cv&&cv.image?'<img class="rq3-cardart" alt="" src="'+esc(cv.image)+'" onerror="this.remove()">':'')+'<div class="rq3-cardtxt"'+(cv&&cv.image?' hidden':'')+'><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names rq-foil">'+esc(n[0])+' '+amp+' '+esc(n[1])+'</span><span class="rq-caps">'+esc(fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}))+'</span></div></div>'+
+        '<div class="rq3-card"><div class="rq3-cardtex"></div>'+(cv&&cv.image?'<img class="rq3-cardart" alt="" src="'+esc(cv.image)+'" onerror="this.remove()">':'')+'<div class="rq3-cardtxt"'+(cv&&cv.image?' hidden':'')+'><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names rq-foil">'+pairHtml(n,L)+'</span><span class="rq-caps">'+esc(fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}))+'</span></div></div>'+
         '<div class="rq3-pocket rq3-tint" style="--m:var(--a-pocket)"></div><div class="rq3-fshadow"></div>'+
         '<div class="rq3-flap"><div class="rq3-face rq3-front"><div class="rq3-tint" style="--m:var(--a-flap)"></div>'+flapGild()+'<button type="button" class="rq3-seal" aria-label="'+esc(t('tap'))+'"></button></div>'+
         '<div class="rq3-face rq3-back"><div class="rq3-backin"></div></div></div>'+
@@ -276,11 +306,11 @@ function render(root,inv,opts){
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+openingHtml(inv.opening,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+openingHtml(inv.opening,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
-        (guest&&guest.seats?'<div class="rq-seats"><span class="rq-caps">'+esc(t('seatsFor'))+'</span><b>'+maxSeats()+'</b></div>':'')+'</div>';
+        (guest&&guest.seats?'<div class="rq-seats"><span class="rq-caps">'+esc(t('seatsFor'))+'</span><b>'+maxSeats()+'</b></div>':'')+(closing?'<p class="rq-closing">'+esc(closing)+'</p>':'')+'</div>';
       if(on('countdown'))html+='<div class="rq-sheet"><h2 class="rq-h2 rq-foil">'+esc(t('count'))+'</h2><div class="rq-count" aria-live="off"><div><b data-c="d">00</b><span>'+esc(t('d'))+'</span></div><div><b data-c="h">00</b><span>'+esc(t('h'))+'</span></div><div><b data-c="m">00</b><span>'+esc(t('m'))+'</span></div><div><b data-c="s">00</b><span>'+esc(t('s'))+'</span></div></div></div>';
       var story=inv.story&&(inv.story[L]||inv.story.fr||inv.story.en||inv.story.ar)||'';
       if(on('story')&&story)html+='<div class="rq-sheet rq-story"><h2 class="rq-h2 rq-foil">'+esc(t('story'))+'</h2>'+String(story).split(/\n+/).filter(function(x){return x.trim()}).map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>';
@@ -328,5 +358,5 @@ function render(root,inv,opts){
   draw();
   return{destroy:function(){clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},isOpen:function(){return st.open},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
-window.ReefqInvite={THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,renderRsvp:renderRsvp,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
+window.ReefqInvite={pairText:pairText,hostsMsg:hostsMsg,hostsLines:hostsLines,THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,renderRsvp:renderRsvp,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();

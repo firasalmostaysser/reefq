@@ -10,7 +10,7 @@ var DEMO={id:'demo',theme:'reefq',eventType:'wedding',lang:'fr',a:{name:'Yasmine
   message:{fr:'',ar:'',en:''},rsvpBy:'2027-05-20',maxGuests:4};
 function show(inv,guest,demo){
   app.innerHTML='';var el=document.createElement('div');el.style.height='100%';app.appendChild(el);
-  var n=ReefqInvite.namesOf(inv,inv.lang||'fr');if(n[0]&&n[1])document.title=n[0]+' & '+n[1];
+  var n=ReefqInvite.namesOf(inv,inv.lang||'fr');if(n[0]&&n[1])document.title=ReefqInvite.pairText(n,inv.lang||'fr');
   ReefqInvite.render(el,inv,{guest:guest,preview:demo,badge:demo?'Démo':'',onRsvp:function(r){
     if(demo)return new Promise(function(res){setTimeout(function(){res({})},500)});
     var w=ReefqInvite.waLink(inv,r);
