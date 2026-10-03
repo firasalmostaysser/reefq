@@ -17,7 +17,7 @@ window.REEFQ_I18N = {
     stat_themes: '',
     stat_langs: '',
     stat_ready: '',
-    stat_personal: '',
+    stat_app: '',
     demo_replay: 'إعادة العرض',
     demo_full: 'عرض بملء الشاشة',
     how_t: 'كيف نعمل',
@@ -113,7 +113,7 @@ window.REEFQ_I18N = {
     stat_themes: 'visual worlds',
     stat_langs: 'languages',
     stat_ready: 'until it is ready',
-    stat_personal: 'personal link per family',
+    stat_app: 'app to install',
     demo_replay: 'Replay',
     demo_full: 'Full screen',
     how_t: 'How it works',
@@ -199,5 +199,5 @@ window.REEFQ_I18N = {
 window.REEFQ_I18N.ar.stat_themes = window.REEFQ_I18N.ar.mod_t;
 window.REEFQ_I18N.ar.stat_langs = window.REEFQ_I18N.ar.f3t;
 window.REEFQ_I18N.ar.stat_ready = window.REEFQ_I18N.ar.s2t;
-window.REEFQ_I18N.ar.stat_personal = window.REEFQ_I18N.ar.g2;
+window.REEFQ_I18N.ar.stat_app = window.REEFQ_I18N.ar.q1;
 window.REEFQ_I18N.ar.collection_t = window.REEFQ_I18N.ar.mod_t;
