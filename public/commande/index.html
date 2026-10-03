@@ -20,113 +20,142 @@
 <main class="cs">
   <p class="msg" id="loading">Chargement de votre commande…</p>
   <div id="view" hidden>
+
+    <!-- Who and where we are: names, order code, offer, status -->
     <section class="head">
       <p class="eyebrow">Espace client</p>
       <h1 id="h-names"></h1>
       <p class="meta"><span id="h-code"></span> · <span id="h-plan"></span> · <span class="pill" id="h-status"></span></p>
     </section>
 
+    <!-- The four steps of the order; commande.js marks them done / now -->
     <ol class="track" id="track" aria-label="Étapes de la commande"></ol>
 
-    <section class="card" id="brief" hidden>
+    <!-- Step 1: the couple prepares the invitation (form + phone preview) -->
+    <section class="card brief" id="brief" hidden>
       <div class="bhead"><h2 id="b-title">Préparez votre invitation</h2><button class="btn sm ghost" type="button" id="b-toggle" hidden>Modifier</button></div>
-      <p class="muted small" id="b-lead">Quelques minutes suffisent. Vous voyez l'aperçu à chaque étape, et vous pourrez tout modifier plus tard sur le même lien.</p>
-      <p class="muted small" id="b-done" hidden></p>
+      <p class="muted small bnote" id="b-lead">Quelques minutes suffisent. Vous voyez l'aperçu à chaque étape, et vous pourrez tout modifier plus tard sur le même lien.</p>
+      <p class="muted small bnote done-note" id="b-done" hidden></p>
       <form id="b-form" novalidate>
-        <fieldset>
+
+        <fieldset class="fs">
           <legend>Les mariés</legend>
           <div class="g2">
             <label class="f"><span>Prénom du marié</span><input id="b-b" maxlength="60" required></label>
-            <label class="f"><span>اسم العريس <i>(بالعربية)</i></span><input id="b-b-ar" dir="rtl" lang="ar" maxlength="60" placeholder="سامي"></label>
+            <label class="f"><span lang="ar" dir="rtl">اسم العريس <i>(بالعربية)</i></span><input id="b-b-ar" dir="rtl" lang="ar" maxlength="60" placeholder="سامي"></label>
             <label class="f"><span>Prénom de la mariée</span><input id="b-a" maxlength="60" required></label>
-            <label class="f"><span>اسم العروس <i>(بالعربية)</i></span><input id="b-a-ar" dir="rtl" lang="ar" maxlength="60" placeholder="نور"></label>
-            <label class="f"><span>Ordre des prénoms</span><select id="b-order"><option value="groom">Le marié puis la mariée</option><option value="bride">La mariée puis le marié</option></select></label>
+            <label class="f"><span lang="ar" dir="rtl">اسم العروس <i>(بالعربية)</i></span><input id="b-a-ar" dir="rtl" lang="ar" maxlength="60" placeholder="نور"></label>
+            <label class="f span2"><span>Ordre des prénoms</span><select id="b-order"><option value="groom">Le marié puis la mariée</option><option value="bride">La mariée puis le marié</option></select></label>
           </div>
         </fieldset>
-        <fieldset>
+
+        <fieldset class="fs">
           <legend>Qui invite ?</legend>
-          <p class="muted small">Comme sur les cartes traditionnelles, vous pouvez mettre le nom des parents ou des familles au-dessus de vos prénoms.</p>
+          <p class="fs-note muted small">Comme sur les cartes traditionnelles : le nom des parents ou des familles au-dessus de vos prénoms.</p>
           <div class="g2">
             <label class="f"><span>Au nom de</span><select id="b-hmode"><option value="none">Nous-mêmes (les mariés)</option><option value="parents">Les parents</option><option value="families">Les familles</option></select></label>
-            <label class="chk" id="b-hmothers-wrap"><input type="checkbox" id="b-hmothers" checked> Avec les mamans (« Monsieur et Madame », « <bdi lang="ar" dir="rtl">وحرمه</bdi> »)</label>
+            <label class="chk" id="b-hmothers-wrap"><input type="checkbox" id="b-hmothers" checked> <span>Avec les mamans (« Monsieur et Madame », « <bdi lang="ar" dir="rtl">وحرمه</bdi> »)</span></label>
           </div>
-          <div class="g2" id="b-hosts">
+          <div class="g2 hosts" id="b-hosts">
             <label class="f"><span id="b-hg-l">Père du marié</span><input id="b-hg-fr" maxlength="80" placeholder="Mohamed Ben Salah"></label>
-            <label class="f"><span id="b-hg-l-ar">بالعربية</span><input id="b-hg-ar" dir="rtl" lang="ar" maxlength="80" placeholder="محمد بن صالح"></label>
+            <label class="f"><span id="b-hg-l-ar" lang="ar" dir="rtl">بالعربية</span><input id="b-hg-ar" dir="rtl" lang="ar" maxlength="80" placeholder="محمد بن صالح"></label>
             <label class="f"><span id="b-hb-l">Père de la mariée</span><input id="b-hb-fr" maxlength="80" placeholder="Ali Trabelsi"></label>
-            <label class="f"><span id="b-hb-l-ar">بالعربية</span><input id="b-hb-ar" dir="rtl" lang="ar" maxlength="80" placeholder="علي الطرابلسي"></label>
-            <p class="muted small" style="grid-column:1/-1">Laissez un côté vide si une seule famille invite. Le texte s'accorde tout seul (<bdi lang="ar" dir="rtl">يتشرّف، نجلهما، ابنيهما…</bdi>).</p>
+            <label class="f"><span id="b-hb-l-ar" lang="ar" dir="rtl">بالعربية</span><input id="b-hb-ar" dir="rtl" lang="ar" maxlength="80" placeholder="علي الطرابلسي"></label>
+            <p class="muted small span2">Laissez un côté vide si une seule famille invite. Le texte s'accorde tout seul (<bdi lang="ar" dir="rtl">يتشرّف، نجلهما، ابنيهما…</bdi>).</p>
           </div>
         </fieldset>
-        <fieldset>
+
+        <fieldset class="fs">
           <legend>Le jour J</legend>
           <div class="g2">
             <label class="f"><span>Occasion</span><select id="b-event"></select></label>
-            <label class="f"><span>Date</span><input id="b-date" type="date" required></label>
-            <label class="f"><span>Heure</span><input id="b-time" type="time" value="20:00"></label>
+            <div class="g2 tight">
+              <label class="f"><span>Date</span><input id="b-date" type="date" required></label>
+              <label class="f"><span>Heure</span><input id="b-time" type="time" value="20:00"></label>
+            </div>
             <label class="f"><span>Ville</span><input id="b-city" maxlength="160" placeholder="Sousse"></label>
             <label class="f"><span>Salle ou lieu</span><input id="b-venue" maxlength="160" placeholder="Salle des fêtes Dar El Yasmine"></label>
-            <label class="f"><span>Lien Google Maps <i>(facultatif)</i></span><input id="b-maps" type="url" inputmode="url" maxlength="500" placeholder="https://maps.app.goo.gl/…"></label>
+            <label class="f span2"><span>Lien Google Maps <i>(facultatif)</i></span><input id="b-maps" type="url" inputmode="url" maxlength="500" placeholder="https://maps.app.goo.gl/…"></label>
             <label class="f"><span>Tenue souhaitée <i>(facultatif)</i></span><input id="b-dress" maxlength="160" placeholder="Tenue de soirée"></label>
             <label class="f"><span>Répondre avant le <i>(facultatif)</i></span><input id="b-rsvpby" type="date"></label>
+            <label class="f" id="b-seats-wrap"><span>Places par réponse sur le lien partagé</span><input id="b-seats" type="number" min="1" max="20" value="2"></label>
           </div>
         </fieldset>
-        <fieldset>
+
+        <fieldset class="fs">
           <legend>Le style</legend>
           <div class="g2">
             <label class="f" id="b-theme-wrap"><span>Thème</span><select id="b-theme"></select></label>
             <label class="f"><span>Langue principale</span><select id="b-lang"><option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option></select></label>
-            <label class="f"><span>Ton du texte</span><select id="b-tone"></select></label>
-            <label class="f"><span>Phrase de fin</span><select id="b-close"></select></label>
           </div>
+          <p class="muted small" id="b-custom-note" hidden>Votre site sur mesure est dessiné par notre designer à partir de ces informations.</p>
           <div class="chks" role="group" aria-label="Parties de l'invitation">
-            <span class="muted small">Parties affichées :</span>
-            <label class="chk"><input type="checkbox" data-show="rsvp" checked> Formulaire de réponse (présence)</label>
+            <span class="muted small chks-lead">Parties affichées</span>
+            <label class="chk"><input type="checkbox" data-show="rsvp" checked> Formulaire de réponse</label>
             <label class="chk"><input type="checkbox" data-show="countdown" checked> Compte à rebours</label>
             <label class="chk"><input type="checkbox" data-show="program" checked> Programme et tenue</label>
             <label class="chk"><input type="checkbox" data-show="story" checked> Notre histoire</label>
           </div>
+        </fieldset>
+
+        <fieldset class="fs">
+          <legend>Le texte</legend>
+          <div class="g2">
+            <label class="f"><span>Ton du texte</span><select id="b-tone"></select></label>
+            <label class="f"><span>Phrase de fin</span><select id="b-close"></select></label>
+          </div>
           <div class="f opens"><span>En tête de l'invitation <i>(cochez une ou plusieurs lignes, elles s'affichent dans cet ordre)</i></span><div class="opens-list" id="b-opens"></div></div>
-          <p class="muted small" id="b-custom-note" hidden>Votre site sur mesure est dessiné par notre designer à partir de ces informations.</p>
           <details class="more"><summary>Modifier le texte de l'invitation</summary>
-            <label class="f"><span>العربية</span><textarea id="b-msg-ar" dir="rtl" lang="ar" maxlength="600"></textarea></label>
+            <label class="f"><span lang="ar" dir="rtl">العربية</span><textarea id="b-msg-ar" dir="rtl" lang="ar" maxlength="600"></textarea></label>
             <label class="f"><span>Français</span><textarea id="b-msg-fr" maxlength="600"></textarea></label>
             <label class="f"><span>English</span><textarea id="b-msg-en" maxlength="600"></textarea></label>
           </details>
-          <label class="f" id="b-story-wrap"><span>Votre histoire en quelques lignes <i>(facultatif)</i></span><textarea id="b-story" maxlength="1500" placeholder="Tout a commencé…"></textarea></label>
+          <label class="f story" id="b-story-wrap"><span>Votre histoire en quelques lignes <i>(facultatif)</i></span><textarea id="b-story" maxlength="1500" placeholder="Tout a commencé…"></textarea></label>
         </fieldset>
-        <fieldset id="b-guests-wrap">
+
+        <fieldset class="fs" id="b-guests-wrap">
           <legend>Vos invités</legend>
-          <p class="muted small">Chaque famille reçoit son lien, à son nom, avec ses places réservées. Une ligne par invitation : <b>nom, téléphone, places</b>. Vous pouvez en ajouter à tout moment.</p>
-          <label class="f"><span class="sr">Ajouter des invités</span><textarea id="b-paste" rows="4" placeholder="Famille Ben Salah, 22 123 456, 4&#10;Amira et Youssef, 98 765 432, 2"></textarea></label>
-          <button class="btn sm" type="button" id="b-add">Ajouter à la liste</button>
-          <p class="muted small" id="b-gcount"></p>
+          <p class="fs-note muted small">Chaque famille reçoit son lien, à son nom, avec ses places réservées. Une ligne par invitation : <b>nom, téléphone, places</b>. Vous pouvez en ajouter à tout moment.</p>
+          <div class="paste">
+            <label class="f"><span class="sr">Ajouter des invités</span><textarea id="b-paste" rows="3" placeholder="Famille Ben Salah, 22 123 456, 4&#10;Amira et Youssef, 98 765 432, 2"></textarea></label>
+            <button class="btn sm" type="button" id="b-add">Ajouter à la liste</button>
+          </div>
+          <p class="muted small gcount" id="b-gcount"></p>
           <ul class="glist" id="b-glist"></ul>
         </fieldset>
-        <label class="f" id="b-seats-wrap"><span>Places par réponse sur le lien partagé</span><input id="b-seats" type="number" min="1" max="20" value="2"></label>
+
         <p class="err" id="b-err" hidden></p>
-        <div class="bactions"><button class="btn primary" type="submit" id="b-save">Enregistrer mon invitation</button><button class="btn ghost" type="button" id="b-pv-btn">Voir l'aperçu</button><span class="muted small" id="b-status"></span></div>
+        <div class="bactions"><button class="btn primary" type="submit" id="b-save">Enregistrer mon invitation</button><button class="btn ghost" type="button" id="b-pv-btn">Voir l'aperçu</button><span class="muted small bstatus" id="b-status"></span></div>
       </form>
       <div class="pvwrap" id="b-pv" hidden><iframe id="b-frame" title="Aperçu de votre invitation"></iframe></div>
     </section>
 
+    <!-- Step 2: pay by bank transfer, then send the receipt -->
     <section class="card" id="pay" hidden>
       <h2 id="p-title">Réglez votre commande par virement</h2>
       <p class="lead-s">Montant à virer : <b id="p-amount"></b> <span class="muted" id="p-of"></span></p>
       <div class="alert" id="p-rejected" hidden></div>
-      <dl class="bank" id="bank"></dl>
-      <p class="muted small">Indiquez le motif <b id="p-ref"></b> pour que nous retrouvions votre virement.</p>
-      <h3>Envoyez la preuve du virement</h3>
-      <p class="muted small">Une photo ou une capture du reçu (ou du SMS/app de votre banque). JPG, PNG ou PDF, 6 Mo maximum.</p>
-      <form id="proof-form" class="upload">
-        <label class="drop" for="proof-file"><span id="drop-txt">Choisir une photo ou un PDF</span><input type="file" id="proof-file" accept="image/*,application/pdf"></label>
-        <img id="proof-prev" alt="" hidden>
-        <p class="err" id="proof-err" hidden></p>
-        <button class="btn primary" type="submit" id="proof-send" disabled>Envoyer le justificatif</button>
-      </form>
+      <div class="paysteps">
+        <div class="pstep">
+          <h3><span class="pnum">1</span>Faites le virement</h3>
+          <dl class="bank" id="bank"></dl>
+          <p class="muted small">Indiquez le motif <b id="p-ref"></b> pour que nous retrouvions votre virement.</p>
+        </div>
+        <div class="pstep">
+          <h3><span class="pnum">2</span>Envoyez la preuve</h3>
+          <p class="muted small">Une photo ou une capture du reçu (ou du SMS/app de votre banque). JPG, PNG ou PDF, 6 Mo maximum.</p>
+          <form id="proof-form" class="upload">
+            <label class="drop" for="proof-file"><span id="drop-txt">Choisir une photo ou un PDF</span><input type="file" id="proof-file" accept="image/*,application/pdf"></label>
+            <img id="proof-prev" alt="" hidden>
+            <p class="err" id="proof-err" hidden></p>
+            <button class="btn primary" type="submit" id="proof-send" disabled>Envoyer le justificatif</button>
+          </form>
+        </div>
+      </div>
     </section>
 
-    <section class="card" id="checking" hidden>
+    <!-- Step 3: we check the transfer -->
+    <section class="card wait" id="checking" hidden>
       <h2>Nous vérifions votre virement</h2>
       <p>Merci ! Votre justificatif est bien reçu. Nous le vérifions sur notre compte bancaire, en général sous 24 h ouvrées. Cette page se met à jour toute seule.</p>
       <p class="muted small" id="c-proofs"></p>
@@ -138,6 +167,7 @@
       <p id="paid-txt"></p>
     </section>
 
+    <!-- Step 4: the invitation is online; link, replies, personal links -->
     <section class="card" id="space" hidden>
       <h2>Votre invitation</h2>
       <div id="inv-none"><p id="inv-none-txt">Notre équipe prépare votre invitation. Vous recevrez le lien ici et sur WhatsApp.</p></div>

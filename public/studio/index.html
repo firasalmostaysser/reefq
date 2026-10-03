@@ -56,6 +56,7 @@
 
   <section id="p-design" class="desk" hidden>
     <form class="form" id="form" autocomplete="off" onsubmit="return false">
+      <p class="stage">1 · Who and when</p>
       <fieldset>
         <legend>The couple</legend>
         <p class="hint">Arabic names are used when a guest reads the invitation in Arabic.</p>
@@ -73,7 +74,7 @@
         <p class="hint">Parents (“<bdi lang="ar" dir="rtl">السيد … وحرمه</bdi>”, “Monsieur et Madame …”) or families above the couple's names. Leave one side empty if only one family invites. Pick the wording “Continues from the hosts” and the text agrees by itself.</p>
         <div class="grid">
           <label class="f"><span>In the name of</span><select id="k-hmode" data-k="hosts.mode"><option value="none">The couple</option><option value="parents">The parents</option><option value="families">The families</option></select></label>
-          <label class="f" id="k-hmothers-wrap"><span>Mothers</span><span><input type="checkbox" id="k-hmothers"> Add “and Madame” / “<bdi lang="ar" dir="rtl">وحرمه</bdi>”</span></label>
+          <label class="f chkf" id="k-hmothers-wrap"><span>Mothers</span><span class="chkf-box"><input type="checkbox" id="k-hmothers"> Add “and Madame” / “<bdi lang="ar" dir="rtl">وحرمه</bdi>”</span></label>
           <label class="f"><span id="k-hg-l">Groom's father</span><input id="k-hg-fr" data-k="hosts.g.fr"></label>
           <label class="f"><span>… in Arabic</span><input id="k-hg-ar" data-k="hosts.g.ar" dir="rtl" lang="ar"></label>
           <label class="f"><span id="k-hb-l">Bride's father</span><input id="k-hb-fr" data-k="hosts.b.fr"></label>
@@ -101,9 +102,10 @@
         <legend>Celebrations</legend>
         <p class="hint">Henna, contract, ceremony, dinner… Labels translate automatically for each guest.</p>
         <div class="events" id="events"></div>
-        <div style="margin-top:10px"><button class="btn sm" type="button" id="ev-add">+ Add celebration</button></div>
+        <div class="fs-foot"><button class="btn sm" type="button" id="ev-add">+ Add celebration</button></div>
       </fieldset>
 
+      <p class="stage" data-theme-only>2 · Words</p>
       <fieldset data-theme-only>
         <legend>Wording</legend>
         <p class="hint">Start from a ready-made text, then adjust it freely. The line sits just above the couple's names.</p>
@@ -116,34 +118,35 @@
         <div class="w-sugg" id="w-sugg" aria-live="polite"></div>
         <div class="grid three">
           <label class="f"><span>Français</span><textarea id="k-msg-fr" data-k="message.fr"></textarea></label>
-          <label class="f"><span>العربية</span><textarea id="k-msg-ar" data-k="message.ar" dir="rtl"></textarea></label>
+          <label class="f"><span lang="ar" dir="rtl">العربية</span><textarea id="k-msg-ar" data-k="message.ar" dir="rtl" lang="ar"></textarea></label>
           <label class="f"><span>English</span><textarea id="k-msg-en" data-k="message.en"></textarea></label>
         </div>
-        <p class="hint" style="margin:14px 0 6px">Our story (optional): how they met, in a few lines. Leave a language empty to show the French one.</p>
+        <p class="hint sub-h">Our story (optional): how they met, in a few lines. Leave a language empty to show the French one.</p>
         <div class="grid three">
           <label class="f"><span>Histoire · FR</span><textarea id="k-story-fr" data-k="story.fr"></textarea></label>
-          <label class="f"><span>الحكاية · AR</span><textarea id="k-story-ar" data-k="story.ar" dir="rtl"></textarea></label>
+          <label class="f"><span lang="ar" dir="rtl">الحكاية · AR</span><textarea id="k-story-ar" data-k="story.ar" dir="rtl" lang="ar"></textarea></label>
           <label class="f"><span>Story · EN</span><textarea id="k-story-en" data-k="story.en"></textarea></label>
         </div>
       </fieldset>
 
+      <p class="stage">3 · Look</p>
       <fieldset>
         <legend>Look &amp; feel</legend>
-        <div class="langtabs" role="group" aria-label="Design source" style="margin-bottom:14px"><button class="chip" type="button" data-src="theme">Reefq theme</button><button class="chip" type="button" data-src="canva">Custom design (Canva)</button></div>
+        <div class="langtabs src-tabs" role="group" aria-label="Design source"><button class="chip" type="button" data-src="theme">Reefq theme</button><button class="chip" type="button" data-src="canva">Custom design (Canva)</button></div>
         <div id="src-canva" hidden>
           <p class="hint">The designer builds the invitation as a Canva website and publishes it. Guests open it at this invitation's own link, with the Reefq bar to reply. The Canva address is never shown to them.</p>
           <div class="grid">
             <label class="f full"><span>Published Canva site address</span><input id="k-curl" data-k="canvaUrl" inputmode="url" placeholder="https://….my.canva.site/…"></label>
           </div>
-          <p class="status" id="c-state" style="margin:10px 0"></p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" type="button" id="c-pub">Mark published</button><a class="btn" id="c-open" target="_blank" rel="noopener noreferrer">Open Canva site ↗</a></div>
+          <p class="status c-state" id="c-state"></p>
+          <div class="btnrow"><button class="btn primary" type="button" id="c-pub">Mark published</button><a class="btn" id="c-open" target="_blank" rel="noopener noreferrer">Open Canva site ↗</a></div>
           <p class="hint" id="c-tpl" hidden></p>
-          <p class="hint" style="margin:12px 0 0">For the designer: link the design's RSVP button to <code>#rsvp</code>. After later edits in Canva, press <b>Refresh copy</b> so guests see them.</p>
+          <p class="hint hint-foot">For the designer: link the design's RSVP button to <code>#rsvp</code>. After later edits in Canva, press <b>Refresh copy</b> so guests see them.</p>
         </div>
         <div class="themes" id="themes" data-theme-only></div>
-        <div class="grid" style="margin-top:14px">
+        <div class="grid grid-gap">
           <label class="f"><span>Opens in</span><select id="k-lang" data-k="lang"><option value="fr">Français</option><option value="ar">العربية</option><option value="en">English</option></select></label>
-          <div class="f full" data-theme-only><span>Canva template from your designer</span><select id="k-canva"><option value="">None: use the Reefq card</option></select><small class="hint" id="canva-note" style="margin:4px 0 0"></small></div>
+          <div class="f full" data-theme-only><span>Canva template from your designer</span><select id="k-canva"><option value="">None: use the Reefq card</option></select><small class="hint canva-note" id="canva-note"></small></div>
         </div>
       </fieldset>
 
@@ -172,14 +175,14 @@
         </div>
       </fieldset>
 
+      <p class="stage">4 · Replies</p>
       <fieldset>
         <legend>Replies</legend>
         <div class="grid">
           <label class="f"><span>Reply by</span><input type="date" id="k-rsvpby" data-k="rsvpBy"></label>
           <label class="f"><span>Seats per invitation</span><input type="number" min="1" max="12" id="k-max" data-k="maxGuests"></label>
-          <label class="f"><span>Couple's WhatsApp (replies fallback)</span><input id="k-wa" data-k="whatsapp" placeholder="+216 …"></label>
-          <div class="toggles full" style="grid-column:1/-1"><label><input type="checkbox" id="k-personal"> Replies only from personal links (nobody can answer under another guest's name)</label></div>
-
+          <label class="f full"><span>Couple's WhatsApp (replies fallback)</span><input id="k-wa" data-k="whatsapp" placeholder="+216 …"></label>
+          <div class="toggles full"><label><input type="checkbox" id="k-personal"> Replies only from personal links (nobody can answer under another guest's name)</label></div>
         </div>
       </fieldset>
     </form>
@@ -200,11 +203,11 @@
     <div class="card">
       <h2>Guest list</h2>
       <p class="hint">One guest or family per line: <b>name, WhatsApp number, seats</b>. Each gets a personal invitation that greets them by name and reserves their seats.</p>
-      <div class="grid" style="grid-template-columns:minmax(0,1fr) auto;align-items:end">
+      <div class="paste-row">
         <label class="f"><span>Paste guests</span><textarea id="g-paste" placeholder="Famille Ben Salah, +216 98 123 456, 4&#10;Ahmed Trabelsi, 22 555 111, 2"></textarea></label>
         <button class="btn primary" type="button" id="g-add">Add guests</button>
       </div>
-      <div class="bar" style="padding:12px 0 6px"><span class="status" id="g-sum" style="flex:1"></span><select id="g-lang" class="btn sm" aria-label="Message language"><option value="fr">Message FR</option><option value="ar">رسالة AR</option><option value="en">Message EN</option></select><button class="btn sm" type="button" id="g-csv">Download guest list</button></div>
+      <div class="bar tbar"><span class="status grow" id="g-sum"></span><select id="g-lang" class="btn sm" aria-label="Message language"><option value="fr">Message FR</option><option value="ar">⁧رسالة⁩ AR</option><option value="en">Message EN</option></select><button class="btn sm" type="button" id="g-csv">Download guest list</button></div>
       <div class="tablewrap"><table><thead><tr><th>Guest</th><th>WhatsApp</th><th style="text-align:right">Seats</th><th>Status</th><th>Send</th><th></th></tr></thead><tbody id="g-rows"></tbody></table></div>
     </div>
     <div class="card">
@@ -218,7 +221,7 @@
         <button class="btn primary" type="button" id="m-add">Add</button>
       </form>
     </div>
-    <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:22px;margin:0;flex:1">Replies</h2><button class="btn sm" type="button" id="btn-csv">Download CSV</button></div>
+    <div class="bar phead"><h2>Replies</h2><button class="btn sm" type="button" id="btn-csv">Download CSV</button></div>
     <div class="tablewrap"><table><thead><tr><th>Guest</th><th>Answer</th><th style="text-align:right">People</th><th>Dietary</th><th>Message</th><th>Received</th></tr></thead><tbody id="rows"></tbody></table></div>
   </section>
 
@@ -238,10 +241,10 @@
         <h2>Message for guests</h2>
         <div class="langtabs" id="msg-langs"></div>
         <div class="msgbox" id="msgbox"></div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm" type="button" id="btn-copymsg">Copy message</button></div>
-        <h2 style="margin-top:20px">Guest link</h2>
+        <div class="btnrow"><button class="btn sm" type="button" id="btn-copymsg">Copy message</button></div>
+        <h2 class="h-gap">Guest link</h2>
         <div class="copybox"><code id="glink"></code><button class="btn sm" type="button" id="btn-copylink">Copy</button><a class="btn sm" id="glink-open" target="_blank" rel="noopener" hidden>Open</a></div>
-        <p class="hint" style="margin-top:8px" id="glink-hint"></p>
+        <p class="hint hint-top" id="glink-hint"></p>
       </div>
       <div class="card">
         <h2>QR code</h2>
@@ -256,26 +259,26 @@
     </div>
   </section>
   <section id="p-orders" class="panel" hidden>
-    <div class="bar" style="padding:0"><h2 style="font-family:var(--display);font-size:24px;margin:0;flex:1">Orders &amp; payments</h2><div class="chips" id="o-filters" style="flex:0 1 auto"></div><button class="btn sm" type="button" id="o-refresh">Refresh</button></div>
+    <div class="bar phead"><h2>Orders &amp; payments</h2><div class="chips ofilters" id="o-filters"></div><button class="btn sm" type="button" id="o-refresh">Refresh</button></div>
     <div id="o-verify" class="verify" role="status" aria-live="polite"></div>
     <div class="tablewrap"><table><thead><tr><th>Received</th><th>Code</th><th>Couple</th><th>Offer</th><th style="text-align:right">Deposit</th><th>Status</th><th></th></tr></thead><tbody id="o-rows"></tbody></table></div>
     <div class="card od" id="o-detail" hidden>
-      <div class="od-head"><h2 id="od-title"></h2><span class="pill" id="od-status"></span><button class="btn sm ghost" type="button" id="od-close" style="margin-inline-start:auto">Close</button></div>
+      <div class="od-head"><h2 id="od-title"></h2><span class="pill" id="od-status"></span><button class="btn sm ghost od-close" type="button" id="od-close">Close</button></div>
       <div class="od-grid">
-        <div>
+        <div class="od-col">
           <dl class="kv" id="od-info"></dl>
-          <label class="f" style="margin-top:12px"><span>Internal note</span><textarea id="od-note" placeholder="Visible only in the studio"></textarea></label>
-          <button class="btn sm" type="button" id="od-note-save" style="margin-top:6px">Save note</button>
+          <label class="f od-note"><span>Internal note</span><textarea id="od-note" placeholder="Visible only in the studio"></textarea></label>
+          <button class="btn sm od-note-save" type="button" id="od-note-save">Save note</button>
         </div>
-        <div>
+        <div class="od-col">
           <h3 class="od-h">Payment proof</h3>
           <div class="proofbox" id="od-proof"><p class="hint">No proof uploaded yet.</p></div>
-          <div class="chips" id="od-proofs" style="margin-top:6px"></div>
+          <div class="chips od-proofs" id="od-proofs"></div>
           <div class="od-actions" id="od-pay-actions">
             <label class="f"><span>Amount received (DT)</span><input type="number" id="od-amount" min="0"></label>
             <button class="btn primary" type="button" id="od-confirm">Confirm payment &amp; open client space</button>
             <label class="f"><span>Reason if not found</span><input id="od-reason" placeholder="Ex. virement introuvable, montant incorrect"></label>
-            <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" type="button" id="od-reject">Proof not valid</button><button class="btn ghost" type="button" id="od-cancel">Cancel order</button><button class="btn ghost" type="button" id="od-reopen" hidden>Reopen</button></div>
+            <div class="btnrow tight"><button class="btn" type="button" id="od-reject">Proof not valid</button><button class="btn ghost" type="button" id="od-cancel">Cancel order</button><button class="btn ghost" type="button" id="od-reopen" hidden>Reopen</button></div>
           </div>
         </div>
       </div>
@@ -292,13 +295,13 @@
     <div class="card">
       <h2>Canva templates</h2>
       <p class="hint" id="s-canva"></p>
-      <div id="s-canva-actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
+      <div id="s-canva-actions" class="btnrow"><a class="btn primary" id="s-connect" href="/auth/canva/start">Connect Canva</a><button class="btn" type="button" id="s-sync">Sync now</button><span class="status" id="s-sync-status"></span></div>
     </div>
     <div class="card">
       <h2>Website templates</h2>
       <p class="hint">Sample invitation sites shown on the landing page under "Modèles sur mesure". Designs in the Canva templates folder appear here after a sync; you can also add one by its address. For each: paste the published address, then <b>Mark published</b>.</p>
       <div id="st-list" class="st-list"></div>
-      <form class="grid" id="st-add" onsubmit="return false" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto;align-items:end;margin-top:12px">
+      <form class="grid st-add" id="st-add" onsubmit="return false">
         <label class="f"><span>Name</span><input id="st-name" placeholder="Olivier doré"></label>
         <label class="f"><span>Published site address</span><input id="st-url" inputmode="url" placeholder="https://….my.canva.site/…"></label>
         <button class="btn" type="button" id="st-add-btn">Add template</button>
@@ -307,7 +310,7 @@
     <div class="card">
       <h2>Morning summary &amp; backups</h2>
       <p class="hint">Every morning at 08:00 the team gets one message: receipts to verify, unpaid orders to remind (WhatsApp link ready), couples who have not prepared their invitation, custom designs to publish, weddings this week, and yesterday's numbers. Unpaid orders older than 14 days are cancelled. Every Monday a full backup file arrives in the same chat.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" type="button" id="s-digest">Preview today's summary</button><button class="btn primary" type="button" id="s-digest-send" hidden>Send it now</button><button class="btn ghost" type="button" id="s-backup">Download a backup</button></div>
+      <div class="btnrow"><button class="btn" type="button" id="s-digest">Preview today's summary</button><button class="btn primary" type="button" id="s-digest-send" hidden>Send it now</button><button class="btn ghost" type="button" id="s-backup">Download a backup</button></div>
       <p class="hint" id="s-digest-hint"></p>
       <pre class="digest" id="s-digest-out" hidden></pre>
     </div>
