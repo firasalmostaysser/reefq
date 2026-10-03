@@ -344,3 +344,127 @@ html[dir=rtl] .landing .plan li::before{transform:rotate(45deg)}
 @media (prefers-reduced-motion:reduce){
  .landing .links a::after,.landing .btn,.landing .themes button,.landing .steps li::after{transition:none}
 }
+
+/* Landing story v2: factual proof, realistic material photography and product-led sections. */
+.landing .hero-still{position:absolute;z-index:-2;inset:4% 0 1%;width:100%;height:95%;object-fit:cover;border-radius:260px 260px 28px 28px;filter:saturate(.78) contrast(.94);opacity:.42}
+.landing .hero-demo::before{background:linear-gradient(155deg,color-mix(in srgb,var(--surface) 82%,transparent),color-mix(in srgb,var(--soft) 58%,var(--surface) 70%))}
+.landing .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:-34px 0 88px;border:1px solid var(--line);border-radius:24px;overflow:hidden;background:color-mix(in srgb,var(--surface) 92%,transparent);box-shadow:var(--land-shadow)}
+.landing .stats article{min-height:130px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;border-inline-start:1px solid var(--line)}
+.landing .stats article:first-child{border-inline-start:0}
+.landing .stats strong{direction:ltr;unicode-bidi:isolate;font:500 clamp(42px,5vw,62px)/.9 var(--display);color:var(--fg);font-variant-numeric:lining-nums tabular-nums}
+.landing .stats strong small{font:600 15px/1 var(--ui);color:var(--gold)}
+.landing .stats article>span{max-width:19ch;color:var(--muted);font-size:13px;font-weight:600;line-height:1.35}
+html[lang=ar] .landing .stats article>span{font:700 16px/1.6 var(--ar)}
+
+.landing :is(#collections,#experience,#proof){scroll-margin-top:78px}
+.landing .collections{position:relative;isolation:isolate;border-top:0;padding-top:8px}
+.landing .collections::before{content:"";position:absolute;z-index:-1;inset:0 calc(50% - 50vw);background:
+  linear-gradient(90deg,var(--bg),color-mix(in srgb,var(--bg) 70%,transparent) 22%,color-mix(in srgb,var(--bg) 70%,transparent) 78%,var(--bg)),
+  url('/assets/media/reefq-paper-shadow.webp') center/cover no-repeat;opacity:.6}
+.landing .collection-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
+.landing .collection-card{position:relative;margin:0;min-width:0;overflow:hidden;border:1px solid color-mix(in srgb,var(--gold) 26%,var(--line));border-radius:28px;background:var(--surface);box-shadow:var(--land-shadow)}
+.landing .collection-card img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+.landing .collection-card:hover img{transform:scale(1.025)}
+.landing .collection-card figcaption{position:absolute;inset-inline:18px;bottom:18px;padding:18px 20px;border:1px solid rgb(255 255 255/.58);border-radius:18px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 42px -30px rgb(0 0 0/.6)}
+.landing .collection-card .th{display:block;margin-bottom:5px}
+.landing .collection-card h3{margin:0;font:600 clamp(27px,3vw,38px)/1.02 var(--display)}
+.landing .collection-card p{margin:7px 0 0;color:var(--muted);font-size:14px;line-height:1.55}
+.landing .collection-atelier{grid-column:span 7;min-height:600px}
+.landing .collection-sidi{grid-column:span 5;min-height:600px}
+.landing .collection-themes{grid-column:1/-1;display:grid;grid-template-columns:minmax(220px,.68fr) minmax(0,1.32fr);gap:34px;align-items:center;padding:34px;background:
+  radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--gold) 10%,transparent),transparent 20rem),
+  linear-gradient(145deg,color-mix(in srgb,var(--soft) 52%,var(--surface)),var(--surface))}
+.landing .theme-lookbook{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.landing .theme-lookbook button{all:unset;box-sizing:border-box;cursor:pointer;min-width:0;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--surface);display:flex;flex-direction:column;gap:8px;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.landing .theme-lookbook button:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 16px 26px -24px rgb(19 40 41/.65)}
+.landing .theme-lookbook button[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.landing .theme-lookbook button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.landing .look-paper{position:relative;display:block;height:66px;border-radius:9px;overflow:hidden;background:var(--look-bg);box-shadow:inset 0 0 0 1px rgb(0 0 0/.06)}
+.landing .look-paper::before{content:"";position:absolute;left:50%;top:11px;width:38px;height:48px;transform:translateX(-50%);border:1px solid color-mix(in srgb,var(--look-fg) 35%,transparent);border-radius:18px 18px 2px 2px;background:color-mix(in srgb,var(--look-bg) 70%,#fff)}
+.landing .look-paper::after{content:"";position:absolute;left:50%;top:28px;width:18px;height:1px;background:var(--look-fg);transform:translateX(-50%);box-shadow:0 7px 0 color-mix(in srgb,var(--look-fg) 48%,transparent)}
+.landing .look-name{overflow:hidden;text-overflow:ellipsis;color:var(--fg);font:700 11px/1.2 var(--ui);white-space:nowrap}
+
+.landing .film{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);margin:16px 0 96px;border-radius:30px;overflow:hidden;background:#0e4547;color:#fffdf8;box-shadow:0 34px 70px -42px rgb(8 48 50/.9)}
+.landing .film-frame{width:100%;min-height:0;aspect-ratio:16/9;align-self:center;background:url('/assets/media/reefq-paper-atelier-poster.webp') center/cover no-repeat}
+.landing .film-frame video{display:block;width:100%;height:100%;min-height:0;aspect-ratio:16/9;object-fit:contain;background:#0e4547}
+.landing .film-copy{position:relative;overflow:hidden;padding:48px 38px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.landing .film-copy::after{content:"";position:absolute;inset-inline-end:-100px;bottom:-100px;width:240px;height:240px;border:1px solid rgb(255 255 255/.16);border-radius:50%;box-shadow:0 0 0 25px rgb(255 255 255/.035),0 0 0 58px rgb(255 255 255/.02)}
+.landing .film-copy .eyebrow{position:relative;z-index:1;color:#e2c789}
+.landing .film-copy h2{position:relative;z-index:1;font-size:clamp(38px,4vw,54px);color:inherit}
+.landing .film-copy p:not(.eyebrow){position:relative;z-index:1;margin:8px 0 24px;color:rgb(255 255 255/.74);line-height:1.7}
+.landing .film-copy .btn{position:relative;z-index:1;color:#fff;border-color:rgb(255 255 255/.35)}
+
+.landing .experience{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:clamp(42px,7vw,92px);align-items:center}
+.landing .experience-media{position:relative;min-width:0;padding:0 34px 40px 0}
+html[dir=rtl] .landing .experience-media{padding:0 0 40px 34px}
+.landing .experience-media::before{content:"";position:absolute;inset:32px 0 0 34px;border:1px solid color-mix(in srgb,var(--gold) 36%,var(--line));border-radius:220px 220px 24px 24px;background:var(--soft)}
+html[dir=rtl] .landing .experience-media::before{inset:32px 34px 0 0}
+.landing .experience-media>img{position:relative;display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:26px;box-shadow:0 28px 58px -36px rgb(19 40 41/.7)}
+.landing .map-card{position:absolute;inset-inline-end:0;bottom:0;max-width:min(330px,82%);display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"pin place" "pin open";column-gap:12px;padding:15px 18px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 22px 44px -30px rgb(19 40 41/.7)}
+.landing .map-pin{grid-area:pin;align-self:center;width:30px;height:30px;border-radius:50% 50% 50% 5px;transform:rotate(-45deg);background:var(--accent);box-shadow:inset 0 0 0 8px var(--surface)}
+.landing .map-card div{grid-area:place;display:flex;flex-direction:column;min-width:0}
+.landing .map-card strong{font:700 15px/1.25 var(--ui)}
+.landing .map-card div span{overflow:hidden;text-overflow:ellipsis;color:var(--muted);font-size:12px;white-space:nowrap}
+.landing .map-open{grid-area:open;margin-top:4px;color:var(--accent);font:700 11px/1.2 var(--ui);letter-spacing:.08em;text-transform:uppercase}
+html[lang=ar] .landing .map-open{font:700 14px/1.3 var(--ar);letter-spacing:0;text-transform:none}
+.landing .experience .section-head{margin-bottom:20px}
+.landing .experience-list{border-top:1px solid var(--line)}
+.landing .experience-list article{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:20px 0;border-bottom:1px solid var(--line)}
+.landing .experience-list article>span{color:var(--gold);font:700 10px/1 var(--ui);letter-spacing:.14em;padding-top:6px}
+.landing .experience-list h3{margin:0 0 4px;font:600 21px/1.2 var(--display)}
+.landing .experience-list p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+
+.landing .product-proof{position:relative;margin-block:18px 70px;padding:58px;border:1px solid var(--line);border-radius:30px;overflow:hidden;background:
+  linear-gradient(90deg,color-mix(in srgb,var(--surface) 86%,transparent),color-mix(in srgb,var(--surface) 96%,transparent)),
+  url('/assets/media/reefq-paper-shadow.webp') center/cover no-repeat;box-shadow:var(--land-shadow)}
+.landing .product-proof .section-head{max-width:650px}
+.landing .proof-notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.landing .proof-notes blockquote{position:relative;min-height:190px;margin:0;padding:30px 24px 24px;border:1px solid color-mix(in srgb,var(--gold) 28%,var(--line));border-radius:20px;background:color-mix(in srgb,var(--surface) 88%,transparent);display:flex;flex-direction:column;justify-content:space-between}
+.landing .quote-mark{position:absolute;inset-inline-start:20px;top:12px;color:color-mix(in srgb,var(--gold) 58%,transparent);font:500 42px/1 var(--display)}
+.landing .proof-notes p{margin:24px 0 28px;font:500 clamp(22px,2.3vw,29px)/1.25 var(--display);text-wrap:balance}
+.landing .proof-notes cite{color:var(--muted);font:700 11px/1.4 var(--ui);font-style:normal;letter-spacing:.1em;text-transform:uppercase}
+html[lang=ar] .landing .proof-notes p{font:700 23px/1.7 var(--ar)}
+html[lang=ar] .landing .proof-notes cite{font:700 14px/1.5 var(--ar);letter-spacing:0;text-transform:none}
+
+@media (max-width:900px){
+ .landing .hero-still{inset:1% -8px 6%;width:calc(100% + 16px);height:93%;border-radius:220px 220px 24px 24px}
+ .landing .stats{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:-18px}
+ .landing .stats article:nth-child(odd){border-inline-start:0}
+ .landing .stats article:nth-child(n+3){border-top:1px solid var(--line)}
+ .landing .collection-atelier,.landing .collection-sidi{grid-column:span 6;min-height:520px}
+ .landing .collection-themes{grid-template-columns:1fr}
+ .landing .film{grid-template-columns:1fr}
+ .landing .film-frame,.landing .film-frame video{min-height:0}
+ .landing .experience{grid-template-columns:1fr}
+ .landing .experience-media{max-width:680px;margin-inline:auto}
+ .landing .proof-notes{grid-template-columns:1fr}
+ .landing .proof-notes blockquote{min-height:150px}
+}
+@media (max-width:560px){
+ .landing .stats{margin:0 0 64px;border-radius:18px}
+ .landing .stats article{min-height:112px;padding:18px}
+ .landing .stats strong{font-size:44px}
+ .landing .collection-grid{grid-template-columns:1fr;gap:12px}
+ .landing .collection-atelier,.landing .collection-sidi,.landing .collection-themes{grid-column:1;min-height:0}
+ .landing .collection-atelier,.landing .collection-sidi{height:500px}
+ .landing .collection-card{border-radius:20px}
+ .landing .collection-card figcaption{inset-inline:12px;bottom:12px;padding:15px 16px}
+ .landing .collection-themes{padding:24px 20px;gap:22px}
+ .landing .theme-lookbook{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .landing .look-paper{height:58px}
+ .landing .film{margin-bottom:68px;border-radius:20px}
+ .landing .film-frame,.landing .film-frame video{min-height:0}
+ .landing .film-copy{padding:34px 24px}
+ .landing .experience-media{padding:0 18px 42px 0}
+ html[dir=rtl] .landing .experience-media{padding:0 0 42px 18px}
+ .landing .experience-media::before{inset:20px 0 0 18px}
+ html[dir=rtl] .landing .experience-media::before{inset:20px 18px 0 0}
+ .landing .experience-media>img{border-radius:20px}
+ .landing .map-card{max-width:88%;padding:13px 15px}
+ .landing .product-proof{margin-bottom:48px;padding:32px 20px;border-radius:20px}
+ .landing .proof-notes blockquote{padding:26px 20px 20px}
+}
+@media (prefers-reduced-motion:reduce){
+ .landing .collection-card img{transition:none}
+ .landing .film-frame video{display:none}
+}

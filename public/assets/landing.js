@@ -20,7 +20,7 @@ var UI={
 };
 var LANGS=['fr','ar','en'],I18N=window.REEFQ_I18N||{};
 function ui(k){return (UI[lang]||UI.fr)[k]}
-var THEMES=ReefqInvite.THEME_LIST.map(function(t){return [t.id,t.name,t.fg]});
+var THEMES=ReefqInvite.THEME_LIST.map(function(t){return [t.id,t.name,t.fg,t.bg]});
 var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[],SITES=[];
 function demoData(){var d=JSON.parse(JSON.stringify(DEMO)),o=ui('demo');d.theme=cur;d.lang=lang;if(demoCanva)d.canva=demoCanva;
   ['venue','city','dress'].forEach(function(k){if(o[k])d[k]=o[k]});if(o.places)d.events.forEach(function(e,i){e.place=o.places[i]});return d}
@@ -92,10 +92,15 @@ var tour=(function(){
   };
 })();
 function themes(){$('#themes').innerHTML=THEMES.map(function(t){return '<button type="button" data-t="'+t[0]+'" aria-pressed="'+(cur===t[0])+'"><i style="background:'+t[2]+'"></i>'+t[1]+'</button>'}).join('');
-  $$('[data-t]').forEach(function(b){b.onclick=function(){cur=b.dataset.t;tour.pick();themes();demo();if(window.rqTrack)window.rqTrack('theme_previewed',{theme:cur})}});
+  $$('#themes [data-t]').forEach(function(b){b.onclick=function(){cur=b.dataset.t;tour.pick();themes();demo();if(window.rqTrack)window.rqTrack('theme_previewed',{theme:cur})}});
+  $$('[data-look]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.look===cur))});
   /* Keep the chosen chip in view inside the scrolling row, without moving the page. */
   var row=$('#themes'),on=row.querySelector('[aria-pressed=true]');
   if(on&&row.scrollWidth>row.clientWidth){var r=row.getBoundingClientRect(),c=on.getBoundingClientRect();if(c.left<r.left||c.right>r.right)row.scrollLeft+=c.left+c.width/2-(r.left+r.width/2)}}
+/* The collection shelf mirrors the live themes without loading ten more invitation engines. */
+function lookbook(){var box=$('#theme-lookbook');if(!box)return;
+  box.innerHTML=THEMES.map(function(t){return '<button type="button" data-look="'+t[0]+'" aria-pressed="'+(cur===t[0])+'" style="--look-bg:'+t[3]+';--look-fg:'+t[2]+'"><span class="look-paper" aria-hidden="true"></span><span class="look-name">'+t[1]+'</span></button>'}).join('');
+  $$('[data-look]').forEach(function(b){b.onclick=function(){cur=b.dataset.look;tour.pick();themes();demo();document.querySelector('.lhero').scrollIntoView({behavior:'smooth'});if(window.rqTrack)window.rqTrack('theme_previewed',{theme:cur,source:'collection'})}})}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 /* Prices, percentages and add-on amounts are isolated so "149 DT" or "+49 د.ت" never flips inside Arabic text. */
 function fmt(s){return esc(s).replace(/\+?\d+(?:[.,]\d+)?(?:\s?(?:%|DT|TND|د\.ت))/g,'<bdi>$&</bdi>')}
@@ -114,7 +119,10 @@ function setLang(l){lang=l;var root=document.documentElement;root.lang=l;root.di
   Object.keys(UI[l].ph).forEach(function(id){$('#'+id).placeholder=UI[l].ph[id]});
   document.title=ui('title');$('#themes').setAttribute('aria-label',ui('themes'));$('#lsw').setAttribute('aria-label',ui('lang'));
   $$('#lsw a').forEach(function(a){if(a.dataset.l===l)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current')});
-  if(MODELS.length)renderModels();renderSites();demo()}
+  if(MODELS.length)renderModels();renderSites();demo();proofCopy()}
+function proofCopy(){var d=ReefqInvite.T[lang]||ReefqInvite.T.fr;
+  $$('[data-rq-copy]').forEach(function(el){el.textContent=d[el.dataset.rqCopy]||''});
+  var g=$('[data-demo-guest]');if(g)g.textContent=d.dear+' '+ui('guest')}
 $$('#lsw a').forEach(function(a){a.onclick=function(e){e.preventDefault();var l=a.dataset.l;if(l===lang)return;save(l);
   try{var u=new URL(location.href);if(u.searchParams.has('lang')){u.searchParams.set('lang',l);history.replaceState(null,'',u)}}catch(x){}
   setLang(l);if(window.rqTrack)window.rqTrack('language_changed',{lang:l})}});
@@ -196,5 +204,15 @@ dm.addEventListener('pointerdown',function(e){if(e.isTrusted&&e.pointerType!=='t
 $('#demo-replay').onclick=function(){tour.replay()};
 if('IntersectionObserver' in window)new IntersectionObserver(function(es){tour.show(es[0].isIntersecting)},{threshold:.45}).observe(dm);else tour.show(true);
 document.addEventListener('visibilitychange',function(){tour.show(!document.hidden&&dm.getBoundingClientRect().top<innerHeight)});
-themes();setLang(pickLang());loadModels();loadSites();setInterval(function(){loadModels();loadSites()},5*60*1000);
+/* Factual counters animate once; reduced-motion users see the final values immediately. */
+function counters(){var els=$$('[data-count]'),reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function play(el){if(el.dataset.done)return;el.dataset.done='1';var n=Math.max(0,+el.dataset.count||0);if(reduce){el.textContent=String(n);return}
+    var at=0,dur=900;function frame(t){if(!at)at=t;var p=Math.min(1,(t-at)/dur),v=Math.round(n*(1-Math.pow(1-p,3)));el.textContent=String(v);if(p<1)requestAnimationFrame(frame)}requestAnimationFrame(frame)}
+  if(!('IntersectionObserver' in window)){els.forEach(play);return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){play(e.target);io.unobserve(e.target)}})},{threshold:.55});els.forEach(function(el){io.observe(el)})}
+/* Below-the-fold film pauses off screen and never plays for reduced-motion users. */
+function films(){var vids=$$('.film video'),reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduce){vids.forEach(function(v){v.pause()});return}
+  if(!('IntersectionObserver' in window)){vids.forEach(function(v){v.play().catch(function(){})});return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)e.target.play().catch(function(){});else e.target.pause()})},{rootMargin:'180px 0px',threshold:.1});vids.forEach(function(v){io.observe(v)})}
+lookbook();themes();setLang(pickLang());counters();films();loadModels();loadSites();setInterval(function(){loadModels();loadSites()},5*60*1000);
 })();

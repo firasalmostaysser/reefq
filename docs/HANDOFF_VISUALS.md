@@ -1,14 +1,15 @@
 # Handoff: UI agent → Visuals agent (Gemini 3.8 Flash), 3 October 2026
 
-Branch: `design/round-1`. Stay on this branch. Do not push, switch branches or install packages. Read `AGENTS.md` first; visual work only. Before handing back, run `npm run guard` and `npm test`, then commit.
+Branch: `design/round-1`. Stay on this branch. Do not switch branches or install packages. Read `AGENTS.md` first; visual work only. Before handing back, run `npm run guard` and `npm test`, commit, then push only this branch—never `main`.
 
 ## 1. What the UI pass changed
 
 - `public/assets/invitation.css`: the ten saved theme ids now share a more polished stationery system but have distinct character. Reefq has a teal/gold double keyline; Zitouna warm linen and lace dots; Yasmine a pale blue garden arch; Layl a restrained celestial frame; Sidi Bou Said a cobalt arch; Kairouan copper geometry; Old Money an engraved espresso frame; Sauge rounded botanical paper; Bordeaux a blush arch; Sahara a sun-washed Tozeur rhythm.
 - `.rq-hosts`, `.rq-hosts-lead` and `.rq-closing` now read as a traditional invitation header and blessing. Arabic is never italic and has a generous line-height.
-- `public/index.html` and `public/assets/site.css`: the landing is now a quiet Tunisian paper atelier. The live envelope remains the hero; numbered section markers, a concierge-like four-step path, folio feature cards, calmer offer cards, a two-column FAQ and a teal reservation panel establish the visual rhythm.
+- `public/index.html` and `public/assets/site.css`: the landing is now a quiet Tunisian paper atelier. The live envelope remains the hero; factual count-up cards, realistic collection photography, a theme lookbook, silent film, Maps/product demonstration, honest product-proof cards, numbered stages, calmer offers, a two-column FAQ and a teal reservation panel establish the visual rhythm.
 - Landing-only rules are scoped under `.landing`, so the client space keeps the UX agent's layout.
 - No `engine.js` art was changed in this pass. That is the main opportunity for your visual layer.
+- Initial compliant stills, paper backgrounds, WebP posters and silent MP4/WebM loops are under `public/assets/media/`. The exact next-generation brief is ready in `docs/GEMINI_VISUALS_PROMPT.md`.
 
 Checked at 360 px in French and Arabic, at 1280 px in French, and with all ten open and closed Arabic themes at 360 px. All ten themes had equal 360 px bounds and no horizontal overflow.
 
@@ -47,7 +48,12 @@ Keep art deterministic, fast on low-end phones and visually quiet behind Arabic.
 
 Use the existing source stack in `tools/promo/` (`poster.css`, `poster_scene.js`, `render_posters.cjs`) and bring it in line with the new landing. Export final posters as WebP under `public/assets/media/`; do not leave the only usable output in `tools/promo/out/`.
 
-Create at least:
+The first two code-composited posters are already present:
+
+- `reefq-paper-atelier-poster.webp`
+- `reefq-collections-ar-poster.webp`
+
+Continue with:
 
 - `poster-envelope-fr.webp`
 - `poster-envelope-ar.webp`
@@ -60,6 +66,11 @@ Every poster must show **reefq.netlify.app** clearly, with safe margins and enou
 ### C. Silent promo loops
 
 Refresh the existing scenes in `tools/promo/promo_scene.js` and `render_videos.cjs`, then export matching assets under `public/assets/media/`:
+
+Already present as video-only streams:
+
+- `reefq-paper-atelier.mp4` + `.webm` — 1280 × 720, about 8 seconds;
+- `reefq-collections-ar.mp4` + `.webm` — 720 × 1280, about 9 seconds.
 
 - envelope opening in French;
 - personal invitation in Arabic;
@@ -81,4 +92,4 @@ For each loop provide MP4 (H.264) and WebM, 720p maximum, 6–15 seconds, ideall
 2. All final posters are WebP in `public/assets/media/` and visibly include **reefq.netlify.app**.
 3. Each video has MP4 + WebM + poster, no audio stream, correct dimensions and acceptable file size.
 4. Arabic invitation screens pass at 360 px with no clipping or overflow.
-5. `npm run guard` and `npm test` pass; commit on `design/round-1`, do not push.
+5. `npm run guard` and `npm test` pass; commit and push `design/round-1`, never `main`.

@@ -14,6 +14,10 @@ window.REEFQ_I18N = {
     p1: 'العربية · Français · English',
     p2: 'جاهزة خلال 48 ساعة',
     p3: 'الردود مباشرة',
+    stat_themes: '',
+    stat_langs: '',
+    stat_ready: '',
+    stat_personal: '',
     demo_replay: 'إعادة العرض',
     demo_full: 'عرض بملء الشاشة',
     how_t: 'كيف نعمل',
@@ -39,6 +43,7 @@ window.REEFQ_I18N = {
     f6d: 'لكبار العائلة: البطاقة نفسها على الورق، مع رمز QR يفتح الدعوة الرقمية.',
     mod_t: 'تصاميمنا',
     mod_s: 'من إبداع مصمّمتنا، تُضاف هنا فور جهوزها.',
+    collection_t: '',
     site_t: 'تصاميم حسب الطلب',
     site_s: 'دعوة فريدة تُكيّفها مصمّمتنا باسميكما وتواريخكما وألوانكما. افتحوا تصميماً لتروه كما سيراه ضيوفكم.',
     off_t: 'عروضنا',
@@ -98,24 +103,28 @@ window.REEFQ_I18N = {
     nav_faq: 'FAQ',
     cta_short: 'Order',
     eyebrow: 'Digital wedding invitations · Made in Tunisia',
-    h1: 'An invitation that opens like a real envelope.',
-    lead: 'Textured paper, a wax seal with your initials, a gilded lining. Every guest receives their own invitation by name on WhatsApp, and you follow the replies live.',
+    h1: 'The invitation your guests will want to open.',
+    lead: 'A cotton-paper envelope, a wax seal with your initials, then an invitation considered down to the last detail. Every family receives a personal link; every reply stays together.',
     cta: 'Book your date',
     cta2: 'See packages · from 149 TND',
     p1: 'English · Français · العربية',
     p2: 'Ready in 48 h',
     p3: 'Live replies',
+    stat_themes: 'visual worlds',
+    stat_langs: 'languages',
+    stat_ready: 'until it is ready',
+    stat_personal: 'personal link per family',
     demo_replay: 'Replay',
     demo_full: 'Full screen',
     how_t: 'How it works',
-    s1t: 'You send us your details',
-    s1d: 'Names, dates, venues and theme. Five minutes on WhatsApp.',
-    s2t: 'We design your invitation',
-    s2d: 'Envelope, seal, colours and wording in three languages. You review, we adjust.',
-    s3t: 'Each guest receives it by name',
-    s3d: 'A personal link for every family, sent on WhatsApp, with their reserved seats.',
-    s4t: 'You follow the replies',
-    s4d: 'Who is coming, how many people, dietary notes. A file ready for your caterer.',
+    s1t: 'Prepare your invitation',
+    s1d: 'Names, date, venue, wording and guests: see the result live in your private space.',
+    s2t: 'Approve it before paying',
+    s2d: 'Envelope, seal, colours and wording in three languages. Adjust every detail before the transfer.',
+    s3t: 'Send it in their name',
+    s3d: 'A personal link for every family, ready for WhatsApp, with their reserved seats.',
+    s4t: 'Follow up with clarity',
+    s4d: 'Coming, not coming, party size and notes: everything stays together.',
     f1t: 'A real envelope',
     f1d: 'Textured paper, a gold-edged flap, a zellige or jasmine lining and a glossy wax seal with your initials.',
     f2t: 'Personal for every guest',
@@ -129,7 +138,8 @@ window.REEFQ_I18N = {
     f6t: 'Printed cards with QR',
     f6d: 'For grandparents: the same card on paper, with a QR code that opens the digital invitation.',
     mod_t: 'Our designs',
-    mod_s: 'Created by our designer and added here as soon as they are ready.',
+    mod_s: 'Ten worlds inspired by Tunisian materials and places. Choose a starting point, then personalise the envelope, seal and colours.',
+    collection_t: 'Ten worlds, one starting point',
     site_t: 'Made-to-measure designs',
     site_s: 'A one-of-a-kind invitation that our designer tailors to your names, dates and colours. Open a design to see it as your guests will.',
     off_t: 'Packages',
@@ -184,3 +194,10 @@ window.REEFQ_I18N = {
     o_terms: 'By booking, you accept our terms of sale.'
   }
 };
+
+/* Reuse reviewed Arabic product wording for the factual count-up labels. */
+window.REEFQ_I18N.ar.stat_themes = window.REEFQ_I18N.ar.mod_t;
+window.REEFQ_I18N.ar.stat_langs = window.REEFQ_I18N.ar.f3t;
+window.REEFQ_I18N.ar.stat_ready = window.REEFQ_I18N.ar.s2t;
+window.REEFQ_I18N.ar.stat_personal = window.REEFQ_I18N.ar.g2;
+window.REEFQ_I18N.ar.collection_t = window.REEFQ_I18N.ar.mod_t;
