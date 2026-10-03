@@ -68,7 +68,7 @@ French UI first; Arabic where existing screens use it (RTL); English where it al
 
 **State.** Everything on `main` passes `npm test` and `npm run test:e2e` (`test/smoke.mjs`, `test/edits.mjs`, `test/customize.mjs`). Latest features: couples edit their invitation with a live preview that stays open; guests are edited in place and keep their link; saves never overwrite each other (409 → "load latest / keep mine"); studio auto-save, restore of unsaved typing, order alerts and badges; Tunisian cards: groom first, "who invites" (parents with or without « وحرمه », or families) with automatic Arabic/French/English grammar, closing line (du'a, …), and sections the couple can switch off (RSVP form, countdown, programme, story). Arabic is the default invitation language.
 
-**Live site.** reefq.netlify.app (no own domain for now). A push to GitHub does not deploy; the owner (or Claude) deploys. Netlify credits ran out on 2 Oct 2026, so the newest code may not be live yet.
+**Live site.** reefq.netlify.app (no own domain for now). Every push to `main` deploys automatically (and costs credits), so never push to `main`; the owner merges. Netlify credits ran out on 2 Oct 2026, so the newest code may not be live yet.
 
 **Suggested split** (each on its own branch, `npm run guard` + `npm test` before handing back):
 - **UX agent:** client space flow (`public/commande/index.html`, `commande.css`) and studio layout (`public/studio/index.html`, `studio.css`): fewer steps on screen, clearer grouping, mobile first, Arabic checked at 360 px. Keep every id and `data-*` hook.
