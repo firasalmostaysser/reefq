@@ -122,7 +122,7 @@ var ENV_DEFAULTS={
   zitouna:{paper:'#f3eee3',seal:'#5b6b33',liner:'olive',linerBg:'#56662f',table:'#ebe4d6'},
   yasmine:{paper:'#fbfaf7',seal:'#27549a',liner:'jasmine',linerBg:'#1f4f96',table:'#e6eaee'},
   layl:{paper:'#1e2c48',seal:'#b8913f',liner:'zellige',linerBg:'#0f1a2d',table:'#141c2c'},
-  sidi:{paper:'#fbfbf8',seal:'#1d4f91',liner:'tiles',linerBg:'#1d4f91',linerInk:'#f4f1e8',table:'#dfe7ee'},
+  sidi:{paper:'#fbfbf8',seal:'#b8913f',liner:'tiles',linerBg:'#1d4f91',linerInk:'#f4f1e8',table:'#dfe7ee'},
   kairouan:{paper:'#f1e6d6',seal:'#8f2f1c',liner:'kilim',linerBg:'#8f2f1c',linerInk:'#e8c37e',table:'#e6d6c1'},
   oldmoney:{paper:'#efe6d6',seal:'#4a2f22',liner:'lattice',linerBg:'#3b2a20',linerInk:'#c9a86a',table:'#d9ccb8'},
   sauge:{paper:'#f3f3ea',seal:'#6f8260',liner:'olive',linerBg:'#7d8f6a',linerInk:'#f4efe2',table:'#e4e6da'},
@@ -199,6 +199,205 @@ function flapGild(){ // gold edge inset along the flap cut, in the flap's 720x93
    '<path d="M22 8 L336 402 Q360 426 384 402 L698 8" fill="none" stroke="url(#gd'+uidN+')" stroke-width="2.6"/><path d="M34 8 L340 390 Q360 410 380 390 L686 8" fill="none" stroke="url(#gd'+uidN+')" stroke-width="1" opacity=".8"/></svg>';
 }
 function envOpts(inv,th){var d=ENV_DEFAULTS[th]||ENV_DEFAULTS.reefq,e=inv.env||{};return{paper:e.paper||d.paper,seal:e.seal||d.seal,liner:e.liner||d.liner,linerBg:e.linerBg||d.linerBg,linerInk:e.linerInk||d.linerInk||'#d4b26a',table:e.table||d.table}}
+/* ---- Envelope v4: each theme has its own construction, closure and opening (Reefq keeps the v3 photographed layers).
+   Paper = tint + grain canvas under SVG shape masks; only transform and opacity animate. Kept hooks: .rq3, .rq3-seal canvas. ---- */
+var GRAIN=null;
+function grainUrl(){if(GRAIN)return GRAIN;
+  try{var S=256,N=128,c=document.createElement('canvas');c.width=c.height=S;var g=c.getContext('2d'),r=rng(11),base=[],i,x,y;
+    for(i=0;i<N*N;i++)base.push(240+r()*12);
+    var s=document.createElement('canvas');s.width=s.height=N+2;var sg=s.getContext('2d'),im=sg.createImageData(N+2,N+2);
+    for(y=0;y<N+2;y++)for(x=0;x<N+2;x++){var v=base[((y+N-1)%N)*N+(x+N-1)%N],o=(y*(N+2)+x)*4;im.data[o]=im.data[o+1]=im.data[o+2]=v;im.data[o+3]=255}
+    sg.putImageData(im,0,0);g.imageSmoothingEnabled=true;g.drawImage(s,-S/N,-S/N,S+2*S/N,S+2*S/N);
+    var f=g.getImageData(0,0,S,S),d=f.data;for(i=0;i<S*S;i++){var n=(r()-.5)*12;d[i*4]+=n;d[i*4+1]+=n;d[i*4+2]+=n}g.putImageData(f,0,0);
+    g.lineCap='round';for(var k=0;k<380;k++){x=r()*S;y=r()*S;var a=r()*6.283,l=3+r()*9,dark=r()<.55;g.strokeStyle=dark?'rgba(60,45,20,.045)':'rgba(255,255,255,.16)';g.lineWidth=.4+r()*.7;
+      for(var ox=-S;ox<=S;ox+=S)for(var oy=-S;oy<=S;oy+=S){g.beginPath();g.moveTo(x+ox,y+oy);g.quadraticCurveTo(x+ox+Math.cos(a+.7)*l*.5,y+oy+Math.sin(a+.7)*l*.5,x+ox+Math.cos(a)*l,y+oy+Math.sin(a)*l);g.stroke()}}
+    GRAIN='url('+c.toDataURL()+')'}catch(e){GRAIN='none'}
+  return GRAIN}
+function svgU(vb,body){return 'url("data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+vb+'" preserveAspectRatio="none">'+body+'</svg>')+'")'}
+function mk(vb,d,clip,tf){var p='<path fill-rule="evenodd" d="'+d+'"'+(tf?' transform="'+tf+'"':'');return svgU(vb,clip?'<clipPath id="c"><path d="'+clip+'"/></clipPath>'+p+' clip-path="url(#c)"/>':p+'/>')}
+/* a paper piece: masked tinted grain; inner content is clipped to the shape */
+function pc(cls,vb,d,inner,st,clip,tf){return '<div class="rq4-p '+cls+'" style="--m:'+esc(mk(vb,d,clip,tf))+';'+(st||'')+'">'+(inner||'')+'</div>'}
+function deco(vb,body,cls,st){return '<svg class="rq4-deco'+(cls?' '+cls:'')+'" viewBox="'+vb+'" preserveAspectRatio="none" aria-hidden="true"'+(st?' style="'+st+'"':'')+'>'+body+'</svg>'}
+function cast(vb,d,st,clip){return '<div class="rq4-cast" style="'+(st||'')+'"><div style="--m:'+esc(mk(vb,d,clip))+'"></div></div>'}
+/* a hinged piece with a front and a back; o.open = end transform, o.org = hinge, o.d = delay, o.zt = when it drops behind the card */
+function flap4(cls,vb,d,o){o=o||{};var ax=o.y?'y':'x';
+  return '<div class="rq4-flap'+(o.noz?'':' rq4-z')+' '+cls+'" style="--open:'+o.open+';transform-origin:'+o.org+';--d:'+(o.d||0)+'s;--dur:'+(o.dur||1.2)+'s;--zt:'+(o.zt||1)+'s;z-index:'+(o.z||6)+';'+(o.st||'')+'">'+
+    '<div class="rq4-face">'+pc(o.front||'rq4-fr',vb,d,'<i class="rq4-sh"></i>'+(o.deco||''),o.fst,o.clip)+(o.over||'')+'</div>'+
+    '<div class="rq4-face rq4-bk'+ax+'"><div class="rq4-flip'+ax+'">'+pc(o.back||'rq4-ln',vb,d,o.backDeco||'',o.bst,o.clip)+'</div></div>'+(o.child||'')+'</div>'}
+function seal4(c,x,y,w,cls){return '<button type="button" class="rq3-seal'+(cls?' '+cls:'')+'" style="left:'+x+'%;top:'+y+'%;width:'+w+'%" aria-label="'+esc(c.tap)+'"></button>'}
+function card4(c,pos,cls,inner){return '<div class="rq4-card'+(cls?' '+cls:'')+'" style="'+pos+'"><div class="rq4-cardp"></div>'+(inner==null?c.cardIn:inner)+'</div>'}
+function gradG(id,a,b,cc){return '<linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="'+a+'"/><stop offset=".45" stop-color="'+b+'"/><stop offset=".62" stop-color="'+cc+'"/><stop offset="1" stop-color="'+a+'"/></linearGradient>'}
+function goldDef(id){return gradG(id,'#f3e2a8','#c49a48','#86621f')}
+function jit(r,a){return (r()-.5)*2*a}
+/* scallops along a quadratic curve, bulging away from the point (cx,cy) */
+function lobes(P0,P1,P2,n,depth,cx,cy){var s='';for(var i=0;i<n;i++){var a=quad(P0,P1,P2,i/n),b=quad(P0,P1,P2,(i+1)/n),m=quad(P0,P1,P2,(i+.5)/n),dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
+  if((m[0]-cx)*nx+(m[1]-cy)*ny<0){nx=-nx;ny=-ny}s+='Q'+f1(m[0]+nx*depth*2)+' '+f1(m[1]+ny*depth*2)+' '+f1(b[0])+' '+f1(b[1])}return s}
+/* torn deckle edge from A to B (points every ~step units) */
+function deckle(r,A,B,amp,step){var L=Math.hypot(B[0]-A[0],B[1]-A[1]),n=Math.max(2,Math.round(L/(step||9))),s='',nx=-(B[1]-A[1])/L,ny=(B[0]-A[0])/L;
+  for(var i=1;i<=n;i++){var t=i/n,k=i===n?0:jit(r,amp)+Math.sin(t*19+A[0])*amp*.4;s+='L'+f1(A[0]+(B[0]-A[0])*t+nx*k)+' '+f1(A[1]+(B[1]-A[1])*t+ny*k)}return s}
+/* twisted cord (jute, leather): drop shadow + body + twist dashes + highlight */
+function cord(d,col,w,dash){return '<path d="'+d+'" fill="none" stroke="rgba(30,18,4,.28)" stroke-width="'+(w+4)+'" transform="translate(3 7)" stroke-linecap="round"/>'+
+  '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linecap="round"/>'+
+  (dash?'<path d="'+d+'" fill="none" stroke="rgba(50,30,8,.42)" stroke-width="'+w+'" stroke-dasharray="'+dash+'"/>':'')+
+  '<path d="'+d+'" fill="none" stroke="rgba(255,248,230,.38)" stroke-width="'+(w*.22)+'" transform="translate(-'+(w*.18)+' -'+(w*.18)+')"/>'}
+function star8(x,y,R,r){var p=[];for(var i=0;i<16;i++){var a=i*Math.PI/8-Math.PI/2,q=i%2?r:R;p.push(f1(x+Math.cos(a)*q)+','+f1(y+Math.sin(a)*q))}return '<polygon points="'+p.join(' ')+'"/>'}
+function star4(x,y,R){var r=R*.28;return '<path d="M'+x+' '+(y-R)+'Q'+(x+r)+' '+(y-r)+' '+(x+R)+' '+y+'Q'+(x+r)+' '+(y+r)+' '+x+' '+(y+R)+'Q'+(x-r)+' '+(y+r)+' '+(x-R)+' '+y+'Q'+(x-r)+' '+(y-r)+' '+x+' '+(y-R)+'Z"/>'}
+function bits(cls,n,seed,fn){var r=rng(seed),o='';for(var i=0;i<n;i++)o+='<i class="'+cls+'" style="'+fn(r,i)+'"></i>';return o}
+/* soft side-flap shading on an envelope pocket: two triangles meeting under the flap, bottom flap seam */
+function pocketFolds(W,H,mx,my,id){return '<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".07"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient></defs>'+
+  '<path d="M0 0L'+mx+' '+my+'L0 '+H+'Z" fill="url(#'+id+')"/><path d="M'+W+' 0L'+mx+' '+my+'L'+W+' '+H+'Z" fill="url(#'+id+')" transform="matrix(-1 0 0 1 '+W+' 0)"/>'+
+  '<path d="M0 '+H+'L'+mx+' '+my+'L'+W+' '+H+'" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.5"/><path d="M0 '+H+'L'+mx+' '+(my+4)+'L'+W+' '+H+'" fill="none" stroke="#000" stroke-opacity=".07" stroke-width="3"/>'}
+function sprigBox(kind,seed,st,vars){return '<div class="rq4-sprig" style="'+st+';'+(vars||'')+'">'+sprig(kind,seed)+'</div>'}
+var LEAFV='--leaf1:#9aa86d;--leaf2:#56653a;--stem:#6b6744;--fruit:#39402a';
+var JASV='--leaf1:#86a46c;--leaf2:#3d5c34;--stem:#58714b;--petal:#fffdf8;--petal-edge:#d9d0bf;--pistil:#e6c25a;--bud:#f3e1dc';
+
+var ENV_KINDS={
+/* Zitouna: baronial round flap, jute twine crossed under the seal, olive sprig tucked under the twine */
+zitouna:function(c){var W=1000,H=1250,vb='0 0 1000 1250',id='z'+(++uidN),
+  fl='M0 0H1000V50C1000 400 700 730 500 730C300 730 0 400 0 50Z';
+  return {ar:.8,ms:3300,crack:false,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V1250H0Z')+
+    card4(c,'left:6%;top:4%;width:88%;height:80%')+
+    pc('rq4-fr rq4-pocket',vb,'M0 70Q500 760 1000 70V1250H0Z',deco(vb,pocketFolds(W,H,500,700,id+'f')))+
+    cast(vb,fl,'z-index:4')+
+    flap4('',vb,fl,{open:'rotateX(180deg)',org:'50% 0',d:.75,zt:1.4,deco:deco(vb,'<defs>'+goldDef(id)+'</defs><path d="M38 24V58C38 380 312 690 500 690C688 690 962 380 962 58V24" fill="none" stroke="url(#'+id+')" stroke-width="3"/><path d="M52 24V60C52 370 318 676 500 676C682 676 948 370 948 60V24" fill="none" stroke="url(#'+id+')" stroke-width="1.2" opacity=".8"/>')})+
+    '<div class="rq4-tie rq4-tie-h">'+deco(vb,cord('M-20 712C300 704 700 722 1020 708','#b79c68',15,'4 6'))+sprigBox('olive',c.seed+5,'left:4%;top:41%;width:15%;height:32%;transform:rotate(-74deg)',LEAFV)+'</div>'+
+    '<div class="rq4-tie rq4-tie-v">'+deco(vb,cord('M506 -20C496 300 512 900 500 1270','#b79c68',15,'4 6')+cord('M500 712C430 760 420 840 452 900','#b79c68',11,'4 6')+cord('M500 712C560 770 590 830 566 886','#b79c68',11,'4 6'))+seal4(c,50,57,30)+'</div>'}},
+
+/* Yasmine: Moorish lobed-arch flap over an arch-cut pocket; jasmine sprig at the seal sheds petals as it opens */
+yasmine:function(c){var W=1000,H=1351,vb='0 0 1000 1351',id='y'+(++uidN),
+  fl='M0 0H1000V400'+lobes([1000,400],[820,800],[500,880],5,15,500,300)+lobes([500,880],[180,800],[0,400],5,15,500,300)+'Z',
+  line='M968 380'+lobes([968,380],[800,760],[500,836],5,12,500,300)+lobes([500,836],[200,760],[32,380],5,12,500,300);
+  return {ar:.74,ms:3000,crack:true,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V1351H0Z')+
+    card4(c,'left:7%;top:4%;width:86%;height:78%')+
+    pc('rq4-fr rq4-pocket',vb,'M0 360Q240 820 500 850Q760 820 1000 360V1351H0Z',deco(vb,pocketFolds(W,H,500,860,id+'f')+'<path d="M60 1290H940" stroke="var(--linerbg)" stroke-opacity=".35" stroke-width="2"/><path d="M80 1274H920" stroke="var(--linerbg)" stroke-opacity=".18" stroke-width="1"/>'))+
+    cast(vb,fl,'z-index:4')+
+    flap4('',vb,fl,{open:'rotateX(180deg)',org:'50% 0',d:.55,zt:1.15,deco:deco(vb,'<path d="'+line+'" fill="none" stroke="var(--linerbg)" stroke-width="3" opacity=".75"/><path d="M500 120l16 16-16 16-16-16z" fill="var(--linerbg)" opacity=".5"/>'),
+      over:sprigBox('jasmine',c.seed+9,'left:23%;top:43%;width:17%;height:27%;transform:rotate(-58deg)',JASV)+seal4(c,50,64.6,32)})+
+    '<div class="rq4-fx">'+bits('rq4-petal',9,c.seed,function(r,i){return 'left:'+f1(30+r()*30)+'%;top:'+f1(52+r()*12)+'%;--pd:'+f1(.05+i*.09)+'s;--px:'+f1(jit(r,22))+'cqw;--pr:'+f1(jit(r,260))+'deg'})+'</div>'}},
+
+/* Layl: midnight gatefold, two doors with gold-foil stars and a crescent, gold seal on the overlapping tab */
+layl:function(c){var W=1000,H=1389,vb='0 0 1000 1389',id='l'+(++uidN),r=rng(c.seed+21),stL='',stR='';
+  for(var i=0;i<16;i++){var x=60+r()*380,y=70+r()*1250,R=6+r()*12;if(Math.abs(y-694)<170&&x>330)continue;stL+=r()<.3?star8(x,y,R,R*.45):star4(x,y,R)}
+  for(i=0;i<16;i++){x=560+r()*380;y=70+r()*1250;R=6+r()*12;stR+=r()<.3?star8(x,y,R,R*.45):star4(x,y,R)}
+  var dl='M0 0H520V520C600 560 600 828 520 868V1389H0Z',dr='M480 0H1000V1389H480Z',gd='<defs>'+goldDef(id)+'</defs>',
+    frame=function(x0,x1){return '<rect x="'+(x0+34)+'" y="34" width="'+(x1-x0-68)+'" height="'+(H-68)+'" fill="none" stroke="url(#'+id+')" stroke-width="3"/><rect x="'+(x0+48)+'" y="48" width="'+(x1-x0-96)+'" height="'+(H-96)+'" fill="none" stroke="url(#'+id+')" stroke-width="1.2" opacity=".7"/>'};
+  return {ar:.72,ms:3100,crack:true,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V1389H0Z')+
+    '<div class="rq4-glow"></div>'+card4(c,'left:8%;top:6%;width:84%;height:88%')+
+    flap4('rq4-door',vb,dr,{y:1,open:'rotateY(150deg)',org:'100% 50%',d:.75,dur:1.5,zt:1.5,z:5,deco:deco(vb,gd+frame(480,1000)+'<g fill="url(#'+id+')">'+stR+'</g>')+'<i class="rq4-sheen"></i>'})+
+    flap4('rq4-door',vb,dl,{y:1,open:'rotateY(-150deg)',org:'0 50%',d:.55,dur:1.5,zt:1.3,z:6,deco:deco(vb,gd+frame(0,520)+'<path d="M520 520C600 560 600 828 520 868" fill="none" stroke="url(#'+id+')" stroke-width="3"/><g fill="url(#'+id+')">'+stL+'<path d="M180 250a80 80 0 1 0 70 118a64 64 0 1 1-70-118z"/></g>')+'<i class="rq4-sheen"></i>',over:seal4(c,52,50,30,'rq4-glowseal')})+
+    '<div class="rq4-fx">'+bits('rq4-spark',12,c.seed,function(r,i){return 'left:'+f1(8+r()*84)+'%;top:'+f1(5+r()*80)+'%;--pd:'+f1(1.6+r()*1.1)+'s;--ps:'+f1(.5+r()*.9)})+'</div>'}},
+
+/* Sidi Bou Said: whitewashed arch with a studded cobalt double door; bougainvillea over the frame; doors swing open onto light */
+sidi:function(c){var W=1000,H=1613,vb='0 0 1000 1613',id='s'+(++uidN),r=rng(c.seed+31),studs='',bg='';
+  var stud=function(x,y,s){return '<circle cx="'+f1(x)+'" cy="'+f1(y)+'" r="'+((s||7.5)*1.45)+'" fill="url(#'+id+'st)"/>'};
+  var leaf=function(x0,isL){var o='',x1=isL?500:870,xa=isL?130:500,cx=500,i,a;
+    for(var y=560;y<=1470;y+=46){o+=stud(xa+34,y)+stud(x1-34,y)}
+    for(var x=xa+34;x<=x1-34;x+=46)o+=stud(x,1490);
+    for(i=0;i<=12;i++){a=Math.PI+i/12*Math.PI*(isL?.5:.5)+(isL?0:Math.PI*.5);o+=stud(cx+Math.cos(a)*334,520+Math.sin(a)*334)}
+    var mx=(xa+x1)/2;for(i=0;i<16;i++){a=i/16*6.283;o+=stud(mx+Math.cos(a)*110,980+Math.sin(a)*110,6.5)}
+    for(i=0;i<8;i++){a=i/8*6.283;o+=stud(mx+Math.cos(a)*52,980+Math.sin(a)*52,6)}o+=stud(mx,980,9);
+    for(y=640;y<=820;y+=45)o+=stud(mx,y,6);for(y=1140;y<=1400;y+=45)o+=stud(mx,y,6);
+    return o};
+  for(var k=0;k<34;k++){var bx=640+r()*380,by=-20+r()*380;if(k<10){bx=-20+r()*200;by=-10+r()*200}
+    var s=20+r()*16,rot=r()*360;bg+='<g transform="translate('+f1(bx)+' '+f1(by)+') rotate('+f1(rot)+')">'+(r()<.35?'<ellipse rx="'+f1(s*.5)+'" ry="'+f1(s*1.05)+'" fill="#4f7a3c" transform="translate('+f1(s)+' 0) rotate(60)"/>':'')+
+      [0,120,240].map(function(a){return '<path d="M0 0C'+f1(-s*.6)+' '+f1(-s*.4)+' '+f1(-s*.5)+' '+f1(-s*1.2)+' 0 '+f1(-s*1.3)+'C'+f1(s*.5)+' '+f1(-s*1.2)+' '+f1(s*.6)+' '+f1(-s*.4)+' 0 0Z" fill="'+(r()<.5?'#d23a86':'#c22a75')+'" transform="rotate('+a+')"/><path d="M0 -2V'+f1(-s)+'" stroke="#9d1d5c" stroke-width="1.2" opacity=".6" transform="rotate('+a+')"/>'}).join('')+'<circle r="3.2" fill="#f7efc4"/></g>'}
+  var dl='M130 1530V520A370 370 0 0 1 500 150V1530Z',dr='M500 150A370 370 0 0 1 870 520V1530H500Z',
+    defs='<defs><radialGradient id="'+id+'st" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#8a8f99"/><stop offset=".35" stop-color="#2a2d33"/><stop offset="1" stop-color="#0b0c0f"/></radialGradient></defs>',
+    bevel=function(isL){var xa=isL?130:500,x1=isL?500:870;return '<path d="M'+(xa+70)+' 1460V'+(isL?'560':'560')+'" stroke="#fff" stroke-opacity=".12" stroke-width="3"/><rect x="'+(xa+62)+'" y="1130" width="'+(x1-xa-124)+'" height="300" fill="none" stroke="#000" stroke-opacity=".18" stroke-width="4"/><rect x="'+(xa+66)+'" y="1134" width="'+(x1-xa-124)+'" height="300" fill="none" stroke="#fff" stroke-opacity=".1" stroke-width="2"/>'+
+      '<path d="M'+(isL?498:502)+' 160V1528" stroke="#000" stroke-opacity=".35" stroke-width="5"/>'};
+  return {ar:.62,ms:3000,crack:true,html:
+    '<div class="rq4-glow rq4-glow-sidi"></div>'+card4(c,'left:17%;top:27%;width:66%;height:62%')+
+    pc('rq4-fr rq4-frame',vb,'M0 0H1000V1613H0ZM130 1530V520A370 370 0 0 1 870 520V1530Z',deco(vb,
+      '<path d="M96 1530V520A404 404 0 0 1 904 520V1530" fill="none" stroke="var(--linerbg)" stroke-width="16"/><path d="M118 1530V520A382 382 0 0 1 882 520V1530" fill="none" stroke="#000" stroke-opacity=".12" stroke-width="10"/>'+
+      '<rect x="60" y="1530" width="880" height="83" fill="#000" fill-opacity=".07"/><path d="M60 1532H940" stroke="#fff" stroke-width="4" stroke-opacity=".8"/><path d="M60 1560H940" stroke="#000" stroke-opacity=".08" stroke-width="2"/>'+
+      '<g opacity=".06" fill="#000"><ellipse cx="200" cy="300" rx="120" ry="60"/><ellipse cx="880" cy="900" rx="90" ry="140"/></g>'+bg))+
+    flap4('rq4-door',vb,dr,{y:1,open:'rotateY(-78deg)',org:'87% 50%',d:.55,dur:1.6,zt:1.25,z:5,front:'rq4-fr rq4-cobalt',back:'rq4-fr rq4-cobalt rq4-dim',deco:deco(vb,defs+leaf(500,false)+bevel(false))})+
+    flap4('rq4-door',vb,dl,{y:1,open:'rotateY(78deg)',org:'13% 50%',d:.45,dur:1.6,zt:1.15,z:6,front:'rq4-fr rq4-cobalt',back:'rq4-fr rq4-cobalt rq4-dim',deco:deco(vb,defs+leaf(130,true)+bevel(true)),over:seal4(c,50,60.8,25)})+
+    '<div class="rq4-fx">'+bits('rq4-bract',6,c.seed,function(r,i){return 'left:'+f1(66+r()*28)+'%;top:'+f1(3+r()*18)+'%;--pd:'+f1(.6+i*.18)+'s;--px:'+f1(jit(r,10))+'cqw;--pr:'+f1(jit(r,300))+'deg'})+'</div>'}},
+
+/* Kairouan: square pinwheel envelope, four kilim-bordered flaps meeting under the seal, unfolded one by one */
+kairouan:function(c){var vb='0 0 1000 1000',id='k'+(++uidN),ink=c.eo.linerBg,ink2=c.eo.linerInk;
+  var top='M0 0H1000L545 470Q500 515 455 470Z',zig='',zig2='';
+  for(var i=0;i<=20;i++){var t=i/20,ax=30+t*440,ay=30+t*440;zig+=(i?'L':'M')+f1(ax+(i%2?40:14))+' '+f1(ay-(i%2?14:40));}
+  for(i=0;i<=20;i++){t=i/20;ax=970-t*440;ay=30+t*440;zig2+=(i?'L':'M')+f1(ax-(i%2?40:14))+' '+f1(ay-(i%2?14:40));}
+  var band='<g clip-path="url(#'+id+'c)"><path d="M60 0L560 500M940 0L440 500" stroke="'+ink+'" stroke-width="10" fill="none" transform="translate(0 -12)"/><path d="M0 -40L520 480M1000 -40L480 480" stroke="'+ink+'" stroke-width="3" fill="none" transform="translate(0 -84)"/>'+
+    '<path d="'+zig+'" fill="none" stroke="'+ink2+'" stroke-width="6" stroke-linejoin="miter" transform="translate(0 -10)"/><path d="'+zig2+'" fill="none" stroke="'+ink2+'" stroke-width="6" transform="translate(0 -10)"/>'+
+    [200,330,640,770].map(function(x){return '<path d="M'+x+' 70l22 22-22 22-22-22z" fill="'+ink+'" opacity=".85"/>'}).join('')+'</g>';
+  var flp=function(k,name,d,open,org,z,zt,extra){var tf='rotate('+(k*90)+' 500 500)',dd=top.replace(/[\d.]+ [\d.]+/g,function(p){var q=p.split(' ').map(Number),a=k*Math.PI/2,x=q[0]-500,y=q[1]-500;return f1(500+x*Math.cos(a)-y*Math.sin(a))+' '+f1(500+x*Math.sin(a)+y*Math.cos(a))});
+    return cast(vb,dd,'z-index:'+(z-1)+';--cd:'+d+'s')+flap4(name,vb,dd,{y:k%2,open:open,org:org,d:d,dur:.95,zt:zt,z:z,deco:deco(vb,'<defs><clipPath id="'+id+'c"><path d="'+top+'"/></clipPath></defs><g transform="'+tf+'">'+band+'</g>'),over:extra||''})};
+  /* the top path uses H1000; expand it so it can be rotated point by point */
+  top='M0 0L1000 0L545 470Q500 515 455 470Z';
+  return {ar:1,ew:'70cqw',ms:3300,crack:true,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V1000H0Z')+
+    card4(c,'left:7%;top:7%;width:86%;height:86%')+
+    flp(3,'',1.35,'rotateY(-178deg)','0 50%',3,1.85)+
+    flp(2,'',1.05,'rotateX(-178deg)','50% 100%',5,1.55)+
+    flp(1,'',.75,'rotateY(178deg)','100% 50%',7,1.25)+
+    flp(0,'',.45,'rotateX(178deg)','50% 0',9,.95,seal4(c,50,49,30))}},
+
+/* Old Money: landscape wallet envelope, deep straight flap with a deckled edge, blind-embossed monogram, tissue over the card */
+oldmoney:function(c){var W=1000,H=735,vb='0 0 1000 735',id='o'+(++uidN),r=rng(c.seed+41);
+  var fl='M0 0H1000V300Q1000 342 958 342'+deckle(r,[958,342],[42,342],3.2,7)+'Q0 342 0 300Z';
+  return {ar:1.36,ms:3400,crack:false,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V735H0Z')+
+    card4(c,'left:5%;top:5%;width:90%;height:88%','',c.cardIn+'<div class="rq4-tissue"></div>')+
+    pc('rq4-fr rq4-pocket',vb,'M0 26L500 190L1000 26V735H0Z',deco(vb,pocketFolds(W,H,500,420,id+'f')+
+      '<text x="900" y="680" text-anchor="end" font-family="Cormorant Garamond,Georgia,serif" font-style="italic" font-size="44" fill="#fff" fill-opacity=".7" transform="translate(-1.5 -1.5)">'+esc(c.mono)+'</text><text x="900" y="680" text-anchor="end" font-family="Cormorant Garamond,Georgia,serif" font-style="italic" font-size="44" fill="#000" fill-opacity=".14">'+esc(c.mono)+'</text>'))+
+    cast(vb,fl,'z-index:4')+
+    flap4('',vb,fl,{open:'rotateX(180deg)',org:'50% 0',d:.45,zt:1.05,deco:deco(vb,'<path d="M40 300H960" stroke="#000" stroke-opacity=".05" stroke-width="2"/><path d="M0 4H1000" stroke="#fff" stroke-opacity=".5" stroke-width="5"/>'),over:seal4(c,50,46.5,21)})}},
+
+/* Sauge: two vellum panels over the card, a sage satin ribbon round the bundle with the seal and an olive sprig */
+sauge:function(c){var vb='0 0 1000 1389',id='g'+(++uidN);
+  var vl='M0 0H560V1389H0Z',vr='M440 0H1000V1389H440Z';
+  return {ar:.72,ms:3100,crack:false,html:
+    card4(c,'inset:0','rq4-card-base')+
+    flap4('rq4-vel',vb,vr,{y:1,noz:1,open:'rotateY(160deg)',org:'100% 50%',d:.95,dur:1.3,z:5,front:'rq4-vellum',back:'rq4-vellum',deco:deco(vb,'<path d="M446 0V1389" stroke="#fff" stroke-opacity=".9" stroke-width="3"/><path d="M990 0V1389" stroke="#000" stroke-opacity=".06" stroke-width="10"/>')})+
+    flap4('rq4-vel',vb,vl,{y:1,noz:1,open:'rotateY(-160deg)',org:'0 50%',d:.8,dur:1.3,z:6,front:'rq4-vellum',back:'rq4-vellum',deco:deco(vb,'<path d="M554 0V1389" stroke="#fff" stroke-opacity=".9" stroke-width="3"/><path d="M548 0V1389" stroke="#000" stroke-opacity=".08" stroke-width="4"/><path d="M10 0V1389" stroke="#000" stroke-opacity=".06" stroke-width="10"/>')})+
+    '<div class="rq4-tie rq4-ribbon">'+deco(vb,'<defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset=".22" stop-color="#fff" stop-opacity=".38"/><stop offset=".4" stop-color="#fff" stop-opacity=".05"/><stop offset=".7" stop-color="#000" stop-opacity=".08"/><stop offset=".86" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>'+
+      '<rect x="-10" y="660" width="1020" height="88" fill="#000" fill-opacity=".18" transform="translate(4 10)"/><rect x="-10" y="650" width="1020" height="88" fill="var(--linerbg)"/><rect x="-10" y="650" width="1020" height="88" fill="url(#'+id+')"/>')+
+      sprigBox('olive',c.seed+3,'left:6%;top:30%;width:14%;height:30%;transform:rotate(-78deg)',LEAFV)+seal4(c,50,49.9,30)+'</div>'}},
+
+/* Bordeaux: scalloped flap with a rose-gold edge that curls back like real paper (two hinged segments) */
+bordeaux:function(c){var W=1000,H=1316,vb='0 0 1000 1316',id='b'+(++uidN),cut=330;
+  var fl='M0 0H1000V40'+lobes([1000,40],[750,380],[500,720],7,13,500,200)+lobes([500,720],[250,380],[0,40],7,13,500,200)+'Z',
+    edge='M972 46'+lobes([972,46],[738,368],[500,688],7,11,500,200)+lobes([500,688],[262,368],[28,46],7,11,500,200),
+    cA='M-10 -10H1010V'+(cut+2)+'H-10Z',cB='M-10 '+cut+'H1010V1316H-10Z',
+    gd='<defs>'+gradG(id,'#f6d2c2','#c98b74','#8d5444')+'</defs>',dec=deco(vb,gd+'<path d="'+fl.replace(/^M0 0H1000V40/,'M1000 40')+'" fill="none" stroke="url(#'+id+')" stroke-width="7"/><path d="'+edge+'" fill="none" stroke="url(#'+id+')" stroke-width="2" opacity=".85"/>'),
+    segB='<div class="rq4-segB" style="transform-origin:50% '+f1(cut/H*100)+'%"><div class="rq4-face">'+pc('rq4-fr',vb,fl,'<i class="rq4-sh"></i>'+dec,'',cB)+seal4(c,50,54.4,30)+'</div><div class="rq4-face rq4-bkx"><div class="rq4-flipx">'+pc('rq4-ln',vb,fl,'','',cB)+'</div></div></div>';
+  return {ar:.76,ms:3000,crack:true,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V1316H0Z')+
+    card4(c,'left:7%;top:4%;width:86%;height:80%')+
+    pc('rq4-fr rq4-pocket',vb,'M0 20L500 600L1000 20V1316H0Z',deco(vb,pocketFolds(W,H,500,780,id+'f')))+
+    cast(vb,fl,'z-index:4')+
+    flap4('rq4-segA',vb,fl,{open:'rotateX(180deg)',org:'50% 0',d:.5,dur:1.5,zt:1.25,clip:cA,deco:dec,child:segB})}},
+
+/* Sahara: handmade deckled letter folded in three, tied with a leather cord; it unfolds into the invitation itself */
+sahara:function(c){var vb='0 0 1000 625',r=rng(c.seed+51),id='h'+(++uidN);
+  var side=function(y0,y1,topD,botD){var d='M0 '+y0+(topD?deckle(r,[0,y0],[1000,y0],5,8):'L1000 '+y0)+deckle(r,[1000,y0],[1000,y1],5,8)+(botD?deckle(r,[1000,y1],[0,y1],5,8):'L0 '+y1)+deckle(r,[0,y1],[0,y0],5,8)+'Z';return d};
+  var dm=side(0,625,0,0),dt=side(0,625,1,0),db=side(0,625,0,1),flipT='matrix(1 0 0 -1 0 625)';
+  var brick='<g opacity=".55" stroke="var(--linerbg)" fill="none" stroke-width="3"><path d="M0 250H1000M0 375H1000"/>'+[0,1,2,3,4,5,6,7,8,9].map(function(i){var x=i*100+50;return '<path d="M'+x+' 270l22 22-22 22-22-22zM'+(x+50)+' 318V375M'+(x)+' 250V270"/>'}).join('')+'</g>';
+  var out=deco(vb,brick+'<text x="500" y="160" text-anchor="middle" font-family="Pinyon Script,cursive" font-size="64" fill="var(--linerbg)" opacity=".75">'+esc(c.mono)+'</text>');
+  var inner=function(html){return '<div class="rq4-lt">'+html+'</div>'};
+  var face=function(cls,d,content,tf){return pc('rq4-fr rq4-sheet',vb,d,content,'',null,tf)};
+  return {ar:1.6,ew:'74cqw',ms:3600,crack:true,html:
+    '<div class="rq4-letter">'+
+     '<div class="rq4-panel rq4-mid">'+face('',dm,'<i class="rq4-sh"></i>'+inner('<span class="rq-names rq-foil">'+c.namesHtml+'</span>'))+'</div>'+
+     '<div class="rq4-panel rq4-bot rq4-fold" style="--d:1.75s">'+
+      '<div class="rq4-face">'+face('',db,'<i class="rq4-sh"></i>'+inner('<span class="rq-caps">'+esc(c.dateLong)+'</span>'+(c.venue?'<span class="rq4-venue">'+esc(c.venue)+'</span>':'')))+'</div>'+
+      '<div class="rq4-face rq4-out">'+face('',db,deco(vb,brick),flipT)+'</div></div>'+
+     '<div class="rq4-panel rq4-tp rq4-fold" style="--d:.9s">'+
+      '<div class="rq4-face">'+face('',dt,'<i class="rq4-sh"></i>'+inner('<span class="rq-caps">'+esc(c.kick)+'</span>'))+'</div>'+
+      '<div class="rq4-face rq4-out">'+face('',dt,out,flipT)+'</div></div>'+
+    '</div>'+
+    '<div class="rq4-tie rq4-cordv">'+deco(vb,cord('M455 -30C462 200 448 420 458 660','#6b4426',11,'5 4')+cord('M545 -30C538 200 552 420 542 660','#6b4426',11,'5 4'))+seal4(c,50,50,26)+'</div>'+
+    '<div class="rq4-fx">'+bits('rq4-sand',14,c.seed,function(r,i){return 'left:'+f1(10+r()*80)+'%;top:'+f1(10+r()*80)+'%;--pd:'+f1(.2+r()*1.8)+'s;--px:'+f1(10+r()*25)+'cqw;--py:'+f1(jit(r,8))+'cqh'})+'</div>'}}
+};
+function crackSeal(sb){var cv=sb.querySelector('canvas');if(!cv)return;
+  var half=function(s){var k=document.createElement('canvas');k.width=cv.width;k.height=cv.height;k.getContext('2d').drawImage(cv,0,0);k.className='rq4-half rq4-half-'+s;return k};
+  sb.appendChild(half('l'));sb.appendChild(half('r'));cv.style.visibility='hidden'}
 
 function pad(n){return String(n).padStart(2,'0')}
 function loc(l){return l==='ar'?'ar-TN':l==='fr'?'fr-TN':'en-GB'}
@@ -310,16 +509,21 @@ function render(root,inv,opts){
     var nameH='<h1 class="rq-names rq-foil">'+pairHtml(n,L,true)+'</h1>';
     var html=badge+langBar+'<div class="rq-scroll">';
     if(!st.open){
-      var eo=envOpts(inv,th),cv=inv.canva||null;
-      html+='<section class="rq-cover rq3" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,eo.linerInk))+';--linerbg:'+esc(eo.linerBg)+'">'+
+      var eo=envOpts(inv,th),cv=inv.canva||null,K=ENV_KINDS[th];
+      var cardIn=(cv&&cv.image?'<img class="rq3-cardart" alt="" src="'+esc(cv.image)+'" onerror="this.remove()">':'')+'<div class="rq3-cardtxt"'+(cv&&cv.image?' hidden':'')+'><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names rq-foil">'+pairHtml(n,L)+'</span><span class="rq-caps">'+esc(fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}))+'</span></div>';
+      var E=K?K({tap:t('tap'),seed:seed,eo:eo,cardIn:cardIn,mono:(inv.env&&inv.env.mono)||initials(inv).replace('&',' & '),namesHtml:pairHtml(n,L),kick:t('married'),
+        dateLong:fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}),venue:[inv.venue,inv.city].filter(Boolean).join(', ')}):null;
+      st.env=E||{ms:2500,crack:true};
+      html+='<section class="rq-cover rq3'+(E?' rq4 rq4-'+th:'')+'" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,eo.linerInk))+';--linerbg:'+esc(eo.linerBg)+(E?';--grain:'+esc(grainUrl())+';--ar:'+E.ar+(E.ew?';--ew:'+E.ew:''):'')+'">'+
        '<div class="rq3-table"></div>'+
        '<div class="rq3-top">'+(guest&&guest.name?'<p class="rq3-dear">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-caps rq3-kick">'+esc(t('married'))+'</p><h1 class="rq-names rq-foil">'+pairHtml(n,L)+'</h1><p class="rq-date-s">'+esc(dots(inv.date))+'</p></div>'+
+       (E?'<div class="rq3-env">'+E.html+'</div>':
        '<div class="rq3-env"><div class="rq3-shadow"></div><div class="rq3-int"></div>'+
-        '<div class="rq3-card"><div class="rq3-cardtex"></div>'+(cv&&cv.image?'<img class="rq3-cardart" alt="" src="'+esc(cv.image)+'" onerror="this.remove()">':'')+'<div class="rq3-cardtxt"'+(cv&&cv.image?' hidden':'')+'><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names rq-foil">'+pairHtml(n,L)+'</span><span class="rq-caps">'+esc(fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}))+'</span></div></div>'+
+        '<div class="rq3-card"><div class="rq3-cardtex"></div>'+cardIn+'</div>'+
         '<div class="rq3-pocket rq3-tint" style="--m:var(--a-pocket)"></div><div class="rq3-fshadow"></div>'+
         '<div class="rq3-flap"><div class="rq3-face rq3-front"><div class="rq3-tint" style="--m:var(--a-flap)"></div>'+flapGild()+'<button type="button" class="rq3-seal" aria-label="'+esc(t('tap'))+'"></button></div>'+
         '<div class="rq3-face rq3-back"><div class="rq3-backin"></div></div></div>'+
-       '</div><p class="rq-caps rq3-hint">'+esc(t('tap'))+'</p></section>';
+       '</div>')+'<p class="rq-caps rq3-hint">'+esc(t('tap'))+'</p></section>';
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
@@ -365,7 +569,8 @@ function render(root,inv,opts){
         if(busy)return;busy=true;
         var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
         sc.classList.add('opening');if(window.rqTrack)window.rqTrack('invitation_opened',{theme:th,layout:inv.layout||'classic',preview:!!opts.preview,personal:!!guest,lang:st.lang});
-        setTimeout(function(){var cov=sc,fl=sc.querySelector('.rq3-flap');if(fl){fl.style.animation='none';fl.style.zIndex='0';fl.style.transition='none'}var cd=sc.querySelector('.rq3-card');if(cd){cd.style.transition='none';cd.style.transform='translateY(-54%)'}st.open=true;draw();var s=root.querySelector('.rq-scroll');if(s)s.scrollTop=0;cov.classList.add('handoff');root.appendChild(cov);requestAnimationFrame(function(){requestAnimationFrame(function(){cov.classList.add('fadeout')})});setTimeout(function(){if(cov.parentNode)cov.parentNode.removeChild(cov)},900)},reduce?200:2500);
+        if(st.env.crack)crackSeal(sb);var ms=st.env.ms||2500;
+        setTimeout(function(){var cov=sc;cov.classList.add('done');st.open=true;draw();var s=root.querySelector('.rq-scroll');if(s)s.scrollTop=0;cov.classList.add('handoff');root.appendChild(cov);requestAnimationFrame(function(){requestAnimationFrame(function(){cov.classList.add('fadeout')})});setTimeout(function(){if(cov.parentNode)cov.parentNode.removeChild(cov)},900)},reduce?200:ms);
       };
       sb.onclick=function(e){e.stopPropagation();go()};sc.querySelector('.rq3-env').onclick=go;
     }
