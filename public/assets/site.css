@@ -468,3 +468,97 @@ html[lang=ar] .landing .proof-notes cite{font:700 14px/1.5 var(--ar);letter-spac
  .landing .collection-card img{transition:none}
  .landing .film-frame video{display:none}
 }
+
+/* ---- Oct 2026 landing pass: live envelope gallery, numbers without a table, step timeline, icon cards, FAQ cards ---- */
+.env-gallery{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px;margin-top:6px}
+@media (max-width:1100px){.env-gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:860px){.env-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.env-tile{display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 22px 46px -38px rgb(19 40 41/.6);transition:transform .3s ease,box-shadow .3s ease}
+.env-tile:hover{transform:translateY(-3px);box-shadow:0 30px 60px -40px rgb(19 40 41/.7)}
+.env-stage{position:relative;aspect-ratio:390/780;overflow:hidden;background:var(--tile-bg)}
+.env-vp{position:absolute;left:0;top:0;width:390px;height:780px;transform-origin:0 0}
+html[dir=rtl] .env-vp{left:auto;right:0;transform-origin:100% 0}
+.env-vp>div{width:100%;height:100%}
+.env-vp .rq-lang,.env-vp .rq-badge{display:none}
+.env-vp .rq-scroll{overflow:hidden}
+.env-again{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:70;border:0;cursor:pointer;padding:9px 14px;border-radius:999px;background:color-mix(in srgb,var(--surface) 92%,transparent);color:var(--fg);font:600 12px/1 var(--ui);box-shadow:0 6px 18px -8px rgb(0 0 0/.45);white-space:nowrap}
+html[lang=ar] .env-again{font:700 14px/1.2 var(--ar)}
+.env-meta{display:flex;flex-direction:column;gap:4px;padding:14px 16px 16px;flex:1}
+.env-meta h3{margin:0;font:600 22px/1.1 var(--display);color:var(--fg)}
+.env-meta p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45;flex:1}
+html[lang=ar] .env-meta p{font-size:16px;line-height:1.7}
+.env-phone{all:unset;cursor:pointer;margin-top:10px;align-self:flex-start;color:var(--accent);font:600 13px/1.2 var(--ui);border-bottom:1px solid currentColor;padding-bottom:2px}
+html[lang=ar] .env-phone{font:700 15px/1.4 var(--ar)}
+.env-phone:focus-visible,.env-again:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (max-width:620px){
+ .env-gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;margin-inline:-16px;padding:4px 16px 18px;scroll-padding-inline:16px;scrollbar-width:none}
+ .env-gallery::-webkit-scrollbar{display:none}
+ .env-tile{flex:0 0 74%;scroll-snap-align:center}
+}
+
+/* the numbers: one quiet line of foil figures, no grid lines */
+.landing .stats{display:flex;justify-content:center;align-items:flex-start;margin:-6px auto 96px;max-width:1000px;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
+.landing .stats article,.landing .stats article:nth-child(n){position:relative;flex:1;min-height:0;padding:6px 14px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:10px;text-align:center}
+.landing .stats article+article::before{content:"";position:absolute;inset-inline-start:0;top:34%;width:7px;height:7px;border:1px solid var(--gold);transform:translate(-50%,-50%) rotate(45deg)}
+html[dir=rtl] .landing .stats article+article::before{transform:translate(50%,-50%) rotate(45deg)}
+.landing .stats strong{font:500 clamp(46px,5.4vw,70px)/.95 var(--display);font-variant-numeric:lining-nums tabular-nums;background:linear-gradient(100deg,#7a5c24 0%,#b08d48 30%,#d9bd7c 45%,#94723a 62%,#7a5c24 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.landing .stats strong small{font:600 16px/1 var(--ui);-webkit-text-fill-color:var(--gold)}
+.landing .stats article>span{max-width:16ch;color:var(--muted);font:600 11.5px/1.45 var(--ui);letter-spacing:.14em;text-transform:uppercase}
+html[lang=ar] .landing .stats article>span{font:700 16px/1.6 var(--ar);letter-spacing:0}
+@media (max-width:620px){
+ .landing .stats{display:grid;grid-template-columns:1fr 1fr;row-gap:30px;margin:6px 0 72px}
+ .landing .stats article+article::before{display:none}
+ .landing .stats article:nth-child(n)::after{content:"";order:-1;width:22px;height:1px;background:var(--gold);opacity:.7}
+}
+
+/* how it works: four stations on one gold thread (vertical on phones) */
+.landing .steps,.landing .steps:is(*){position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;margin-top:8px;border:0}
+.landing .steps::before{content:"";position:absolute;top:19px;inset-inline:12.5%;height:1px;background:linear-gradient(90deg,transparent,var(--gold) 12%,var(--gold) 88%,transparent);opacity:.7}
+.landing .steps li,.landing .steps li:nth-child(n){position:relative;min-height:0;padding:0;border:0;border-radius:0;background:none;align-items:center;text-align:center;gap:8px}
+.landing .steps li::before{position:relative;z-index:1;display:grid;place-items:center;width:40px;height:40px;margin:0 0 14px;border:1px solid var(--gold);border-radius:50%;background:var(--bg);box-shadow:0 0 0 6px var(--bg);font:600 13px/1 var(--ui);letter-spacing:.06em;color:var(--gold)}
+.landing .steps li:first-child::before{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.landing .steps li::after{display:none}
+.landing .steps b{font:600 22px/1.2 var(--display)}
+.landing .steps span{max-width:28ch;color:var(--muted);font-size:15px;line-height:1.65}
+@media (max-width:860px){
+ .landing .steps,.landing .steps:is(*){grid-template-columns:1fr;gap:26px}
+ .landing .steps::before{top:20px;bottom:20px;inset-inline:19px auto;width:1px;height:auto;background:linear-gradient(180deg,var(--gold),var(--gold) 85%,transparent)}
+ .landing .steps li,.landing .steps li:nth-child(n){align-items:flex-start;text-align:start;padding-inline-start:62px;min-height:40px;gap:4px}
+ .landing .steps li::before{position:absolute;inset-inline-start:0;top:0;margin:0}
+ .landing .steps span{max-width:none}
+}
+
+/* features: separate cards with a line icon, no shared table border */
+.landing .features{gap:18px;background:none;border:0;border-radius:0;box-shadow:none;overflow:visible}
+.landing .feat,.landing .feat:nth-child(n){min-height:0;padding:28px 26px;background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:0 22px 46px -40px rgb(19 40 41/.55);transition:transform .3s ease,border-color .3s ease}
+.landing .feat:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--gold) 45%,var(--line))}
+.landing .feat::after{display:none}
+.feat-ic{display:grid;place-items:center;width:48px;height:48px;margin-bottom:20px;border-radius:15px;background:var(--soft);color:var(--accent)}
+.feat-ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:620px){
+ .landing .features{gap:12px}
+ .landing .feat,.landing .feat:nth-child(n){display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:16px;align-items:start;padding:20px 18px}
+ .feat-ic{grid-row:1/span 2;margin:0}
+ .landing .feat h3{font-size:21px;margin-bottom:4px}
+}
+
+/* FAQ: soft cards, a round chevron, smooth opening where the browser allows it */
+:root{interpolate-size:allow-keywords}
+.landing .faq .section-head{grid-row:1/span 12}
+.landing .faq details{grid-column:2;margin:0 0 12px;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--surface);transition:border-color .25s ease,box-shadow .25s ease}
+.landing .faq details:hover{border-color:color-mix(in srgb,var(--gold) 40%,var(--line))}
+.landing .faq details[open]{border-color:color-mix(in srgb,var(--gold) 55%,var(--line));box-shadow:0 24px 50px -40px rgb(19 40 41/.6)}
+.landing .faq summary{align-items:center;padding:18px 20px;font-size:17.5px;line-height:1.4}
+.landing .faq summary::-webkit-details-marker{display:none}
+.landing .faq summary::after{content:"";flex:none;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6.5 8 10l3.5-3.5' fill='none' stroke='%23a8864a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat;transition:transform .3s ease,background-color .3s ease}
+.landing .faq details[open] summary::after{content:"";transform:rotate(180deg);background-color:var(--soft)}
+.landing .faq details p{margin:0;padding:0 20px 20px;max-width:64ch;color:var(--muted);line-height:1.75}
+.landing .faq details::details-content{block-size:0;overflow:clip;transition:block-size .35s ease,content-visibility .35s allow-discrete}
+.landing .faq details[open]::details-content{block-size:auto}
+.faq-more{grid-column:2;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px 20px;margin-top:6px;padding:20px 22px;border-radius:18px;background:var(--soft)}
+.faq-more p{margin:0;max-width:44ch;font-weight:600;line-height:1.5}
+html[lang=ar] .faq-more p{font:700 17px/1.7 var(--ar)}
+@media (max-width:860px){.faq-more{grid-column:1}}
+@media (max-width:620px){.landing .faq summary{padding:16px;font-size:16.5px}.landing .faq details p{padding:0 16px 18px}.faq-more .btn{width:100%}}
+@media (prefers-reduced-motion:reduce){.env-tile,.landing .feat,.landing .faq details::details-content,.landing .faq summary::after{transition:none}}
+@media (max-width:900px){.landing .faq .section-head{grid-row:auto}.landing .faq details,.faq-more{grid-column:1}}

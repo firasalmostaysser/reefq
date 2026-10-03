@@ -97,10 +97,33 @@ function themes(){$('#themes').innerHTML=THEMES.map(function(t){return '<button 
   /* Keep the chosen chip in view inside the scrolling row, without moving the page. */
   var row=$('#themes'),on=row.querySelector('[aria-pressed=true]');
   if(on&&row.scrollWidth>row.clientWidth){var r=row.getBoundingClientRect(),c=on.getBoundingClientRect();if(c.left<r.left||c.right>r.right)row.scrollLeft+=c.left+c.width/2-(r.left+r.width/2)}}
-/* The collection shelf mirrors the live themes without loading ten more invitation engines. */
-function lookbook(){var box=$('#theme-lookbook');if(!box)return;
-  box.innerHTML=THEMES.map(function(t){return '<button type="button" data-look="'+t[0]+'" aria-pressed="'+(cur===t[0])+'" style="--look-bg:'+t[3]+';--look-fg:'+t[2]+'"><span class="look-paper" aria-hidden="true"></span><span class="look-name">'+t[1]+'</span></button>'}).join('');
-  $$('[data-look]').forEach(function(b){b.onclick=function(){cur=b.dataset.look;tour.pick();themes();demo();document.querySelector('.lhero').scrollIntoView({behavior:'smooth'});if(window.rqTrack)window.rqTrack('theme_previewed',{theme:cur,source:'collection'})}})}
+/* Envelope gallery: every theme's real envelope, closed, in a small phone-sized frame. Frames render only near the screen,
+   one at a time, so ten engines never load together; touching the seal plays that theme's own opening. */
+var GAL={
+  fr:{open:'Ouvrir',again:'Refermer',phone:'Voir dans le téléphone',d:{reefq:'Rabat pointé, le sceau se brise',zitouna:"Ficelle de jute et brin d'olivier",yasmine:'Rabat en arc, pétales de jasmin',layl:'Deux volets de nuit étoilée',sidi:"Une porte bleue qui s'ouvre",kairouan:'Quatre rabats kilim, un par un',oldmoney:'Rabat déchiré main, papier de soie',sauge:'Calque et ruban de satin',bordeaux:'Rabat festonné qui se courbe',sahara:'Lettre pliée et cordon de cuir'}},
+  ar:{open:'افتحوا',again:'أغلقوا من جديد',phone:'شاهدوه في الهاتف',d:{reefq:'غطاء مدبّب، والختم ينكسر',zitouna:'خيط من الكتّان وغصن زيتون',yasmine:'غطاء على شكل قوس، وبتلات ياسمين',layl:'جناحان كليلةٍ مرصّعة بالنجوم',sidi:'بابٌ أزرق يُفتح',kairouan:'أربعة أجنحة بنقش المرقوم، واحدًا تلو الآخر',oldmoney:'غطاء بحافّة ممزّقة يدويًا وورق حرير',sauge:'ورقٌ شفّاف وشريط من الساتان',bordeaux:'غطاء مزخرف الحوافّ ينثني',sahara:'رسالةٌ مطويّة وحبلٌ من الجلد'}},
+  en:{open:'Open',again:'Close again',phone:'See it in the phone',d:{reefq:'Pointed flap, the seal breaks',zitouna:'Jute twine and an olive sprig',yasmine:'Arched flap, jasmine petals',layl:'Two starry-night doors',sidi:'A blue door swings open',kairouan:'Four kilim flaps, one by one',oldmoney:'Hand-torn flap, tissue paper',sauge:'Vellum and a satin ribbon',bordeaux:'A scalloped flap that curls',sahara:'A folded letter, leather cord'}}};
+var galH={},galQ=[],galBusy=false;
+function gal(k){return (GAL[lang]||GAL.fr)[k]}
+function gallery(){var box=$('#env-gallery');if(!box)return;
+  Object.keys(galH).forEach(function(k){galH[k].destroy()});galH={};
+  box.innerHTML=THEMES.map(function(t){return '<article class="env-tile" role="listitem" data-env="'+t[0]+'" style="--tile-bg:'+t[3]+';--tile-fg:'+t[2]+'"><div class="env-stage"><div class="env-vp"></div><button type="button" class="env-again" hidden>'+esc(gal('again'))+'</button></div>'+
+    '<div class="env-meta"><h3>'+esc(t[1])+'</h3><p>'+esc(gal('d')[t[0]]||'')+'</p><button type="button" class="env-phone" data-look="'+t[0]+'">'+esc(gal('phone'))+'</button></div></article>'}).join('');
+  $$('.env-tile').forEach(function(tile){var id=tile.dataset.env,vp=tile.querySelector('.env-vp'),st=tile.querySelector('.env-stage');
+    var fitT=function(){var s=st.clientWidth/390;if(s>0)vp.style.transform='scale('+s+')'};
+    if('ResizeObserver' in window)new ResizeObserver(fitT).observe(st);fitT();
+    tile.querySelector('.env-again').onclick=function(){paint(tile)};
+    tile.querySelector('.env-phone').onclick=function(){cur=id;tour.pick();themes();demo();document.querySelector('.lhero').scrollIntoView({behavior:'smooth'});if(window.rqTrack)window.rqTrack('theme_previewed',{theme:cur,source:'gallery'})}});
+  var tiles=$$('.env-tile');
+  if(!('IntersectionObserver' in window)){tiles.forEach(queue);return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){io.unobserve(e.target);queue(e.target)}})},{rootMargin:'300px 0px'});tiles.forEach(function(t){io.observe(t)})}
+function queue(tile){galQ.push(tile);pump()}
+function pump(){if(galBusy||!galQ.length)return;galBusy=true;var tile=galQ.shift();paint(tile);setTimeout(function(){galBusy=false;pump()},120)}
+function paint(tile){var id=tile.dataset.env,vp=tile.querySelector('.env-vp'),again=tile.querySelector('.env-again');if(galH[id])galH[id].destroy();
+  var el=document.createElement('div');vp.innerHTML='';vp.appendChild(el);again.hidden=true;tile.classList.remove('is-open');
+  var d=demoData();d.theme=id;delete d.canva;
+  galH[id]=ReefqInvite.render(el,d,{lang:lang,preview:true,badge:''});
+  var w=setInterval(function(){if(!tile.isConnected)return clearInterval(w);if(!vp.querySelector('.rq3')){clearInterval(w);tile.classList.add('is-open');again.hidden=false;if(window.rqTrack)window.rqTrack('envelope_opened',{theme:id,source:'gallery'})}},300)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 /* Prices, percentages and add-on amounts are isolated so "149 DT" or "+49 د.ت" never flips inside Arabic text. */
 function fmt(s){return esc(s).replace(/\+?\d+(?:[.,]\d+)?(?:\s?(?:%|DT|TND|د\.ت))/g,'<bdi>$&</bdi>')}
@@ -119,7 +142,7 @@ function setLang(l){lang=l;var root=document.documentElement;root.lang=l;root.di
   Object.keys(UI[l].ph).forEach(function(id){$('#'+id).placeholder=UI[l].ph[id]});
   document.title=ui('title');$('#themes').setAttribute('aria-label',ui('themes'));$('#lsw').setAttribute('aria-label',ui('lang'));
   $$('#lsw a').forEach(function(a){if(a.dataset.l===l)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current')});
-  if(MODELS.length)renderModels();renderSites();demo();proofCopy()}
+  if(MODELS.length)renderModels();renderSites();demo();proofCopy();gallery()}
 function proofCopy(){var d=ReefqInvite.T[lang]||ReefqInvite.T.fr;
   $$('[data-rq-copy]').forEach(function(el){el.textContent=d[el.dataset.rqCopy]||''});
   var g=$('[data-demo-guest]');if(g)g.textContent=d.dear+' '+ui('guest')}
@@ -214,5 +237,5 @@ function counters(){var els=$$('[data-count]'),reduce=window.matchMedia&&matchMe
 function films(){var vids=$$('.film video'),reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduce){vids.forEach(function(v){v.pause()});return}
   if(!('IntersectionObserver' in window)){vids.forEach(function(v){v.play().catch(function(){})});return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)e.target.play().catch(function(){});else e.target.pause()})},{rootMargin:'180px 0px',threshold:.1});vids.forEach(function(v){io.observe(v)})}
-lookbook();themes();setLang(pickLang());counters();films();loadModels();loadSites();setInterval(function(){loadModels();loadSites()},5*60*1000);
+themes();setLang(pickLang());counters();films();loadModels();loadSites();setInterval(function(){loadModels();loadSites()},5*60*1000);
 })();
