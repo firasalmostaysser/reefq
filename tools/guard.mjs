@@ -38,7 +38,7 @@ const FROZEN = ['esc', 'rng', 'hash', 'pad', 'loc', 'fmtDate', 'namesOf', 'initi
 const fnSource = (src, name) => {
   const m = src.match(new RegExp(`^function ${name}\\(`, 'm'));
   if (!m) return null;
-  const rest = src.slice(m.index + 1), end = rest.search(/^(function |var |window\.)/m);
+  const rest = src.slice(m.index + 1), end = rest.search(/^(function |var |window\.|\/\*|\/\/)/m);
   return src.slice(m.index, end < 0 ? undefined : m.index + 1 + end).replace(/[ \t]+$/gm, '').trim();
 };
 const apiKeys = src => { const m = src.match(/window\.ReefqInvite=\{([^}]*)\}/); return m ? m[1].split(',').map(kv => kv.split(':')[0].trim()) : []; };
