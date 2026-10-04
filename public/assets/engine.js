@@ -489,6 +489,41 @@ function renderRsvp(root,inv,opts){
   draw();
   return{destroy:function(){root.innerHTML=''},t:t};
 }
+/* Round 2 stationery artwork; decorative only, with no invitation data or wording. */
+function stationeryArt(theme){
+  var start='<svg viewBox="0 0 300 140" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">';
+  if(theme==='layl')return start+
+    '<g stroke="currentColor" stroke-width=".7"><path class="rq-art-line" pathLength="1" d="M22 106Q150 -56 278 106M36 106Q150 -31 264 106" opacity=".45"/>'+
+    '<path d="M149 31C119 40 123 79 151 83C136 69 137 46 149 31Z" fill="currentColor" stroke-width=".5"/>'+
+    '<path d="M176 43v12m-6-6h12M71 77v10m-5-5h10M239 93v12m-6-6h12M212 30v8m-4-4h8"/>'+
+    '<path d="m103 23 2 5 5 2-5 2-2 5-2-5-5-2 5-2Zm95 64 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z" fill="currentColor"/>'+
+    '<g fill="currentColor" stroke="none"><circle cx="48" cy="105" r="1.3"/><circle cx="187" cy="18" r="1"/><circle cx="253" cy="63" r="1.3"/><circle cx="91" cy="107" r="1"/><circle cx="157" cy="114" r="1.2"/></g></g></svg>';
+  return start+'<g stroke="currentColor" stroke-width="1">'+
+    '<path class="rq-art-line" pathLength="1" d="M24 128V77H57V62H79C84 35 122 34 150 9C178 34 216 35 221 62H243V77H276V128M33 128V86H66V71H87C92 43 126 44 150 21C174 44 208 43 213 71H234V86H267V128"/>'+
+    '<path d="M45 128V98H78V82H96C104 57 128 57 150 36C172 57 196 57 204 82H222V98H255V128" opacity=".4"/>'+
+    '<path d="M150 60l7 10 12-3-3 12 10 7-10 7 3 12-12-3-7 10-7-10-12 3 3-12-10-7 10-7-3-12 12 3Z" fill="currentColor" opacity=".14"/>'+
+    '<path d="M150 60l7 10 12-3-3 12 10 7-10 7 3 12-12-3-7 10-7-10-12 3 3-12-10-7 10-7-3-12 12 3Z M150 72l9 12-9 10-9-10Z"/>'+
+    '<path d="M15 128h79m112 0h79M113 118h74M128 123h44"/>'+
+    '<path d="m28 39 7 7-7 7-7-7Zm244 0 7 7-7 7-7-7Z" fill="currentColor"/>'+
+    '</g></svg>';
+}
+/* One observer for all below-fold sheets in this render, disconnected on redraw/destroy.
+   Focused controls always reveal immediately; reduced motion never hides content. */
+function stationeryReveal(root){
+  var inside=root.querySelector('.rq-atelier');
+  if(!inside)return function(){};
+  var media=window.matchMedia('(prefers-reduced-motion: reduce)'),observer;
+  var sheets=inside.querySelectorAll('.rq-sheet:not(.hero)');
+  function finish(){sheets.forEach(function(el){el.classList.remove('rq-await')});if(observer)observer.disconnect()}
+  function focus(e){var sheet=e.target.closest('.rq-sheet');if(sheet)sheet.classList.remove('rq-await')}
+  if(!media.matches&&window.IntersectionObserver){
+    observer=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.remove('rq-await');e.target.classList.add('rq-arrived');observer.unobserve(e.target)}})},{root:root.querySelector('.rq-scroll'),threshold:0.06});
+    sheets.forEach(function(el){el.classList.add('rq-await');observer.observe(el)});
+  }
+  inside.addEventListener('focusin',focus);
+  media.addEventListener('change',finish);
+  return function(){finish();inside.removeEventListener('focusin',focus);media.removeEventListener('change',finish)};
+}
 function render(root,inv,opts){
   opts=opts||{};
   var st={lang:opts.lang||inv.lang||'fr',open:!!opts.startOpen,timer:null,sent:null,guests:1};
@@ -499,7 +534,9 @@ function render(root,inv,opts){
   var guest=opts.guest||null,show=inv.show||{};function on(k){return show[k]!==false}
   var maxSeats=function(){return Math.max(1,guest&&guest.seats?+guest.seats:(+inv.maxGuests||1))};if(guest&&guest.seats)st.guests=maxSeats();
   var R={t:t,inv:inv,guest:guest,st:st,opts:opts,maxSeats:maxSeats};
+  var stopStationery=function(){};
   function draw(){
+    stopStationery();
     clearInterval(st.timer);
     var L=T[st.lang]?st.lang:'fr';st.lang=L;
     root.setAttribute('lang',L);root.setAttribute('dir',L==='ar'?'rtl':'ltr');
@@ -525,9 +562,10 @@ function render(root,inv,opts){
         '<div class="rq3-face rq3-back"><div class="rq3-backin"></div></div></div>'+
        '</div>')+'<p class="rq-caps rq3-hint">'+esc(t('tap'))+'</p></section>';
     } else {
-      html+='<section class="rq-inside">';
+      var atelier=th==='layl'||th==='kairouan';
+      html+='<section class="rq-inside'+(atelier?' rq-atelier':'')+'"'+(atelier?' style="--grain:'+esc(grainUrl())+'"':'')+'>';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+sprig(THEMES[th].sprig,seed+77)+'</div>'+openingHtml(inv,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      html+='<div class="rq-sheet hero"><div class="rq-corner">'+(atelier?stationeryArt(th):sprig(THEMES[th].sprig,seed+77))+'</div>'+openingHtml(inv,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
@@ -550,6 +588,7 @@ function render(root,inv,opts){
     }
     html+='</div>';
     root.innerHTML=html;
+    stopStationery=stationeryReveal(root);
     wire();
   }
   function dots(d){if(!d)return'';var p=d.split('-');return p.length===3?p[2]+' · '+p[1]+' · '+p[0]:d}
@@ -578,7 +617,7 @@ function render(root,inv,opts){
     wireRsvp(root,R,draw);
   }
   draw();
-  return{destroy:function(){clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},isOpen:function(){return st.open},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
+  return{destroy:function(){stopStationery();clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},isOpen:function(){return st.open},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
 window.ReefqInvite={pairText:pairText,hostsMsg:hostsMsg,hostsLines:hostsLines,THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,renderRsvp:renderRsvp,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();
