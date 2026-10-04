@@ -11,7 +11,32 @@ must become its own artwork: a guest should recognise Layl or Kairouan from a sc
 
 Aim: an object you would want to keep, like a letterpress card from a fine Tunis atelier. Not a web template.
 
-## What to build, per theme
+Reference for the level of polish (study it, never copy its files or code): wooowinvites.com demos. Their impact comes from
+a photorealistic **video intro per theme** (embossed envelope whose relief lights up, then opens into light) followed
+by watercolour inside pages with script titles. Reefq does the same with its own Tunisian art, and stays faster.
+
+## Part A: video intro layer (all themes, built once)
+
+The owner generates the media (`docs/SORA_PROMPTS.md`) into `public/assets/media/themes/<id>/`:
+`intro-v1.mp4`, `intro-v1.webm` (720 × 1280, silent, 5 s), `poster-v1.webp` (first frame), `inside-v1.webp`,
+`inside-wide-v1.webp`, `venue-v1.webp`. Build the player so a theme uses them when they exist and falls back
+to today's code-drawn envelope when they do not.
+
+1. **One map in engine.js**, e.g. `THEME_MEDIA={layl:{v:'v1',intro:1,inside:1,venue:1},…}`, and one base constant
+   `MEDIA_BASE='/assets/media/themes/'` so the files can move to a CDN later by changing one line.
+2. **Closed state:** the poster fills the envelope stage, with the guest greeting and the existing `.rq3-seal`
+   button laid over the seal (keep the `.rq3-seal` class and its click behaviour: tests and `play()` use it).
+   Start loading the video after the page has rendered (`preload="auto"`, `muted playsinline`, no `autoplay`, no `loop`).
+3. **On tap:** play the video; on `ended` (or after 6 s at the latest, or at once if playback fails) run the same
+   hand-off to the open invitation that the envelope uses today, cross-fading from the video's last bright frame.
+   Keep the `invitation_opened` tracking call exactly where it is.
+4. **Fallback to the code envelope** when: the theme has no media, `prefers-reduced-motion`, `navigator.connection.saveData`,
+   a 2g/slow-2g connection, or the video has not loaded enough data 1.5 s after the tap.
+5. **Inside:** `inside-v1.webp` (portrait) / `inside-wide-v1.webp` (≥ 768 px) as the page background, fixed behind a
+   readable text column; `venue-v1.webp` above the venue/map block. Lazy-load everything below the fold.
+6. **Never** add an audio track, a sound button or `unmute`. Videos stay muted.
+
+## Part B: the art of each theme (code)
 
 For each of the ten theme ids (`reefq`, `zitouna`, `yasmine`, `layl`, `sidi`, `kairouan`, `oldmoney`, `sauge`, `bordeaux`, `sahara`):
 
@@ -51,15 +76,16 @@ Art direction (keep each to one strong idea):
   no alcohol, dancing or nightlife imagery. Use florals, patterns, architecture, calligraphy and objects.
 - **Text:** never edit wording, Quran verses (`OPENING_LIST`) or the frozen functions listed in `AGENTS.md`.
   Arabic is never italic and its line-height stays generous; ornaments never overlap diacritics.
-- **Performance:** fast on a cheap Android phone. No libraries, no images over 60 KB per theme (prefer code-drawn
-  art), no layout-triggering animations, at most one `requestAnimationFrame` loop and stop it when idle.
+- **Performance:** fast on a cheap Android phone. No libraries. Only the files in Part A are heavy (intro about 1.5 MB);
+  any other image stays under 60 KB. No layout-triggering animations, at most one `requestAnimationFrame` loop and stop it when idle.
   `prefers-reduced-motion`: show the final state at once.
 - **Files:** `public/assets/engine.js` (visual functions and `render` markup only) and `public/assets/invitation.css`.
-  New media under `public/assets/media/` as WebP.
+  New media under `public/assets/media/` as WebP. Do not edit `netlify.toml` (theme media already has a one-year cache header).
 
 ## How to work
 
-1. **Pilot first:** do `layl` and `kairouan` completely, commit, and stop for owner review before the other eight.
+1. **Pilot first:** build Part A, then do `layl` and `kairouan` completely (Part A with their media if the owner has
+   added it, Part B either way), commit, and stop for owner review before the other eight.
 2. Then one commit per theme, message `Theme <id>: <what changed>`.
 3. Before each commit, run `npm run guard` and `npm test`, and check the theme with `npm run dev`
    (open the studio preview or `/i/<slug>`) in **Arabic and French at 360 px**, plus 1280 px. No horizontal overflow.
@@ -67,6 +93,8 @@ Art direction (keep each to one strong idea):
 
 ## Done means
 
+- A theme with media opens with its video and hands off without a flash; a theme without media, reduced motion
+  or save-data shows the code envelope.
 - The ten themes look clearly different from each other in a side-by-side screenshot.
 - Each reveal plays smoothly on a mid-range phone, and reduced motion shows the final state.
 - `npm run guard` and `npm test` pass; screenshots of each theme (AR and FR, 360 px) are attached in the hand-back note.
