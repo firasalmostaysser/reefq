@@ -251,6 +251,18 @@ function sprigBox(kind,seed,st,vars){return '<div class="rq4-sprig" style="'+st+
 var LEAFV='--leaf1:#9aa86d;--leaf2:#56653a;--stem:#6b6744;--fruit:#39402a';
 var JASV='--leaf1:#86a46c;--leaf2:#3d5c34;--stem:#58714b;--petal:#fffdf8;--petal-edge:#d9d0bf;--pistil:#e6c25a;--bud:#f3e1dc';
 
+/* Pilot envelopes: a weighted flap lifts before the invitation slides out. */
+function atelierEnvelope(c){
+  var vb='0 0 1000 680',id='at'+(++uidN),flap='M0 0H1000L535 370Q500 398 465 370Z';
+  return {ar:1.47,ew:'86cqw',ms:2700,crack:false,html:
+    pc('rq4-ln rq4-back',vb,'M0 0H1000V680H0Z')+
+    card4(c,'left:7%;top:8%;width:86%;height:83%')+
+    cast(vb,'M0 0L500 400L1000 0V680H0Z','z-index:3')+
+    pc('rq4-fr',vb,'M0 0L500 400L1000 0V680H0Z',deco(vb,pocketFolds(1000,680,500,390,id)),'z-index:4')+
+    cast(vb,flap,'z-index:5')+
+    flap4('rq-atelier-flap',vb,flap,{open:'rotateX(178deg)',org:'50% 0',d:.2,dur:1.15,zt:1.05,
+      deco:deco(vb,'<path d="M18 12L474 358Q500 378 526 358L982 12" fill="none" stroke="rgba(255,248,222,.22)" stroke-width="2"/>'),over:seal4(c,50,55,23)})};
+}
 var ENV_KINDS={
 /* Zitouna: baronial round flap, jute twine crossed under the seal, olive sprig tucked under the twine */
 zitouna:function(c){var W=1000,H=1250,vb='0 0 1000 1250',id='z'+(++uidN),
@@ -277,18 +289,8 @@ yasmine:function(c){var W=1000,H=1351,vb='0 0 1000 1351',id='y'+(++uidN),
       over:sprigBox('jasmine',c.seed+9,'left:23%;top:43%;width:17%;height:27%;transform:rotate(-58deg)',JASV)+seal4(c,50,64.6,32)})+
     '<div class="rq4-fx">'+bits('rq4-petal',9,c.seed,function(r,i){return 'left:'+f1(30+r()*30)+'%;top:'+f1(52+r()*12)+'%;--pd:'+f1(.05+i*.09)+'s;--px:'+f1(jit(r,22))+'cqw;--pr:'+f1(jit(r,260))+'deg'})+'</div>'}},
 
-/* Layl: midnight gatefold, two doors with gold-foil stars and a crescent, gold seal on the overlapping tab */
-layl:function(c){var W=1000,H=1389,vb='0 0 1000 1389',id='l'+(++uidN),r=rng(c.seed+21),stL='',stR='';
-  for(var i=0;i<16;i++){var x=60+r()*380,y=70+r()*1250,R=6+r()*12;if(Math.abs(y-694)<170&&x>330)continue;stL+=r()<.3?star8(x,y,R,R*.45):star4(x,y,R)}
-  for(i=0;i<16;i++){x=560+r()*380;y=70+r()*1250;R=6+r()*12;stR+=r()<.3?star8(x,y,R,R*.45):star4(x,y,R)}
-  var dl='M0 0H520V520C600 560 600 828 520 868V1389H0Z',dr='M480 0H1000V1389H480Z',gd='<defs>'+goldDef(id)+'</defs>',
-    frame=function(x0,x1){return '<rect x="'+(x0+34)+'" y="34" width="'+(x1-x0-68)+'" height="'+(H-68)+'" fill="none" stroke="url(#'+id+')" stroke-width="3"/><rect x="'+(x0+48)+'" y="48" width="'+(x1-x0-96)+'" height="'+(H-96)+'" fill="none" stroke="url(#'+id+')" stroke-width="1.2" opacity=".7"/>'};
-  return {ar:.72,ms:3100,crack:true,html:
-    pc('rq4-ln rq4-back',vb,'M0 0H1000V1389H0Z')+
-    '<div class="rq4-glow"></div>'+card4(c,'left:8%;top:6%;width:84%;height:88%')+
-    flap4('rq4-door',vb,dr,{y:1,open:'rotateY(150deg)',org:'100% 50%',d:.75,dur:1.5,zt:1.5,z:5,deco:deco(vb,gd+frame(480,1000)+'<g fill="url(#'+id+')">'+stR+'</g>')+'<i class="rq4-sheen"></i>'})+
-    flap4('rq4-door',vb,dl,{y:1,open:'rotateY(-150deg)',org:'0 50%',d:.55,dur:1.5,zt:1.3,z:6,deco:deco(vb,gd+frame(0,520)+'<path d="M520 520C600 560 600 828 520 868" fill="none" stroke="url(#'+id+')" stroke-width="3"/><g fill="url(#'+id+')">'+stL+'<path d="M180 250a80 80 0 1 0 70 118a64 64 0 1 1-70-118z"/></g>')+'<i class="rq4-sheen"></i>',over:seal4(c,52,50,30,'rq4-glowseal')})+
-    '<div class="rq4-fx">'+bits('rq4-spark',12,c.seed,function(r,i){return 'left:'+f1(8+r()*84)+'%;top:'+f1(5+r()*80)+'%;--pd:'+f1(1.6+r()*1.1)+'s;--ps:'+f1(.5+r()*.9)})+'</div>'}},
+/* Layl: midnight cotton paper, a single hinged flap and an ivory card. */
+layl:function(c){return atelierEnvelope(c)},
 
 /* Sidi Bou Said: whitewashed arch with a studded cobalt double door; bougainvillea over the frame; doors swing open onto light */
 sidi:function(c){var W=1000,H=1613,vb='0 0 1000 1613',id='s'+(++uidN),r=rng(c.seed+31),studs='',bg='';
@@ -318,25 +320,8 @@ sidi:function(c){var W=1000,H=1613,vb='0 0 1000 1613',id='s'+(++uidN),r=rng(c.se
     flap4('rq4-door',vb,dl,{y:1,open:'rotateY(78deg)',org:'13% 50%',d:.45,dur:1.6,zt:1.15,z:6,front:'rq4-fr rq4-cobalt',back:'rq4-fr rq4-cobalt rq4-dim',deco:deco(vb,defs+leaf(130,true)+bevel(true)),over:seal4(c,50,60.8,25)})+
     '<div class="rq4-fx">'+bits('rq4-bract',6,c.seed,function(r,i){return 'left:'+f1(66+r()*28)+'%;top:'+f1(3+r()*18)+'%;--pd:'+f1(.6+i*.18)+'s;--px:'+f1(jit(r,10))+'cqw;--pr:'+f1(jit(r,300))+'deg'})+'</div>'}},
 
-/* Kairouan: square pinwheel envelope, four kilim-bordered flaps meeting under the seal, unfolded one by one */
-kairouan:function(c){var vb='0 0 1000 1000',id='k'+(++uidN),ink=c.eo.linerBg,ink2=c.eo.linerInk;
-  var top='M0 0H1000L545 470Q500 515 455 470Z',zig='',zig2='';
-  for(var i=0;i<=20;i++){var t=i/20,ax=30+t*440,ay=30+t*440;zig+=(i?'L':'M')+f1(ax+(i%2?40:14))+' '+f1(ay-(i%2?14:40));}
-  for(i=0;i<=20;i++){t=i/20;ax=970-t*440;ay=30+t*440;zig2+=(i?'L':'M')+f1(ax-(i%2?40:14))+' '+f1(ay-(i%2?14:40));}
-  var band='<g clip-path="url(#'+id+'c)"><path d="M60 0L560 500M940 0L440 500" stroke="'+ink+'" stroke-width="10" fill="none" transform="translate(0 -12)"/><path d="M0 -40L520 480M1000 -40L480 480" stroke="'+ink+'" stroke-width="3" fill="none" transform="translate(0 -84)"/>'+
-    '<path d="'+zig+'" fill="none" stroke="'+ink2+'" stroke-width="6" stroke-linejoin="miter" transform="translate(0 -10)"/><path d="'+zig2+'" fill="none" stroke="'+ink2+'" stroke-width="6" transform="translate(0 -10)"/>'+
-    [200,330,640,770].map(function(x){return '<path d="M'+x+' 70l22 22-22 22-22-22z" fill="'+ink+'" opacity=".85"/>'}).join('')+'</g>';
-  var flp=function(k,name,d,open,org,z,zt,extra){var tf='rotate('+(k*90)+' 500 500)',dd=top.replace(/[\d.]+ [\d.]+/g,function(p){var q=p.split(' ').map(Number),a=k*Math.PI/2,x=q[0]-500,y=q[1]-500;return f1(500+x*Math.cos(a)-y*Math.sin(a))+' '+f1(500+x*Math.sin(a)+y*Math.cos(a))});
-    return cast(vb,dd,'z-index:'+(z-1)+';--cd:'+d+'s')+flap4(name,vb,dd,{y:k%2,open:open,org:org,d:d,dur:.95,zt:zt,z:z,deco:deco(vb,'<defs><clipPath id="'+id+'c"><path d="'+top+'"/></clipPath></defs><g transform="'+tf+'">'+band+'</g>'),over:extra||''})};
-  /* the top path uses H1000; expand it so it can be rotated point by point */
-  top='M0 0L1000 0L545 470Q500 515 455 470Z';
-  return {ar:1,ew:'70cqw',ms:3300,crack:true,html:
-    pc('rq4-ln rq4-back',vb,'M0 0H1000V1000H0Z')+
-    card4(c,'left:7%;top:7%;width:86%;height:86%')+
-    flp(3,'',1.35,'rotateY(-178deg)','0 50%',3,1.85)+
-    flp(2,'',1.05,'rotateX(-178deg)','50% 100%',5,1.55)+
-    flp(1,'',.75,'rotateY(178deg)','100% 50%',7,1.25)+
-    flp(0,'',.45,'rotateX(178deg)','50% 0',9,.95,seal4(c,50,49,30))}},
+/* Kairouan: warm handmade paper and a deliberate letter-opening motion. */
+kairouan:function(c){return atelierEnvelope(c)},
 
 /* Old Money: landscape wallet envelope, deep straight flap with a deckled edge, blind-embossed monogram, tissue over the card */
 oldmoney:function(c){var W=1000,H=735,vb='0 0 1000 735',id='o'+(++uidN),r=rng(c.seed+41);
@@ -565,11 +550,11 @@ function render(root,inv,opts){
       var atelier=th==='layl'||th==='kairouan';
       html+='<section class="rq-inside'+(atelier?' rq-atelier':'')+'"'+(atelier?' style="--grain:'+esc(grainUrl())+'"':'')+'>';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
-      html+='<div class="rq-sheet hero"><div class="rq-corner">'+(atelier?stationeryArt(th):sprig(THEMES[th].sprig,seed+77))+'</div>'+openingHtml(inv,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
+      html+=(atelier?'<div class="rq-suite"><figure class="rq-still" aria-hidden="true"><img src="/assets/media/'+th+'-stationery-v2.webp" alt="" width="720" height="720" decoding="async"></figure>':'')+'<div class="rq-sheet hero"><div class="rq-corner">'+(atelier?stationeryArt(th):sprig(THEMES[th].sprig,seed+77))+'</div>'+openingHtml(inv,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
         '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
-        (guest&&guest.seats?'<div class="rq-seats"><span class="rq-caps">'+esc(t('seatsFor'))+'</span><b>'+maxSeats()+'</b></div>':'')+(closing?'<p class="rq-closing">'+esc(closing)+'</p>':'')+'</div>';
+        (guest&&guest.seats?'<div class="rq-seats"><span class="rq-caps">'+esc(t('seatsFor'))+'</span><b>'+maxSeats()+'</b></div>':'')+(closing?'<p class="rq-closing">'+esc(closing)+'</p>':'')+'</div>'+(atelier?'</div>':'');
       if(on('countdown'))html+='<div class="rq-sheet"><h2 class="rq-h2 rq-foil">'+esc(t('count'))+'</h2><div class="rq-count" aria-live="off"><div><b data-c="d">00</b><span>'+esc(t('d'))+'</span></div><div><b data-c="h">00</b><span>'+esc(t('h'))+'</span></div><div><b data-c="m">00</b><span>'+esc(t('m'))+'</span></div><div><b data-c="s">00</b><span>'+esc(t('s'))+'</span></div></div></div>';
       var story=inv.story&&(inv.story[L]||inv.story.fr||inv.story.en||inv.story.ar)||'';
       if(on('story')&&story)html+='<div class="rq-sheet rq-story"><h2 class="rq-h2 rq-foil">'+esc(t('story'))+'</h2>'+String(story).split(/\n+/).filter(function(x){return x.trim()}).map(function(x){return '<p>'+esc(x)+'</p>'}).join('')+'</div>';
@@ -584,7 +569,7 @@ function render(root,inv,opts){
           (inv.note?'<p class="rq-muted" style="margin:14px 0 0;font-style:italic">'+esc(inv.note)+'</p>':'')+'</div>';
       }
       if(on('rsvp'))html+=rsvpHtml(R);
-      html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span>'+(opts.preview||!inv.id?'':'<a class="rq-foot-link" target="_top" href="/?utm_source=invitation&amp;utm_medium=footer" aria-label="Reefq">')+'<img alt="Reefq رِفق" src="'+(th==='layl'?LOGO_DARK:LOGO)+'">'+(opts.preview||!inv.id?'':'</a>')+'</div></section>';
+      html+='<div class="rq-foot"><span>'+(L==='ar'?'صُنعت بحبّ مع':L==='fr'?'Créée avec amour par':'Made with love by')+'</span>'+(opts.preview||!inv.id?'':'<a class="rq-foot-link" target="_top" href="/?utm_source=invitation&amp;utm_medium=footer" aria-label="Reefq">')+'<img alt="Reefq رِفق" src="'+(th==='layl'&&!atelier?LOGO_DARK:LOGO)+'">'+(opts.preview||!inv.id?'':'</a>')+'</div></section>';
     }
     html+='</div>';
     root.innerHTML=html;
