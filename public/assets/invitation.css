@@ -628,3 +628,16 @@
   .rq-inv .rq-atelier #rq-rsvp{padding:42px}
 }
 @media(prefers-reduced-motion:reduce){.rq-inv .rq-atelier .rq-sheet.hero{transform:none}.rq-still{transform:none}}
+/* Round 2, part A: video intro per theme (THEME_MEDIA in engine.js) over the code envelope, which stays as the fallback. */
+.rq-intro{position:absolute;inset:0;z-index:3;background:var(--table);cursor:pointer;overflow:hidden}
+.rq-intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.rq-intro::before{content:"";position:absolute;inset:0 0 auto;height:38%;z-index:1;pointer-events:none;background:linear-gradient(var(--table),color-mix(in srgb,var(--table) 0%,transparent));opacity:.82;transition:opacity .6s ease}
+.rq-intro .rq3-seal{top:50%;width:min(30cqw,24cqh);z-index:2}
+.rq-intro .rq3-seal::after{inset:6%}
+.rq-has-intro .rq3-top,.rq-has-intro .rq3-hint{z-index:4}
+.rq-intro-play .rq3-top{opacity:0;transform:translateY(-12px)}
+.rq-intro-play .rq-intro::before,.rq-intro-play .rq3-seal::after,.rq-intro-play .rq3-hint{opacity:0;animation:none}
+.rq-backdrop{position:absolute;inset:0;z-index:0;background:var(--paper) var(--in-p) center/cover no-repeat;pointer-events:none}
+@container (min-width:768px){.rq-backdrop{background-image:var(--in-w)}}
+.rq-scroll.rq-over{position:relative;z-index:1;background-image:none}
+.rq-venue-art{display:block;width:100%;max-width:420px;height:auto;margin:22px auto 4px;border-radius:4px;box-shadow:0 10px 24px -16px rgb(0 0 0 / .45)}

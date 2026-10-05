@@ -57,6 +57,22 @@ var THEME_LIST=[
   {id:'bordeaux',name:'Bordeaux',sub:'Burgundy, blush, rose gold',bg:'#f6ece8',fg:'#6e1f2c'},
   {id:'sahara',name:'Sahara',sub:'Sand, terracotta, Tozeur brick',bg:'#efe3cf',fg:'#9c4a2a'}
 ];
+/* Theme intro video and inside art (docs/SORA_PROMPTS.md). List a theme only once its files are in MEDIA_BASE+id+'/',
+   e.g. layl:{v:'v1',intro:1,inside:1,venue:1}; anything not listed keeps the code envelope and paper. */
+var MEDIA_BASE='/assets/media/themes/';
+var THEME_MEDIA={};
+function mediaUrl(th,k,ext){var m=THEME_MEDIA[th];return m&&m[k==='poster'?'intro':k==='inside-wide'?'inside':k]?MEDIA_BASE+th+'/'+k+'-'+m.v+(ext||'.webp'):''}
+function introOk(th){
+  if(!mediaUrl(th,'intro'))return false;
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return false;
+  var c=navigator.connection;if(c&&(c.saveData||/(^|-)2g$/.test(c.effectiveType||'')))return false;
+  var v=document.createElement('video');return !!(v.canPlayType&&(v.canPlayType('video/webm')||v.canPlayType('video/mp4')));
+}
+function introHtml(th,tap){
+  return '<div class="rq-intro"><video muted playsinline preload="none" disablepictureinpicture poster="'+mediaUrl(th,'poster')+'">'+
+    '<source src="'+mediaUrl(th,'intro','.webm')+'" type="video/webm"><source src="'+mediaUrl(th,'intro','.mp4')+'" type="video/mp4"></video>'+
+    '<button type="button" class="rq3-seal rq-intro-seal" aria-label="'+esc(tap)+'"></button></div>';
+}
 var uidN=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -529,14 +545,16 @@ function render(root,inv,opts){
     var langBar='<div class="rq-lang" role="group" aria-label="Language">'+['fr','ar','en'].map(function(x){return '<button type="button" data-lang="'+x+'" aria-pressed="'+(x===L)+'">'+(x==='ar'?'عربي':x.toUpperCase())+'</button>'}).join('')+'</div>';
     var badge=opts.preview?'<div class="rq-badge">'+(opts.badge||'Preview')+'</div>':'';
     var nameH='<h1 class="rq-names rq-foil">'+pairHtml(n,L,true)+'</h1>';
-    var html=badge+langBar+'<div class="rq-scroll">';
+    var inBg=st.open?mediaUrl(th,'inside'):'';
+    var html=badge+langBar+(inBg?'<div class="rq-backdrop" aria-hidden="true" style="--in-p:url('+inBg+');--in-w:url('+mediaUrl(th,'inside-wide')+')"></div><div class="rq-scroll rq-over">':'<div class="rq-scroll">');
     if(!st.open){
       var eo=envOpts(inv,th),cv=inv.canva||null,K=ENV_KINDS[th];
       var cardIn=(cv&&cv.image?'<img class="rq3-cardart" alt="" src="'+esc(cv.image)+'" onerror="this.remove()">':'')+'<div class="rq3-cardtxt"'+(cv&&cv.image?' hidden':'')+'><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names rq-foil">'+pairHtml(n,L)+'</span><span class="rq-caps">'+esc(fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}))+'</span></div>';
+      var intro=introOk(th);
       var E=K?K({tap:t('tap'),seed:seed,eo:eo,cardIn:cardIn,mono:(inv.env&&inv.env.mono)||initials(inv).replace('&',' & '),namesHtml:pairHtml(n,L),kick:t('married'),
         dateLong:fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}),venue:[inv.venue,inv.city].filter(Boolean).join(', ')}):null;
       st.env=E||{ms:2500,crack:true};
-      html+='<section class="rq-cover rq3'+(E?' rq4 rq4-'+th:'')+'" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,eo.linerInk))+';--linerbg:'+esc(eo.linerBg)+(E?';--grain:'+esc(grainUrl())+';--ar:'+E.ar+(E.ew?';--ew:'+E.ew:''):'')+'">'+
+      html+='<section class="rq-cover rq3'+(E?' rq4 rq4-'+th:'')+(intro?' rq-has-intro':'')+'" style="--paper:'+esc(eo.paper)+';--table:'+esc(eo.table)+';--liner:'+esc(linerTile(eo.liner,eo.linerBg,eo.linerInk))+';--linerbg:'+esc(eo.linerBg)+(E?';--grain:'+esc(grainUrl())+';--ar:'+E.ar+(E.ew?';--ew:'+E.ew:''):'')+'">'+
        '<div class="rq3-table"></div>'+
        '<div class="rq3-top">'+(guest&&guest.name?'<p class="rq3-dear">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+'<p class="rq-caps rq3-kick">'+esc(t('married'))+'</p><h1 class="rq-names rq-foil">'+pairHtml(n,L)+'</h1><p class="rq-date-s">'+esc(dots(inv.date))+'</p></div>'+
        (E?'<div class="rq3-env">'+E.html+'</div>':
@@ -545,14 +563,14 @@ function render(root,inv,opts){
         '<div class="rq3-pocket rq3-tint" style="--m:var(--a-pocket)"></div><div class="rq3-fshadow"></div>'+
         '<div class="rq3-flap"><div class="rq3-face rq3-front"><div class="rq3-tint" style="--m:var(--a-flap)"></div>'+flapGild()+'<button type="button" class="rq3-seal" aria-label="'+esc(t('tap'))+'"></button></div>'+
         '<div class="rq3-face rq3-back"><div class="rq3-backin"></div></div></div>'+
-       '</div>')+'<p class="rq-caps rq3-hint">'+esc(t('tap'))+'</p></section>';
+       '</div>')+(intro?introHtml(th,t('tap')):'')+'<p class="rq-caps rq3-hint">'+esc(t('tap'))+'</p></section>';
     } else {
-      var atelier=th==='layl'||th==='kairouan';
+      var atelier=th==='layl'||th==='kairouan',venueArt=mediaUrl(th,'venue');
       html+='<section class="rq-inside'+(atelier?' rq-atelier':'')+'"'+(atelier?' style="--grain:'+esc(grainUrl())+'"':'')+'>';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
       html+=(atelier?'<div class="rq-suite"><figure class="rq-still" aria-hidden="true"><img src="/assets/media/'+th+'-stationery-v2.webp" alt="" width="720" height="720" decoding="async"></figure>':'')+'<div class="rq-sheet hero"><div class="rq-corner">'+(atelier?stationeryArt(th):sprig(THEMES[th].sprig,seed+77))+'</div>'+openingHtml(inv,L)+(guest&&guest.name?'<p class="rq-guest">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+hostsHtml(inv,L)+'<p class="rq-msg">'+esc(msg)+'</p>'+nameH+'<div class="rq-rule"></div>'+
         '<p class="rq-when">'+esc(fmtDate(inv.date,L))+'</p><p class="rq-caps rq-muted" style="margin:6px 0 0">'+esc(t('at'))+' '+esc(inv.time||'')+'</p>'+
-        '<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
+        (venueArt&&inv.venue?'<img class="rq-venue-art" src="'+venueArt+'" alt="" loading="lazy" decoding="async">':'')+'<p class="rq-where">'+esc(inv.venue||'')+(inv.city?'<br><span class="rq-muted">'+esc(inv.city)+'</span>':'')+'</p>'+
         (inv.venue||inv.maps?'<a class="rq-link" target="_blank" rel="noopener" href="'+esc(mapsHref([inv.venue,inv.city].filter(Boolean).join(', '),inv.maps))+'">'+esc(t('map'))+'</a>':'')+
         (guest&&guest.seats?'<div class="rq-seats"><span class="rq-caps">'+esc(t('seatsFor'))+'</span><b>'+maxSeats()+'</b></div>':'')+(closing?'<p class="rq-closing">'+esc(closing)+'</p>':'')+'</div>'+(atelier?'</div>':'');
       if(on('countdown'))html+='<div class="rq-sheet"><h2 class="rq-h2 rq-foil">'+esc(t('count'))+'</h2><div class="rq-count" aria-live="off"><div><b data-c="d">00</b><span>'+esc(t('d'))+'</span></div><div><b data-c="h">00</b><span>'+esc(t('h'))+'</span></div><div><b data-c="m">00</b><span>'+esc(t('m'))+'</span></div><div><b data-c="s">00</b><span>'+esc(t('s'))+'</span></div></div></div>';
@@ -586,16 +604,38 @@ function render(root,inv,opts){
     root.querySelectorAll('[data-lang]').forEach(function(b){b.onclick=function(){st.lang=b.dataset.lang;draw()}});
     var sc=root.querySelector('.rq3');
     if(sc){
-      var eo2=envOpts(inv,th),sb=sc.querySelector('.rq3-seal'),busy=false;
+      var eo2=envOpts(inv,th),sb=sc.querySelector('.rq3-env .rq3-seal')||sc.querySelector('.rq3-seal'),busy=false;
+      var iv=sc.querySelector('.rq-intro'),vid=iv&&iv.querySelector('video'),introFail=null;
+      var dropIntro=function(){if(iv&&iv.parentNode)iv.parentNode.removeChild(iv);iv=null;sc.classList.remove('rq-has-intro')};
       var paint=function(){var cv=sealCanvas((inv.env&&inv.env.mono)||initials(inv).replace('&',' & '),eo2.seal,seed,360);sb.innerHTML='';sb.appendChild(cv)};
       paint();if(document.fonts&&document.fonts.load)document.fonts.load("40px 'Pinyon Script'").then(function(){if(sb.isConnected)paint()}).catch(function(){});
+      var handoff=function(){var cov=sc;cov.classList.add('done');st.open=true;draw();var s=root.querySelector('.rq-scroll');if(s)s.scrollTop=0;cov.classList.add('handoff');root.appendChild(cov);requestAnimationFrame(function(){requestAnimationFrame(function(){cov.classList.add('fadeout')})});setTimeout(function(){if(cov.parentNode)cov.parentNode.removeChild(cov)},900)};
+      var openEnv=function(){
+        var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+        sc.classList.add('opening');if(st.env.crack)crackSeal(sb);setTimeout(handoff,reduce?200:(st.env.ms||2500));
+      };
+      /* Video intro: hand off on `ended` (6 s at most); fall back to the code envelope if it cannot play or has not buffered 1.5 s after the tap. */
+      var playIntro=function(){
+        var done=false,t1,t2,fin=function(ok){if(done)return;done=true;introFail=null;clearTimeout(t1);clearTimeout(t2);if(ok){vid.pause();handoff()}else{dropIntro();openEnv()}};
+        introFail=function(){fin(false)};
+        vid.addEventListener('ended',function(){fin(true)});
+        t1=setTimeout(function(){if(vid.readyState<3&&!(vid.currentTime>0))fin(false)},1500);
+        t2=setTimeout(function(){fin(true)},6000);
+        var p;try{p=vid.play()}catch(e){fin(false);return}
+        if(p&&p.catch)p.catch(function(){fin(false)});
+      };
+      if(vid){
+        var bad=function(){if(introFail)introFail();else if(!busy)dropIntro()};
+        vid.addEventListener('error',bad);var srcs=vid.querySelectorAll('source');srcs[srcs.length-1].addEventListener('error',bad);
+        var load=function(){if(vid.isConnected&&!busy){vid.preload='auto';vid.load()}};
+        if(document.readyState==='complete')setTimeout(load,0);else window.addEventListener('load',load,{once:true});
+      }
       var go=function(){
         if(busy)return;busy=true;
-        var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-        sc.classList.add('opening');if(window.rqTrack)window.rqTrack('invitation_opened',{theme:th,layout:inv.layout||'classic',preview:!!opts.preview,personal:!!guest,lang:st.lang});
-        if(st.env.crack)crackSeal(sb);var ms=st.env.ms||2500;
-        setTimeout(function(){var cov=sc;cov.classList.add('done');st.open=true;draw();var s=root.querySelector('.rq-scroll');if(s)s.scrollTop=0;cov.classList.add('handoff');root.appendChild(cov);requestAnimationFrame(function(){requestAnimationFrame(function(){cov.classList.add('fadeout')})});setTimeout(function(){if(cov.parentNode)cov.parentNode.removeChild(cov)},900)},reduce?200:ms);
+        sc.classList.add(iv?'rq-intro-play':'opening');if(window.rqTrack)window.rqTrack('invitation_opened',{theme:th,layout:inv.layout||'classic',preview:!!opts.preview,personal:!!guest,lang:st.lang});
+        if(iv)playIntro();else openEnv();
       };
+      if(iv){var isb=iv.querySelector('.rq3-seal');isb.onclick=function(e){e.stopPropagation();go()};iv.onclick=go}
       sb.onclick=function(e){e.stopPropagation();go()};sc.querySelector('.rq3-env').onclick=go;
     }
     if(root.querySelector('[data-c]')){tick();st.timer=setInterval(tick,1000)}

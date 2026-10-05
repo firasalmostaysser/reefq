@@ -15,7 +15,42 @@ Reference for the level of polish (study it, never copy its files or code): wooo
 a photorealistic **video intro per theme** (embossed envelope whose relief lights up, then opens into light) followed
 by watercolour inside pages with script titles. Reefq does the same with its own Tunisian art, and stays faster.
 
+## Scope update (5 October 2026): Codex owns the whole look
+
+The owner delegates **all visual work** to Codex: theme choices, landing page, envelopes, the invitation's
+structure and every detail of its design and animation. Benchmark: wooowinvites.com (study it, then do better;
+never copy its files, code, images or videos). Open these demos on a phone and match their level of polish:
+
+- https://www.wooowinvites.com/invite/demo-bff9ac (Ivory Gypsophila)
+- https://www.wooowinvites.com/invite/demo-37a111 (Azure Sea Vows)
+- https://www.wooowinvites.com/invite/demo-785aed (Tuscan Sunset Lights)
+- https://www.wooowinvites.com/save-the-date/std-demo-15ecdb (save the date)
+
+What to take from them: the cinematic opening (personal envelope, wax seal with initials, then a reveal into
+light), full-bleed painterly backgrounds, large script titles, generous spacing, sections that arrive as you scroll,
+and info blocks that each feel designed (countdown, venue and map, programme/timeline, story, RSVP).
+What to leave out: their music player, couple photos and portraits, drinks menus and anything that breaks the brand rules below.
+Where Reefq must beat them: Tunisian identity (zellige, Kairouan, Sidi Bou Said, jasmine, olive), real Arabic
+typography and RTL, and speed on a cheap Android phone.
+
+Codex decides:
+1. **Themes:** restyle the ten existing ids freely; propose and add new ones (each in `THEME_LIST` and
+   `netlify/lib/themes.mts`). Retire nothing: saved invitations use every existing id.
+2. **Envelopes:** construction, materials, seal, opening choreography per theme (code envelope stays the fallback for the video intro).
+3. **Invitation structure:** order, layout and look of every section that exists today (hero, hosts, opening verse,
+   date/venue/map, countdown, programme, story, RSVP, closing). New info blocks that need new data fields
+   (dress code, transport, FAQ, gallery…) are logic: list them in the hand-back note and the owner and Claude add the data side.
+4. **Landing page** (`public/index.html`, `site.css`, `landing-i18n.js`, `landing.js` effects): a hero that plays a real
+   invitation opening, theme gallery with live demos, three steps, blocks showcase, pricing in TND, FAQ, CTA.
+   Keep every id, form `name` and `data-*` hook.
+
+Functional behaviour (orders, payments, guests, RSVP, studio logic) is out of scope; the owner checks it with Claude afterwards.
+
 ## Part A: video intro layer (all themes, built once)
+
+**Status: code done** (commit "Video intro player"): `MEDIA_BASE`, `THEME_MEDIA`, `introOk`, `introHtml`, the play/fallback
+logic in `render` and the `.rq-intro`, `.rq-backdrop`, `.rq-venue-art` styles. `THEME_MEDIA` is empty until the media files exist:
+add a theme there once its files are in place. Restyle freely; keep the fallback rules below.
 
 The owner generates the media (`docs/SORA_PROMPTS.md`) into `public/assets/media/themes/<id>/`:
 `intro-v1.mp4`, `intro-v1.webm` (720 × 1280, silent, 5 s), `poster-v1.webp` (first frame), `inside-v1.webp`,
