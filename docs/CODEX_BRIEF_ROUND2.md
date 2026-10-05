@@ -48,7 +48,7 @@ Functional behaviour (orders, payments, guests, RSVP, studio logic) is out of sc
 
 ## Part A: video intro layer (all themes, built once)
 
-**Status: code done** (commit "Video intro player"): `MEDIA_BASE`, `THEME_MEDIA`, `introOk`, `introHtml`, the play/fallback
+**Status: code done** (commit "Video intro player per theme"): `MEDIA_BASE`, `THEME_MEDIA`, `introOk`, `introHtml`, the play/fallback
 logic in `render` and the `.rq-intro`, `.rq-backdrop`, `.rq-venue-art` styles. `THEME_MEDIA` is empty until the media files exist:
 add a theme there once its files are in place. Restyle freely; keep the fallback rules below.
 
