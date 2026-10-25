@@ -1,5 +1,17 @@
 # Cinematic invitation
 
+## Existing Reefq template
+
+The existing `reefq` theme now uses the two films directly in `engine.js`, including `/i/demo`, real guest invitations, and embedded landing/client/studio previews. It needs no React runtime or CDN. Other themes keep their current openings. Add future theme-specific clips to `OPENING_FILMS` when they are ready.
+
+The guest taps the existing monogram seal, the intro plays, then the reveal plays, and the original invitation appears with its language, parents' wording, personal greeting, reserved seats, sections, and RSVP form. Films fill the invitation viewport; embedded previews stay contained. Skip, Escape, media errors, rejected playback, a twelve-second stall, and reduced motion lead to the original card. Language changes and preview destruction cancel playback and pending timers. `startOpen` / `open()` continue to show the card immediately.
+
+Both clips use `preload="none"` before interaction so closed gallery previews do not download them. Activating the seal changes them to `preload="auto"`, starts the intro directly inside the click handler, and prepares the reveal. Playback remains muted and inline. Each opening is tracked once through the existing invitation-open event.
+
+Local preview: `/theme-preview.html?t=reefq&lang=ar&guest=1&op=naba` or `/i/demo`. Validated in Chrome at 360 px with actual sequential playback, skip/failure/reduced-motion paths, cleanup on redraw/destruction, and all nine other theme openings. Physical iOS/Android validation remains outstanding.
+
+## Standalone React component
+
 `public/assets/WeddingInvitation.js` exports a React 18+ component using native ES modules, with no JSX compiler requirement. Load `public/assets/invitation.css` alongside it. Preview `/cinematic-invitation.html` on the local development server, or any static server rooted at `public`. The preview uses pinned React imports from esm.sh and needs internet access. The host application should use its own bundled React.
 
 ```jsx
