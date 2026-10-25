@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "basePath": "/assets/media/openings/",
+  "collections": [
+    { "id": "olive", "name": "Olive", "poster": "olive-poster.webp", "scene": "olive-scene.webp", "intro": { "mp4": "olive-intro.mp4", "webm": "olive-intro.webm" }, "reveal": { "mp4": "olive-reveal.mp4", "webm": "olive-reveal.webm" }, "paper": "#fbf8f0", "ink": "#424938", "accent": "#566047" },
+    { "id": "blush", "name": "Blush", "poster": "blush-poster.webp", "scene": "blush-scene.webp", "intro": { "mp4": "blush-intro.mp4", "webm": "blush-intro.webm" }, "reveal": { "mp4": "blush-reveal.mp4", "webm": "blush-reveal.webm" }, "paper": "#fff6f0", "ink": "#6a423c", "accent": "#8a5248" },
+    { "id": "velvet", "name": "Velvet", "poster": "velvet-poster.webp", "scene": "velvet-scene.webp", "intro": { "mp4": "velvet-intro.mp4", "webm": "velvet-intro.webm" }, "reveal": { "mp4": "velvet-reveal.mp4", "webm": "velvet-reveal.webm" }, "paper": "#f6edda", "ink": "#53222b", "accent": "#7a293b" },
+    { "id": "artdeco", "name": "Art Déco", "poster": "artdeco-poster.webp", "scene": "artdeco-scene.webp", "intro": { "mp4": "artdeco-intro.mp4", "webm": "artdeco-intro.webm" }, "reveal": { "mp4": "artdeco-reveal.mp4", "webm": "artdeco-reveal.webm" }, "paper": "#20201b", "ink": "#f3e9cf", "accent": "#dec18a" },
+    { "id": "zahr", "name": "Zahr", "poster": "zahr-poster.webp", "scene": "zahr-scene.webp", "intro": { "mp4": "zahr-intro.mp4", "webm": "zahr-intro.webm" }, "reveal": { "mp4": "zahr-reveal.mp4", "webm": "zahr-reveal.webm" }, "paper": "#fff4e1", "ink": "#653d26", "accent": "#8a4d2f" }
+  ]
+}

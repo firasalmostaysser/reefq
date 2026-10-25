@@ -48,6 +48,8 @@ Do step 3 before launch, so your numbers (morning summary, PostHog funnel) start
 
 ## Should we move to Supabase now?
 
+**New scope, 25 October 2026:** the expanded partner/editor platform requires named accounts, account isolation and transactional commissions/payouts. [PLATFORM_BLUEPRINT.md](PLATFORM_BLUEPRINT.md) proposes Supabase for that workstream. The original decision below describes the current single-operator product; no migration has been performed.
+
 **No. Not yet.** Decision and reasons:
 
 - **Volume.** A good year is a few hundred orders and tens of thousands of guest replies. Blobs handles that with no tuning.
