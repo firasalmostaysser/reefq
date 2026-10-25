@@ -43,7 +43,7 @@ function openingHtml(inv,L){var list=openingsOf(inv);if(!list.length)return'';
 var RQA={pocket:'/assets/env/pocket.webp',flap:'/assets/env/flap.webp',flapshadow:'/assets/env/flapshadow.webp',interior:'/assets/env/interior.webp',card:'/assets/env/card.webp',linen:'/assets/env/linen.webp'};
 var LOGO='/assets/logo-light.webp';
 var LOGO_DARK='/assets/logo-dark.webp';
-var THEMES={reefq:{sprig:'gold'},zitouna:{sprig:'olive'},yasmine:{sprig:'jasmine'},layl:{sprig:'gold'},sidi:{sprig:'jasmine'},kairouan:{sprig:'gold'},oldmoney:{sprig:'gold'},sauge:{sprig:'olive'},bordeaux:{sprig:'jasmine'},sahara:{sprig:'gold'}};
+var THEMES={reefq:{sprig:'gold'},zitouna:{sprig:'olive'},yasmine:{sprig:'jasmine'},layl:{sprig:'gold'},sidi:{sprig:'jasmine'},kairouan:{sprig:'gold'},oldmoney:{sprig:'gold'},sauge:{sprig:'olive'},bordeaux:{sprig:'jasmine'},sahara:{sprig:'gold'},olive:{sprig:'olive'},blush:{sprig:'jasmine'},velvet:{sprig:'gold'},artdeco:{sprig:'gold'},zahr:{sprig:'jasmine'}};
 /* One list for the studio, the landing page and the server: id, name, one-line mood, swatch colours */
 var THEME_LIST=[
   {id:'reefq',name:'Reefq',sub:'Signature teal, ivory, gold line',bg:'#f6f3ea',fg:'#147d82'},
@@ -55,7 +55,12 @@ var THEME_LIST=[
   {id:'oldmoney',name:'Old Money',sub:'Espresso, cream, serif italics',bg:'#efe7da',fg:'#3b2a20'},
   {id:'sauge',name:'Sauge',sub:'Sage green, linen, olive leaves',bg:'#f1f2ea',fg:'#667a55'},
   {id:'bordeaux',name:'Bordeaux',sub:'Burgundy, blush, rose gold',bg:'#f6ece8',fg:'#6e1f2c'},
-  {id:'sahara',name:'Sahara',sub:'Sand, terracotta, Tozeur brick',bg:'#efe3cf',fg:'#9c4a2a'}
+  {id:'sahara',name:'Sahara',sub:'Sand, terracotta, Tozeur brick',bg:'#efe3cf',fg:'#9c4a2a'},
+  {id:'olive',name:'Olive',sub:'Lin naturel, ruban de soie, olivier',bg:'#f2eee4',fg:'#556047'},
+  {id:'blush',name:'Blush',sub:'Soie rose, pétales et papier poudré',bg:'#f8ece7',fg:'#915d52'},
+  {id:'velvet',name:'Velvet',sub:'Velours bordeaux, nacre et or ancien',bg:'#35151c',fg:'#e2c58d'},
+  {id:'artdeco',name:'Art Déco',sub:'Marbre noir, lignes géométriques et or',bg:'#171715',fg:'#d6b575'},
+  {id:'zahr',name:'Zahr',sub:'Fleur d’oranger, arches et terre cuite',bg:'#f4e8d6',fg:'#8a4d2f'}
 ];
 var uidN=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -127,7 +132,12 @@ var ENV_DEFAULTS={
   oldmoney:{paper:'#efe6d6',seal:'#4a2f22',liner:'lattice',linerBg:'#3b2a20',linerInk:'#c9a86a',table:'#d9ccb8'},
   sauge:{paper:'#f3f3ea',seal:'#6f8260',liner:'olive',linerBg:'#7d8f6a',linerInk:'#f4efe2',table:'#e4e6da'},
   bordeaux:{paper:'#f7ece8',seal:'#6e1f2c',liner:'jasmine',linerBg:'#6e1f2c',linerInk:'#e9c3b8',table:'#eadbd6'},
-  sahara:{paper:'#f0e3cd',seal:'#9c4a2a',liner:'tozeur',linerBg:'#b0603a',linerInk:'#f3dcb8',table:'#e3d1b3'}
+  sahara:{paper:'#f0e3cd',seal:'#9c4a2a',liner:'tozeur',linerBg:'#b0603a',linerInk:'#f3dcb8',table:'#e3d1b3'},
+  olive:{paper:'#f2eee4',seal:'#efe8da',liner:'olive',linerBg:'#556047',table:'#e7e2d7'},
+  blush:{paper:'#f8ece7',seal:'#d9b8b0',liner:'jasmine',linerBg:'#915d52',table:'#ead6cf'},
+  velvet:{paper:'#f5ead7',seal:'#6e1f2c',liner:'lattice',linerBg:'#35151c',table:'#35151c'},
+  artdeco:{paper:'#171715',seal:'#b8913f',liner:'lattice',linerBg:'#171715',table:'#11110f'},
+  zahr:{paper:'#f4e8d6',seal:'#b8913f',liner:'tiles',linerBg:'#8a4d2f',table:'#dcc6a5'}
 };
 var PAPERS=[['#f4efe6','Ivoire'],['#efe6d6','Crème'],['#f0e3cd','Sable doré'],['#fbfaf7','Blanc coton'],['#ead6cf','Rose poudré'],['#dfe5d6','Sauge'],['#d9e4ea','Bleu brume'],['#e8dcc6','Sable'],['#147d82','Teal Reefq'],['#1e2c48','Nuit'],['#6e1f2c','Bordeaux'],['#2b2b2b','Noir']];
 var SEALS=[['#147d82','Teal'],['#1d4f91','Cobalt'],['#8f2f1c','Brique'],['#4a2f22','Espresso'],['#6f8260','Sauge'],['#b8913f','Or'],['#8e1f2f','Bordeaux'],['#5b6b33','Olive'],['#27549a','Bleu'],['#d9b8b0','Rose'],['#efe8da','Nacre'],['#1b1b1b','Noir']];
@@ -489,17 +499,66 @@ function renderRsvp(root,inv,opts){
   draw();
   return{destroy:function(){root.innerHTML=''},t:t};
 }
+var OPENING_FILMS={reefq:{opening:'/assets/openings/opening.mp4',envelope:'/assets/openings/envelope-open.mp4'}};
+// Visual assets only. Theme ids also populate the existing Studio and client selectors.
+['olive','blush','velvet','artdeco','zahr'].forEach(function(id){var path='/assets/media/openings/'+id;OPENING_FILMS[id]={opening:path+'-intro.mp4',envelope:path+'-reveal.mp4',poster:path+'-poster.webp',webm:path+'-intro.webm',revealWebm:path+'-reveal.webm'}});
+function wireOpeningFilm(sc,onDone,onStart){
+  var first=sc.querySelector('.rq-film-intro'),second=sc.querySelector('.rq-film-reveal'),seal=sc.querySelector('.rq3-seal'),skip=sc.querySelector('.rq-film-skip');
+  var stage='seal',disposed=false,sound=false,watch=null,removers=[],motion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  function listen(el,type,fn){el.addEventListener(type,fn);removers.push(function(){el.removeEventListener(type,fn)})}
+  function finish(){
+    if(disposed||stage==='done')return;
+    stage='done';sc.dataset.stage=stage;clearInterval(watch);first.pause();second.pause();skip.disabled=true;onDone();
+  }
+  function play(video,next){
+    if(disposed)return;
+    stage=next;sc.dataset.stage=stage;clearInterval(watch);
+    var previous=video.currentTime,lastProgress=performance.now(),started=lastProgress;
+    watch=setInterval(function(){
+      var now=performance.now();
+      if(video.currentTime>previous){previous=video.currentTime;lastProgress=now}
+      if(now-lastProgress>12000||now-started>60000)finish();
+    },500);
+    if(video.error){finish();return}
+    try{video.muted=!sound;var request=video.play();if(request&&request.catch)request.catch(function(){if(stage===next)finish()})}catch(e){finish()}
+  }
+  function begin(e){
+    if(e)e.stopPropagation();if(disposed||stage!=='seal')return;
+    sound=!!(e&&e.isTrusted);onStart();seal.disabled=true;
+    if(motion.matches){finish();return}
+    // No film downloads in theme galleries until the seal is activated.
+    first.preload='auto';second.preload='auto';
+    play(first,'video'); // Keep play() directly in the activation handler for mobile browsers.
+    if(stage==='video'){second.load();skip.focus({preventScroll:true})}
+  }
+  listen(seal,'click',begin);
+  listen(first,'ended',function(){if(stage==='video')play(second,'envelope')});
+  listen(second,'playing',function(){if(stage==='envelope')second.classList.add('is-ready')});
+  listen(second,'ended',function(){if(stage==='envelope')finish()});
+  listen(first,'error',function(){if(stage==='video')finish()});
+  listen(second,'error',function(){if(stage==='envelope')finish()});
+  listen(skip,'click',finish);
+  listen(sc,'keydown',function(e){if(e.key==='Escape'&&stage!=='seal'){e.preventDefault();finish()}});
+  var reduce=function(){if(motion.matches&&stage!=='seal')finish()};
+  if(motion.addEventListener){motion.addEventListener('change',reduce);removers.push(function(){motion.removeEventListener('change',reduce)})}
+  return function(){
+    if(disposed)return;disposed=true;clearInterval(watch);removers.forEach(function(remove){remove()});
+    [first,second].forEach(function(video){video.pause();video.removeAttribute('src');video.load()});
+  };
+}
 function render(root,inv,opts){
   opts=opts||{};
   var st={lang:opts.lang||inv.lang||'fr',open:!!opts.startOpen,timer:null,sent:null,guests:1};
   var seed=hash((inv.a&&inv.a.name)+'|'+(inv.b&&inv.b.name)+'|'+(inv.id||''));
   var th=THEMES[inv.theme]?inv.theme:'zitouna';
+  var film=OPENING_FILMS[th],disposeCover=function(){};
   root.className='rq-inv';root.setAttribute('data-t',th);for(var ak in RQA)root.style.setProperty('--a-'+ak,'url('+RQA[ak]+')');
   function t(k){var D=T[st.lang]||T.fr;if(k==='married'&&inv.eventType&&inv.eventType!=='wedding'&&D['k_'+inv.eventType])return D['k_'+inv.eventType];return D[k]}
   var guest=opts.guest||null,show=inv.show||{};function on(k){return show[k]!==false}
   var maxSeats=function(){return Math.max(1,guest&&guest.seats?+guest.seats:(+inv.maxGuests||1))};if(guest&&guest.seats)st.guests=maxSeats();
   var R={t:t,inv:inv,guest:guest,st:st,opts:opts,maxSeats:maxSeats};
   function draw(){
+    disposeCover();disposeCover=function(){};
     clearInterval(st.timer);
     var L=T[st.lang]?st.lang:'fr';st.lang=L;
     root.setAttribute('lang',L);root.setAttribute('dir',L==='ar'?'rtl':'ltr');
@@ -509,6 +568,17 @@ function render(root,inv,opts){
     var nameH='<h1 class="rq-names rq-foil">'+pairHtml(n,L,true)+'</h1>';
     var html=badge+langBar+'<div class="rq-scroll">';
     if(!st.open){
+      if(film){
+        html+='<section class="rq-cover rq3 rq-film" data-stage="seal">'+
+          '<video class="rq-film-video rq-film-intro" src="'+esc(film.opening)+'"'+(film.poster?' poster="'+esc(film.poster)+'"':'')+' muted playsinline preload="none" disablepictureinpicture aria-hidden="true" tabindex="-1"></video>'+
+          '<video class="rq-film-video rq-film-reveal" src="'+esc(film.envelope)+'"'+(film.poster?' poster="'+esc(film.poster)+'"':'')+' muted playsinline preload="none" disablepictureinpicture aria-hidden="true" tabindex="-1"></video>'+
+          '<div class="rq-film-sealed">'+(guest&&guest.name?'<p class="rq3-dear">'+esc(t('dear'))+' '+esc(guest.name)+'</p>':'')+
+          '<p class="rq-caps">'+esc(t('married'))+'</p><h1 class="rq-names rq-foil">'+pairHtml(n,L)+'</h1>'+
+          '<div class="rq3-env"><button type="button" class="rq3-seal" aria-label="'+esc(t('tap'))+'"></button></div>'+
+          '<p class="rq-film-basmala" lang="ar" dir="rtl">'+esc(OPENINGS.bismillah.ar)+'</p>'+
+          '<p class="rq-caps rq-film-hint">'+esc(t('tap'))+'</p></div>'+
+          '<button type="button" class="rq-film-skip">'+(L==='ar'?'تخطّي':L==='en'?'Skip':'Passer')+'</button></section>';
+      }else{
       var eo=envOpts(inv,th),cv=inv.canva||null,K=ENV_KINDS[th];
       var cardIn=(cv&&cv.image?'<img class="rq3-cardart" alt="" src="'+esc(cv.image)+'" onerror="this.remove()">':'')+'<div class="rq3-cardtxt"'+(cv&&cv.image?' hidden':'')+'><span class="rq-caps">'+esc(t('married'))+'</span><span class="rq-names rq-foil">'+pairHtml(n,L)+'</span><span class="rq-caps">'+esc(fmtDate(inv.date,L,{day:'numeric',month:'long',year:'numeric'}))+'</span></div>';
       var E=K?K({tap:t('tap'),seed:seed,eo:eo,cardIn:cardIn,mono:(inv.env&&inv.env.mono)||initials(inv).replace('&',' & '),namesHtml:pairHtml(n,L),kick:t('married'),
@@ -524,6 +594,7 @@ function render(root,inv,opts){
         '<div class="rq3-flap"><div class="rq3-face rq3-front"><div class="rq3-tint" style="--m:var(--a-flap)"></div>'+flapGild()+'<button type="button" class="rq3-seal" aria-label="'+esc(t('tap'))+'"></button></div>'+
         '<div class="rq3-face rq3-back"><div class="rq3-backin"></div></div></div>'+
        '</div>')+'<p class="rq-caps rq3-hint">'+esc(t('tap'))+'</p></section>';
+      }
     } else {
       html+='<section class="rq-inside">';
       var cz=inv.canva;if(cz&&(cz.video||cz.image))html+='<figure class="rq-canva">'+(cz.video?'<video src="'+esc(cz.video)+'" poster="'+esc(cz.image||'')+'" autoplay muted loop playsinline></video>':'<img alt="" src="'+esc(cz.image)+'" onerror="this.parentNode.remove()">')+'</figure>';
@@ -561,7 +632,20 @@ function render(root,inv,opts){
   function wire(){
     root.querySelectorAll('[data-lang]').forEach(function(b){b.onclick=function(){st.lang=b.dataset.lang;draw()}});
     var sc=root.querySelector('.rq3');
-    if(sc){
+    if(sc&&film){
+      var filmSeal=sc.querySelector('.rq3-seal'),filmOptions=envOpts(inv,th);
+      var paintFilmSeal=function(){filmSeal.innerHTML='';filmSeal.appendChild(sealCanvas((inv.env&&inv.env.mono)||initials(inv).replace('&',' & '),filmOptions.seal,seed,360))};
+      paintFilmSeal();if(document.fonts&&document.fonts.load)document.fonts.load("40px 'Pinyon Script'").then(function(){if(filmSeal.isConnected)paintFilmSeal()}).catch(function(){});
+      disposeCover=wireOpeningFilm(sc,function(){
+        var release=disposeCover;disposeCover=function(){};st.open=true;draw();
+        var scroll=root.querySelector('.rq-scroll');if(scroll)scroll.scrollTop=0;
+        sc.classList.add('handoff');root.appendChild(sc);
+        requestAnimationFrame(function(){requestAnimationFrame(function(){if(sc.isConnected)sc.classList.add('fadeout')})});
+        var hero=root.querySelector('.rq-sheet.hero');if(hero){hero.tabIndex=-1;hero.focus({preventScroll:true})}
+        var fade=setTimeout(function(){release();sc.remove()},800);
+        disposeCover=function(){clearTimeout(fade);release();sc.remove()};
+      },function(){if(window.rqTrack)window.rqTrack('invitation_opened',{theme:th,layout:inv.layout||'classic',preview:!!opts.preview,personal:!!guest,lang:st.lang})});
+    }else if(sc){
       var eo2=envOpts(inv,th),sb=sc.querySelector('.rq3-seal'),busy=false;
       var paint=function(){var cv=sealCanvas((inv.env&&inv.env.mono)||initials(inv).replace('&',' & '),eo2.seal,seed,360);sb.innerHTML='';sb.appendChild(cv)};
       paint();if(document.fonts&&document.fonts.load)document.fonts.load("40px 'Pinyon Script'").then(function(){if(sb.isConnected)paint()}).catch(function(){});
@@ -578,7 +662,7 @@ function render(root,inv,opts){
     wireRsvp(root,R,draw);
   }
   draw();
-  return{destroy:function(){clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},isOpen:function(){return st.open},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
+  return{destroy:function(){disposeCover();clearInterval(st.timer);root.innerHTML=''},setLang:function(l){st.lang=l;draw()},open:function(){st.open=true;draw()},isOpen:function(){return st.open},play:function(){var s=root.querySelector('.rq3-seal');if(s)s.click();else{st.open=true;draw()}},scroller:function(){return root.querySelector('.rq-scroll')}};
 }
 window.ReefqInvite={pairText:pairText,hostsMsg:hostsMsg,hostsLines:hostsLines,THEME_LIST:THEME_LIST,OPENINGS:OPENINGS,sealCanvas:sealCanvas,linerTile:linerTile,PAPERS:PAPERS,SEALS:SEALS,LINERS:LINERS,ENV_DEFAULTS:ENV_DEFAULTS,LOGO:LOGO,LOGO_DARK:LOGO_DARK,render:render,renderRsvp:renderRsvp,waLink:waLink,T:T,fmtDate:fmtDate,sprig:sprig,initials:initials,namesOf:namesOf};
 })();

@@ -162,3 +162,77 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .foot-legal{text-align:center}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:calc(100vw - 32px);text-align:center;background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-weight:600;font-size:14px;z-index:50}
 @media (prefers-reduced-motion:reduce){.bactions{backdrop-filter:none;background:var(--surface)}}
+
+/* Continue the linen, olive and brass palette in the private preparation desk. */
+.cs .head{padding-block:10px 22px;border-bottom:1px solid var(--line)}
+.cs .card{border-radius:6px;box-shadow:0 12px 36px -30px #343b2f55}
+.cs #b-form .fs{border-radius:4px;background:var(--surface);padding:18px 16px 20px;border-block-start:2px solid color-mix(in srgb,var(--gold) 50%,var(--line))}
+.cs #b-form legend{font-size:23px;padding-inline:8px}
+.cs .f input,.cs .f select,.cs .f textarea{min-height:48px;border-radius:5px}
+.cs #b-form .f>span[lang=ar]{font-size:17px;line-height:1.8}
+.cs #b-form input[dir=rtl],.cs #b-form textarea[dir=rtl]{font-size:19px;line-height:1.8}
+.cs #opening-palette-note{font-size:12px;line-height:1.6;margin-top:5px}
+.cs .bactions{border-block-start:1px solid var(--line)}
+.cs .pvwrap{border-color:var(--line);border-radius:6px}
+@media(max-width:560px){.cs{gap:20px}.cs #b-form .fs{padding:14px 12px 18px}.cs .bhead{gap:8px}.cs .bhead h2{font-size:25px}.cs #b-form{gap:22px}}
+.cs #b-form{counter-reset:brief-section}
+.cs #b-form>.fs{counter-increment:brief-section}
+.cs #b-form>.fs>legend::before{content:counter(brief-section,decimal-leading-zero);display:inline-grid;place-items:center;width:24px;height:24px;margin-inline-end:8px;border:1px solid var(--line);border-radius:3px;color:var(--gold);font:600 9px/1 var(--ui);vertical-align:3px}
+.cs .head h1{font-weight:400;line-height:1.2}
+.cs .track{padding-block:8px 14px}
+.cs .card .bnote{line-height:1.8;max-width:60ch}
+.cs .f input:focus-visible,.cs .f select:focus-visible,.cs .f textarea:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-color:var(--accent)}
+.cs #b-form .fs:focus-within{border-block-start-color:var(--accent)}
+.cs .bactions #b-save{min-height:46px}
+.cs .pstep{border-radius:5px;padding:20px;background:var(--surface)}
+.cs .bank{border-radius:4px;background:var(--bg)}
+.cs .drop{min-height:120px;border-radius:5px;line-height:1.7}
+.cs .tile{padding:18px 14px;border-radius:5px}
+.cs .tile b{font-size:36px;margin-bottom:8px}
+@media(max-width:560px){.cs .card{padding:20px 16px}.cs .pstep{padding:16px}.cs #b-form>.fs>legend{font-size:22px}.cs .bactions .btn{flex:1 1 120px;min-height:46px}.cs .tile{padding:14px 10px}.cs .tile b{font-size:30px}}
+
+/* Navigation follows the existing form; saving and order progress remain separate. */
+.cs .journey{padding:18px 20px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.cs .journey-label,.cs .workflow-eyebrow{font:600 10px/1.6 var(--ui);text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0 0 14px}
+.cs .journey .track{margin:0;padding-block:0 12px}
+.cs .brief-index{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;max-width:100%;padding:6px 2px 12px;counter-reset:brief-link}
+.cs .brief-index a{counter-increment:brief-link;display:inline-flex;align-items:center;gap:7px;flex:none;min-height:40px;padding:0 11px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--fg);font:500 12px/1.4 var(--ui);text-decoration:none;white-space:nowrap}
+.cs .brief-index a::before{content:counter(brief-link,decimal-leading-zero);color:var(--gold);font:600 9px/1 var(--ui)}
+.cs .brief-index a:hover{background:var(--soft);border-color:var(--accent)}
+.cs .brief-index a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cs #b-form:not(:has(#b-guests-wrap:not([hidden]))) .brief-index a[href="#b-guests-wrap"]{display:none}
+.cs #b-form>.fs{scroll-margin-top:95px}
+.cs #b-form>.fs:target{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 18%,transparent)}
+.cs #brief{scroll-margin-top:84px}
+@media(max-width:560px){.cs .journey{padding:16px 12px 8px}.cs .journey-label{margin-bottom:12px}.cs .brief-index a{min-height:44px}.cs .workflow-eyebrow{margin-bottom:10px}}
+.cs .editor-guide{border:1px solid var(--line);border-radius:5px;background:var(--soft);padding:0 16px}
+.cs .editor-guide>summary{min-height:44px;align-items:center;padding:14px 0;font:600 14px/1.6 var(--ui)}
+.cs .editor-guide>p,.cs .editor-guide>ul{font-size:14px;line-height:1.9;margin:0 0 16px}
+.cs .editor-guide ul{padding-inline-start:20px}
+.cs .editor-guide a{color:var(--accent);text-underline-offset:3px}
+.cs .editor-guide>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.cs #b-form textarea{font-size:16px;line-height:1.8;padding:12px}
+.cs #b-form textarea[lang=ar]{font-size:20px;line-height:1.9}
+
+/* Keep section navigation available while editing a long invitation. */
+.cs .brief-index{position:sticky;top:calc(64px + env(safe-area-inset-top,0px));z-index:6;background:var(--surface);border-bottom:1px solid var(--line);padding-block:10px;box-shadow:0 10px 18px -20px var(--fg)}
+.cs #b-form>.fs{scroll-margin-top:148px}
+.cs #b-form>.fs:focus{outline:none}
+.cs #b-form:has(#brief-couple:target) .brief-index a[href="#brief-couple"],
+.cs #b-form:has(#brief-hosts:target) .brief-index a[href="#brief-hosts"],
+.cs #b-form:has(#brief-day:target) .brief-index a[href="#brief-day"],
+.cs #b-form:has(#brief-style:target) .brief-index a[href="#brief-style"],
+.cs #b-form:has(#brief-words:target) .brief-index a[href="#brief-words"],
+.cs #b-form:has(#b-guests-wrap:target) .brief-index a[href="#b-guests-wrap"]{border-color:var(--accent);background:var(--soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.cs .pvwrap{flex-direction:column;align-items:center;gap:16px}
+.preview-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;max-width:390px;min-height:38px;border-bottom:1px solid var(--line);padding-bottom:8px;font:500 12px/1.6 var(--ui);color:var(--muted)}
+.preview-heading a{color:var(--accent);text-underline-offset:4px;display:inline-flex;align-items:center;min-height:38px;white-space:nowrap}
+.preview-heading a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.cs .pvwrap iframe{flex:none}
+.cs .preview-caption{max-width:36ch;margin:4px auto 0;text-align:center;color:var(--muted);font:400 12px/1.8 var(--ui)}
+.cs #space .tablewrap{max-height:420px;overflow:auto;scrollbar-gutter:stable}
+.cs #space .tablewrap th{position:sticky;top:0;z-index:1}
+.cs .tablewrap:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(min-width:960px){#brief:has(#b-pv:not([hidden])) .pvwrap iframe{height:min(700px,calc(100dvh - 220px))}}
+@media(max-width:560px){.cs .brief-index{margin-inline:-4px;padding-inline:4px}.cs .pvwrap iframe{height:min(700px,calc(100svh - 220px))}.cs #space .tablewrap{max-height:60svh}}
+@media(max-height:500px){.cs .brief-index{position:static}.cs #b-form>.fs{scroll-margin-top:85px}}

@@ -5,7 +5,7 @@ In priority order. Items 1–6 before the first Facebook post; 7–12 during the
 ## Before the first post
 
 ### 1. Deploy the latest version
-Push `main` to GitHub; Netlify deploys it in about a minute. Check `https://reefq.netlify.app/` opens and Studio → Settings shows the new "Morning summary & backups" card.
+Finish and review a feature branch using [WORKFLOW.md](WORKFLOW.md). Resolve release blockers, then let the owner combine finished branches and merge to `main` in the deployment batch (at most once a day). Do not push directly to `main`. A merge can trigger a Netlify deploy and consume credits. Check the actual deployment result before announcing the update, then check `https://reefq.netlify.app/` and Studio → Settings.
 
 ### 2. Team alerts on Telegram (critical: today new orders arrive silently)
 Production has no `TELEGRAM_*` variables yet, so nobody is told when a couple orders or sends a receipt.

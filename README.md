@@ -4,9 +4,13 @@ Digital wedding invitations that open like a real envelope. One site holds every
 
 **Running the business** (flow, daily routine, designer guide, marketing plan, roadmap, data and backups): see [`docs/`](docs/README.md).
 
+**Working on changes:** [workflow and ownership](docs/WORKFLOW.md) · [cinematic collections](docs/opening-collections.md). Run `node tools/ui-review.mjs` for the required guard and unit checks plus the media inventory review; add `--url http://localhost:8888 --screenshots` for a local visual report. The full end-to-end suite remains a separate release gate.
+
+**Product priorities:** [product outcomes, current delivery and ordered backlog](docs/PRODUCT_PLAN.md). The [platform blueprint](docs/PLATFORM_BLUEPRINT.md) specifies the proposed advanced editor and private partner/commission system.
+
 | URL | What it is | Who uses it |
 | --- | --- | --- |
-| `/` | Landing page: live envelope demo, 10 themes, card designs, made-to-measure website templates, packages, order form (`?modele=<slug>` preselects a template) | Couples |
+| `/` | Landing page: live envelope demo, 15 themes including 5 cinematic collections, card designs, made-to-measure website templates, packages, order form (`?modele=<slug>` preselects a template) | Couples |
 | `/commande/<code>?t=<token>` | Client space: prepare the invitation (details, text, theme, guests) with a live preview, pay by bank transfer, upload the receipt, then share the links and follow guest replies | Couples |
 | `/studio/` | Reefq Studio: invitations, guest lists, RSVPs, orders and payment checks, settings | Reefq team (password) |
 | `/i/<id>` | A couple's invitation. `?g=<guest id>` greets a family by name and reserves their seats | Guests |
@@ -28,7 +32,7 @@ public/                   static site
   i/index.html            invitation viewer
   assets/
     engine.js             invitation engine: envelope, wax seal, themes, layouts, sections, RSVP
-    invitation.css        invitation styles and the 10 themes
+    invitation.css        invitation styles and the 15 themes
     analytics.js          PostHog, cookieless, loaded only when POSTHOG_KEY is set
     invite.js, landing.js, site.css, commande.js, commande.css
     site-bar.js           Reefq bar on custom designs: greeting, open tracking, reply card

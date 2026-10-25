@@ -29,7 +29,10 @@
     </section>
 
     <!-- The four steps of the order; commande.js marks them done / now -->
-    <ol class="track" id="track" aria-label="Étapes de la commande"></ol>
+    <section class="journey" aria-label="Suivi de votre commande">
+      <p class="journey-label">Votre parcours</p>
+      <ol class="track" id="track" aria-label="Étapes de la commande"></ol>
+    </section>
 
     <!-- Step 1: the couple prepares the invitation (form + phone preview) -->
     <section class="card brief" id="brief" hidden>
@@ -37,8 +40,11 @@
       <p class="muted small bnote" id="b-lead">Quelques minutes suffisent. Vous voyez l'aperçu à chaque étape, et vous pourrez tout modifier plus tard sur le même lien.</p>
       <p class="muted small bnote done-note" id="b-done" hidden></p>
       <form id="b-form" novalidate>
+        <nav class="brief-index" aria-label="Rubriques de votre invitation">
+          <a href="#brief-couple">Les mariés</a><a href="#brief-hosts">Les familles</a><a href="#brief-day">Le jour J</a><a href="#brief-style">Le style</a><a href="#brief-words">Le texte</a><a href="#b-guests-wrap">Les invités</a>
+        </nav>
 
-        <fieldset class="fs">
+        <fieldset class="fs" id="brief-couple" tabindex="-1">
           <legend>Les mariés</legend>
           <div class="g2">
             <label class="f"><span>Prénom du marié</span><input id="b-b" maxlength="60" required></label>
@@ -49,7 +55,7 @@
           </div>
         </fieldset>
 
-        <fieldset class="fs">
+        <fieldset class="fs" id="brief-hosts" tabindex="-1">
           <legend>Qui invite ?</legend>
           <p class="fs-note muted small">Comme sur les cartes traditionnelles : le nom des parents ou des familles au-dessus de vos prénoms.</p>
           <div class="g2">
@@ -65,7 +71,7 @@
           </div>
         </fieldset>
 
-        <fieldset class="fs">
+        <fieldset class="fs" id="brief-day" tabindex="-1">
           <legend>Le jour J</legend>
           <div class="g2">
             <label class="f"><span>Occasion</span><select id="b-event"></select></label>
@@ -82,10 +88,10 @@
           </div>
         </fieldset>
 
-        <fieldset class="fs">
+        <fieldset class="fs" id="brief-style" tabindex="-1">
           <legend>Le style</legend>
           <div class="g2">
-            <label class="f" id="b-theme-wrap"><span>Thème</span><select id="b-theme"></select></label>
+            <label class="f" id="b-theme-wrap"><span>Thème</span><select id="b-theme" aria-describedby="opening-palette-note"></select><small id="opening-palette-note" class="muted">Olive, Blush, Velvet, Art Déco et Zahr conservent les couleurs et le sceau de leur film.</small></label>
             <label class="f"><span>Langue principale</span><select id="b-lang"><option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option></select></label>
           </div>
           <p class="muted small" id="b-custom-note" hidden>Votre site sur mesure est dessiné par notre designer à partir de ces informations.</p>
@@ -98,7 +104,7 @@
           </div>
         </fieldset>
 
-        <fieldset class="fs">
+        <fieldset class="fs" id="brief-words" tabindex="-1">
           <legend>Le texte</legend>
           <div class="g2">
             <label class="f"><span>Ton du texte</span><select id="b-tone"></select></label>
@@ -113,7 +119,7 @@
           <label class="f story" id="b-story-wrap"><span>Votre histoire en quelques lignes <i>(facultatif)</i></span><textarea id="b-story" maxlength="1500" placeholder="Tout a commencé…"></textarea></label>
         </fieldset>
 
-        <fieldset class="fs" id="b-guests-wrap">
+        <fieldset class="fs" id="b-guests-wrap" tabindex="-1">
           <legend>Vos invités</legend>
           <p class="fs-note muted small">Chaque famille reçoit son lien, à son nom, avec ses places réservées. Une ligne par invitation : <b>nom, téléphone, places</b>. Vous pouvez en ajouter à tout moment.</p>
           <div class="paste">
@@ -124,14 +130,16 @@
           <ul class="glist" id="b-glist"></ul>
         </fieldset>
 
-        <p class="err" id="b-err" hidden></p>
-        <div class="bactions"><button class="btn primary" type="submit" id="b-save">Enregistrer mon invitation</button><button class="btn ghost" type="button" id="b-pv-btn">Voir l'aperçu</button><span class="muted small bstatus" id="b-status"></span></div>
+        <details class="editor-guide"><summary>Avant de partager votre invitation</summary><p>Ouvrez l’aperçu et relisez la version que vos invités verront.</p><ul><li><a href="#brief-couple">Les prénoms et leur ordre</a>, dans les langues utilisées.</li><li><a href="#brief-day">La date, l’heure et le lieu</a>, puis le lien de la carte.</li><li><a href="#brief-words">Les textes et les lignes d’ouverture</a>, sans oublier la phrase de fin.</li><li>Pour les liens personnels, vérifiez le nom de chaque famille et ses places.</li></ul><p class="muted small">Vos modifications sont enregistrées avec « Enregistrer mon invitation ». Le même lien reste valable après vos changements.</p></details>
+        <p class="err" id="b-err" role="alert" hidden></p>
+        <div class="bactions"><button class="btn primary" type="submit" id="b-save">Enregistrer mon invitation</button><button class="btn ghost" type="button" id="b-pv-btn">Voir l'aperçu</button><span class="muted small bstatus" id="b-status" role="status" aria-live="polite" aria-atomic="true"></span></div>
       </form>
-      <div class="pvwrap" id="b-pv" hidden><iframe id="b-frame" title="Aperçu de votre invitation"></iframe></div>
+      <div class="pvwrap" id="b-pv" hidden><div class="preview-heading"><span>Votre aperçu</span><a href="#brief">Revenir aux détails ↑</a></div><iframe id="b-frame" title="Aperçu de votre invitation"></iframe><p class="preview-caption">L’aperçu suit vos modifications. Enregistrez-les avant de quitter votre espace.</p></div>
     </section>
 
     <!-- Step 2: pay by bank transfer, then send the receipt -->
     <section class="card" id="pay" hidden>
+      <p class="workflow-eyebrow">Le règlement</p>
       <h2 id="p-title">Réglez votre commande par virement</h2>
       <p class="lead-s">Montant à virer : <b id="p-amount"></b> <span class="muted" id="p-of"></span></p>
       <div class="alert" id="p-rejected" hidden></div>
@@ -156,6 +164,7 @@
 
     <!-- Step 3: we check the transfer -->
     <section class="card wait" id="checking" hidden>
+      <p class="workflow-eyebrow">La vérification</p>
       <h2>Nous vérifions votre virement</h2>
       <p>Merci ! Votre justificatif est bien reçu. Nous le vérifions sur notre compte bancaire, en général sous 24 h ouvrées. Cette page se met à jour toute seule.</p>
       <p class="muted small" id="c-proofs"></p>
@@ -169,13 +178,14 @@
 
     <!-- Step 4: the invitation is online; link, replies, personal links -->
     <section class="card" id="space" hidden>
+      <p class="workflow-eyebrow">Le partage et les réponses</p>
       <h2>Votre invitation</h2>
       <div id="inv-none"><p id="inv-none-txt">Notre équipe prépare votre invitation. Vous recevrez le lien ici et sur WhatsApp.</p></div>
       <div id="inv-box" hidden>
         <div class="linkrow"><code id="inv-link"></code><button class="btn sm" type="button" id="inv-copy">Copier</button><a class="btn sm primary" id="inv-open" target="_blank" rel="noopener">Ouvrir</a></div>
         <div class="tiles"><div class="tile"><b id="t-total">0</b><span>Réponses</span></div><div class="tile"><b id="t-coming">0</b><span>Personnes présentes</span></div><div class="tile"><b id="t-declined">0</b><span>Absents</span></div></div>
         <div class="bar"><h3>Réponses de vos invités</h3><a class="btn sm" id="csv" download>Télécharger (Excel)</a></div>
-        <div class="tablewrap"><table><thead><tr><th>Invité</th><th>Réponse</th><th class="num">Pers.</th><th>Régime</th><th>Message</th></tr></thead><tbody id="rows"></tbody></table></div>
+        <div class="tablewrap" tabindex="0" role="region" aria-label="Réponses de vos invités, tableau défilant"><table><thead><tr><th scope="col">Invité</th><th scope="col">Réponse</th><th scope="col" class="num">Pers.</th><th scope="col">Régime</th><th scope="col">Message</th></tr></thead><tbody id="rows"></tbody></table></div>
         <div id="glist" hidden>
           <h3>Liens personnels</h3>
           <p class="muted small">Chaque famille a son lien, avec son nom et ses places réservées.</p>

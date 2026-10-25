@@ -51,7 +51,7 @@ export default function WeddingInvitation(props = {}) {
     if (!video || !video.getAttribute('src')) return finish();
     try {
       // Called directly inside the seal click for the opening: retain user activation.
-      video.muted = true;
+      video.muted = false;
       const request = video.play();
       request?.catch(() => {
         if (current.current !== 'done') finish();
@@ -158,13 +158,13 @@ export default function WeddingInvitation(props = {}) {
     },
     h('video', {
       ref: opening, className: 'rq-cinema-video rq-cinema-opening',
-      src: openingVideoUrl, poster: openingPosterUrl, muted: true, playsInline: true,
+      src: openingVideoUrl, poster: openingPosterUrl, muted: false, playsInline: true,
       preload: 'auto', disablePictureInPicture: true, tabIndex: -1, 'aria-hidden': true,
       onEnded: revealEnvelope, onError: () => videoError('video'),
     }),
     h('video', {
       ref: envelope, className: `rq-cinema-video rq-cinema-envelope${envelopeReady ? ' is-ready' : ''}`,
-      src: envelopeVideoUrl, poster: envelopePosterUrl, muted: true, playsInline: true,
+      src: envelopeVideoUrl, poster: envelopePosterUrl, muted: false, playsInline: true,
       preload: 'auto', disablePictureInPicture: true, tabIndex: -1, 'aria-hidden': true,
       onPlaying: () => setEnvelopeReady(true),
       onEnded: () => { if (current.current === 'envelope') finish(); },

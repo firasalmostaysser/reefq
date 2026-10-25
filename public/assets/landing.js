@@ -21,7 +21,7 @@ var UI={
 var LANGS=['fr','ar','en'],I18N=window.REEFQ_I18N||{};
 function ui(k){return (UI[lang]||UI.fr)[k]}
 var THEMES=ReefqInvite.THEME_LIST.map(function(t){return [t.id,t.name,t.fg,t.bg]});
-var cur='reefq',lang='fr',h=null,demoCanva=null,MODELS=[],SITES=[];
+var cur='olive',lang='fr',h=null,demoCanva=null,MODELS=[],SITES=[];
 function demoData(){var d=JSON.parse(JSON.stringify(DEMO)),o=ui('demo');d.theme=cur;d.lang=lang;if(demoCanva)d.canva=demoCanva;
   ['venue','city','dress'].forEach(function(k){if(o[k])d[k]=o[k]});if(o.places)d.events.forEach(function(e,i){e.place=o.places[i]});return d}
 /* The invitation lives in a fixed 390x844 frame scaled to the phone's screen, so its layout is the one a real phone shows. */
@@ -30,7 +30,7 @@ function fit(){var s=$('#demo').clientWidth/VP_W;if(s>0)vp.style.transform='scal
 if('ResizeObserver' in window)new ResizeObserver(fit).observe($('#demo'));else addEventListener('resize',fit);fit();
 function demo(){if(h)h.destroy();var el=document.createElement('div');vp.innerHTML='';vp.appendChild(el);$('#demo').classList.remove('fade');
   h=ReefqInvite.render(el,demoData(),{lang:lang,guest:{id:'x',name:ui('guest'),seats:4},preview:true,badge:ui('badge'),onRsvp:function(){return new Promise(function(r){setTimeout(function(){r({})},500)})}});
-  $('#demo-full').href='/i/demo?t='+cur+(lang!=='fr'?'&lang='+lang:'');tour.start()}
+  $('#demo-full').href='/theme-preview.html?t='+cur+'&lang='+lang;tour.start()}
 /* Self-playing demo: the envelope opens by itself, then the invitation moves section by section like a thumb scrolling:
    a quick eased flick brings each section near the top, it rests long enough to be read, tall sections glide through
    slowly, and after the last one the phone fades to the next theme. It pauses off-screen and stops for good as soon as
@@ -104,6 +104,10 @@ var GAL={
   ar:{open:'افتحوا',again:'أغلقوا من جديد',phone:'شاهدوه في الهاتف',d:{reefq:'غطاء مدبّب، والختم ينكسر',zitouna:'خيط من الكتّان وغصن زيتون',yasmine:'غطاء على شكل قوس، وبتلات ياسمين',layl:'جناحان كليلةٍ مرصّعة بالنجوم',sidi:'بابٌ أزرق يُفتح',kairouan:'أربعة أجنحة بنقش المرقوم، واحدًا تلو الآخر',oldmoney:'غطاء بحافّة ممزّقة يدويًا وورق حرير',sauge:'ورقٌ شفّاف وشريط من الساتان',bordeaux:'غطاء مزخرف الحوافّ ينثني',sahara:'رسالةٌ مطويّة وحبلٌ من الجلد'}},
   en:{open:'Open',again:'Close again',phone:'See it in the phone',d:{reefq:'Pointed flap, the seal breaks',zitouna:'Jute twine and an olive sprig',yasmine:'Arched flap, jasmine petals',layl:'Two starry-night doors',sidi:'A blue door swings open',kairouan:'Four kilim flaps, one by one',oldmoney:'Hand-torn flap, tissue paper',sauge:'Vellum and a satin ribbon',bordeaux:'A scalloped flap that curls',sahara:'A folded letter, leather cord'}}};
 var galH={},galQ=[],galBusy=false;
+// Descriptions of the new artwork; all existing gallery controls stay the same.
+Object.assign(GAL.fr.d,{olive:'Lin naturel, ruban de soie et feuillage d’olivier',blush:'Soie rose, pétales et papier poudré',velvet:'Velours bordeaux, nacre et or ancien',artdeco:'Marbre noir et lignes d’or',zahr:'Fleur d’oranger et arches baignées de lumière'});
+Object.assign(GAL.ar.d,{olive:'كتّان طبيعي وشريط حرير وأغصان زيتون',blush:'حرير وردي وبتلات وورق ناعم',velvet:'مخمل عنّابي ولؤلؤ وذهب عتيق',artdeco:'رخام أسود وخطوط ذهبية',zahr:'زهر البرتقال وأقواس يغمرها النور'});
+Object.assign(GAL.en.d,{olive:'Natural linen, silk ribbon and olive leaves',blush:'Rose silk, petals and powder pink paper',velvet:'Burgundy velvet, pearls and antique gold',artdeco:'Black marble and golden geometry',zahr:'Orange blossom and sunlit arches'});
 function gal(k){return (GAL[lang]||GAL.fr)[k]}
 function gallery(){var box=$('#env-gallery');if(!box)return;
   Object.keys(galH).forEach(function(k){galH[k].destroy()});galH={};
